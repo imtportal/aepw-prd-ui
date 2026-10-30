@@ -1,0 +1,29 @@
+<div class="rounded-lg border bg-card shadow-sm">
+  <div class="px-3 py-2 border-b">
+    <h4 class="text-xs font-semibold">L1 Metric Breakdown</h4>
+  </div>
+  <ui-data-table
+    data-l1-table
+    [columns]="tableColumns"
+    [data]="pageData()"
+    [total]="allRows().length"
+    [loading]="false"
+    [rowTemplate]="l1Row"
+    (pageChange)="onPage($event)" />
+</div>
+
+<ng-template #l1Row let-row>
+  <tr class="border-b last:border-0 text-xs">
+    <td class="px-3 py-1.5 font-mono text-[10px]">{{ row.code }}</td>
+    <td class="px-3 py-1.5 text-[11px]">{{ row.name }}</td>
+    <td class="px-3 py-1.5 text-right font-medium">{{ row.reported.toLocaleString() }}</td>
+    <td class="px-3 py-1.5 text-right text-muted-foreground">{{ row.riskAdjusted.toLocaleString() }}</td>
+    <td class="px-3 py-1.5">
+      @if (row.isCorporate) {
+        <ui-badge variant="outline" styleClass="text-[8px] px-1 py-0 font-normal" data-corp-badge>
+          Corp
+        </ui-badge>
+      }
+    </td>
+  </tr>
+</ng-template>

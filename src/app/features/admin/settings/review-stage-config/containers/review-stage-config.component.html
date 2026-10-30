@@ -1,0 +1,310 @@
+@let showResetButton = haveStageOptionsChanged();
+
+<div class="flex flex-col gap-6 font-sans text-foreground">
+  <!-- Header -->
+  <div>
+    <h1 class="font-heading text-xl font-bold">Review Stage Configuration</h1>
+    <p class="text-sm text-muted-foreground">Configure approval stages for review.</p>
+  </div>
+
+  <!-- Stages -->
+  <ui-card>
+    <ui-card-content styleClass="p-0">
+      @if (loadingReviewStages()) {
+        @for (item of [1, 2, 3, 4, 5]; track item) {
+          <div class="flex items-center justify-between gap-4 border-b px-4 py-3">
+            <div class="h-4 w-2/3 animate-pulse rounded bg-muted"></div>
+            <div class="h-5 w-9 animate-pulse rounded-full bg-muted"></div>
+          </div>
+        }
+      } @else if (reviewStages().length > 0) {
+        @for (stage of reviewStages(); track stage.reviewStageId) {
+          <div
+            class="flex items-center justify-between gap-4 border-b px-4 py-3 last:border-b-0 hover:bg-muted/50"
+          >
+            <span
+              class="text-sm font-medium"
+              [ngClass]="
+                stage.isActive ? 'text-[hsl(var(--aepw-blue))]' : 'text-[hsl(var(--aepw-orange))]'
+              "
+            >
+              {{ stage.label }}
+            </span>
+
+            <button
+              type="button"
+              role="switch"
+              [attr.aria-checked]="stage.isActive"
+              [attr.aria-label]="'Enable ' + stage.label"
+              (click)="toggleUpdated(stage.reviewStageId, !stage.isActive)"
+              class="relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors"
+              [ngClass]="stage.isActive ? 'bg-[hsl(var(--aepw-blue))]' : 'bg-black/40'"
+            >
+              <span
+                class="pointer-events-none inline-block h-4 w-4 rounded-full bg-white shadow transition-transform"
+                [class.translate-x-4]="stage.isActive"
+                [class.translate-x-0.5]="!stage.isActive"
+              ></span>
+            </button>
+          </div>
+        }
+      } @else {
+        <div class="p-6 text-sm text-muted-foreground">No review stages available.</div>
+      }
+    </ui-card-content>
+  </ui-card>
+  <!-- ////////////////////////////////////////////////////////////////////// -->
+  <ui-dialog
+    [(visible)]="approvalChangesDialogVisible"
+    header="Confirm Review Stage Changes"
+    styleClass="w-[95vw] max-w-[1400px]"
+  >
+    <div class="flex flex-col gap-4 text-sm">
+      <p class="rounded-md border border-blue-200 bg-blue-50 px-4 py-3 text-blue-800">
+        Review the affected approvals before applying the changes. No changes will be made until you
+        confirm.
+      </p>
+
+      <!-- Stages to Disable -->
+      <section class="rounded-lg border border-red-200 bg-red-50/40 p-3">
+        <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h3 class="font-semibold text-red-700">
+              Stages to Disable ({{ disablePreview().length }})
+            </h3>
+            <p class="text-xs text-muted-foreground">
+              These approvals will be updated to Approved for the selected stages.
+            </p>
+          </div>
+
+          <span class="rounded border border-red-200 px-2 py-1 text-xs text-red-700">
+            Total Approvals: {{ totalDisableApprovals() }}
+          </span>
+        </div>
+
+        @if (disablePreview().length === 0) {
+          <p class="rounded border bg-white p-4 text-muted-foreground">
+            No approvals are affected by disabling stages.
+          </p>
+        } @else {
+          <div class="flex flex-col gap-2">
+            @for (stage of disablePreview(); track stage.stageCode) {
+              <details #stageDetails class="overflow-hidden rounded-md border bg-white">
+                <summary
+                  class="flex cursor-pointer flex-wrap items-center justify-between gap-2 px-4 py-3 font-medium hover:bg-muted/40"
+                >
+                  <span class="flex items-center gap-2">
+                    <lucide-icon
+                      name="chevron-down"
+                      [size]="16"
+                      class="transition-transform duration-200"
+                      [class.rotate-[-90deg]]="!stageDetails.open"
+                    />
+                    {{ stage.stageName }} ({{ stage.changes.length }})
+                  </span>
+                  <span class="text-xs text-muted-foreground">
+                    {{ stage.changes.length }} approvals
+                  </span>
+                </summary>
+
+                <div class="max-h-[380px] overflow-auto border-t">
+                  <table class="w-full min-w-[850px] text-left text-xs">
+                    <thead class="sticky top-0 z-10 bg-muted">
+                      <tr>
+                        <th class="px-3 py-2">#</th>
+                        <th class="px-3 py-2">Review ID</th>
+                        <th class="px-3 py-2">Project / Impact Record</th>
+                        <th class="px-3 py-2">Metric Code</th>
+                        <th class="px-3 py-2">Metric Name</th>
+                        <th class="px-3 py-2">Current Status</th>
+                        <th class="px-3 py-2">Action</th>
+                      </tr>
+                    </thead>
+
+                    <tbody>
+                      @for (
+                        change of stage.changes;
+                        track change.reviewApprovalId ?? change.reviewId + '-' + change.metricId;
+                        let i = $index
+                      ) {
+                        <tr class="border-t">
+                          <td class="px-3 py-2">{{ i + 1 }}</td>
+                          <td class="px-3 py-2">{{ change.reviewId }}</td>
+                          <td class="px-3 py-2">{{ change.reviewTitle }}</td>
+                          <td class="px-3 py-2">{{ change.metricCode }}</td>
+                          <td class="px-3 py-2">{{ change.metricName }}</td>
+                          <td class="px-3 py-2">
+                            {{ change.currentStatus ?? change.statusCode ?? 'Not Configured' }}
+                          </td>
+                          <td class="px-3 py-2">
+                            <span
+                              class="whitespace-nowrap rounded border border-red-200 bg-red-50 px-2 py-1 text-red-700"
+                            >
+                              Update to Approved
+                            </span>
+                          </td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
+              </details>
+            }
+          </div>
+        }
+      </section>
+
+      <!-- Stages to Enable -->
+      <section class="rounded-lg border border-green-200 bg-green-50/40 p-3">
+        <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h3 class="font-semibold text-green-800">
+              Stages to Enable ({{ enablePreview().length }})
+            </h3>
+            <p class="text-xs text-muted-foreground">
+              These approvals will be inserted or updated to Pending.
+            </p>
+          </div>
+
+          <span class="rounded border border-green-200 px-2 py-1 text-xs text-green-800">
+          Total Approvals: {{ totalEnableApprovals() }}
+          </span>
+        </div>
+
+        @if (enablePreview().length === 0) {
+          <p class="rounded border bg-white p-4 text-muted-foreground">
+            No approvals are affected by enabling stages.
+          </p>
+        } @else {
+          <div class="flex flex-col gap-2">
+            @for (stage of enablePreview(); track stage.stageCode) {
+              <details #stageDetails class="overflow-hidden rounded-md border bg-white">
+                <summary
+                  class="flex cursor-pointer flex-wrap items-center justify-between gap-2 px-4 py-3 font-medium hover:bg-muted/40"
+                >
+                  <span class="flex items-center gap-2">
+                    <lucide-icon
+                      name="chevron-down"
+                      [size]="16"
+                      class="transition-transform duration-200"
+                      [class.rotate-[-90deg]]="!stageDetails.open"
+                    />
+                    {{ stage.stageName }} ({{ stage.changes.length }})
+                  </span>
+                  <span class="text-xs text-muted-foreground">
+                    {{ stage.changes.length }} approvals
+                  </span>
+                </summary>
+
+                <div class="max-h-[380px] overflow-auto border-t">
+                  <table class="w-full min-w-[850px] text-left text-xs">
+                    <thead class="sticky top-0 z-10 bg-muted">
+                      <tr>
+                        <th class="px-3 py-2">#</th>
+                        <th class="px-3 py-2">Review ID</th>
+                        <th class="px-3 py-2">Project / Impact Record</th>
+                        <th class="px-3 py-2">Metric Code</th>
+                        <th class="px-3 py-2">Metric Name</th>
+                        <th class="px-3 py-2">Current Status</th>
+                        <th class="px-3 py-2">Action</th>
+                      </tr>
+                    </thead>
+
+                    <tbody>
+                      @for (
+                        change of stage.changes;
+                        track change.reviewApprovalId ?? change.reviewId + '-' + change.metricId;
+                        let i = $index
+                      ) {
+                        <tr class="border-t">
+                          <td class="px-3 py-2">{{ i + 1 }}</td>
+                          <td class="px-3 py-2">{{ change.reviewId }}</td>
+                          <td class="px-3 py-2">{{ change.reviewTitle }}</td>
+                          <td class="px-3 py-2">{{ change.metricCode }}</td>
+                          <td class="px-3 py-2">{{ change.metricName }}</td>
+                          <td class="px-3 py-2">
+                            {{ change.currentStatus ?? change.statusCode ?? 'Not Configured' }}
+                          </td>
+                          <td class="px-3 py-2">
+                            @if (
+                              change.action === 'Insert' ||
+                              change.action === 'InsertNew' ||
+                              change.action === 'InsertNewApproval'
+                            ) {
+                              <span
+                                class="whitespace-nowrap rounded border border-green-200 bg-green-50 px-2 py-1 text-green-800"
+                              >
+                                Insert (New)
+                              </span>
+                            } @else if (change.action === 'UpdateToPending') {
+                              <span
+                                class="whitespace-nowrap rounded border border-blue-200 bg-blue-50 px-2 py-1 text-blue-800"
+                              >
+                                Update to Pending
+                              </span>
+                            } @else {
+                              <span class="whitespace-nowrap rounded border px-2 py-1">
+                                {{ change.action }}
+                              </span>
+                            }
+                          </td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
+              </details>
+            }
+          </div>
+        }
+      </section>
+    </div>
+
+    <div slot="footer" class="flex justify-end gap-2 border-t pt-4">
+      <button
+        type="button"
+        (click)="cancelApprovalChanges()"
+        class="rounded-md border px-4 py-2 text-sm hover:bg-muted"
+      >
+        Cancel
+      </button>
+
+      <button
+        type="button"
+        (click)="confirmApprovalChanges()"
+        class="rounded-md bg-green-700 px-4 py-2 text-sm font-medium text-white hover:bg-green-800"
+      >
+        Confirm Changes
+      </button>
+    </div>
+  </ui-dialog>
+  <!-- Actions -->
+  @if (!loadingReviewStages() && reviewStages().length > 0) {
+    <div class="flex flex-wrap justify-end gap-2">
+      @if (showResetButton) {
+        <button
+          type="button"
+          (click)="resetStageStates()"
+          class="inline-flex items-center gap-2 rounded-md border px-4 py-2 text-sm hover:bg-muted"
+        >
+          <lucide-icon name="rotate-ccw" [size]="16" />
+          Reset
+        </button>
+      }
+
+      <button
+        type="button"
+        (click)="saveReviewStageStates()"
+        [disabled]="savingReviewStages()"
+        class="inline-flex items-center gap-2 rounded-md bg-[hsl(var(--aepw-blue))] px-4 py-2 text-sm text-white hover:opacity-90 disabled:opacity-50"
+      >
+        @if (savingReviewStages()) {
+          <lucide-icon name="loader-circle" [size]="16" class="animate-spin" />
+        } @else {
+          <lucide-icon name="save" [size]="16" />
+        }
+        Save Changes
+      </button>
+    </div>
+  }
+</div>

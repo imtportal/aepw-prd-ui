@@ -1,0 +1,10 @@
+<div [class]="cn('flex items-center gap-2', styleClass())">
+  <p-toggleswitch
+    [ngModel]="checked"
+    [disabled]="isDisabled"
+    (ngModelChange)="onCheckedChange($event)"
+  />
+  @if (label()) {
+    <span class="text-sm font-medium leading-none">{{ label() }}</span>
+  }
+</div>

@@ -1,0 +1,127 @@
+<div [class]="outerClass()">
+
+  <!-- Row header button -->
+  <button type="button" data-header
+    [class]="'flex w-full items-center gap-3 px-3 py-1.5 text-left' + (metric().isTopLevel ? ' cursor-default' : '')"
+    [attr.aria-expanded]="metric().isTopLevel ? null : isExpanded()"
+    [disabled]="metric().isTopLevel || null"
+    (click)="metric().isTopLevel ? null : toggle.emit()">
+
+    @if (metric().isTopLevel) {
+      <span class="h-3.5 w-3.5 shrink-0"></span>
+    } @else if (isExpanded()) {
+      <lucide-icon name="chevron-down"  [size]="14" class="shrink-0 text-[hsl(var(--aepw-blue))]" />
+    } @else {
+      <lucide-icon name="chevron-right" [size]="14" class="shrink-0 text-muted-foreground/40" />
+    }
+
+    <span class="w-14 shrink-0 font-mono text-[11px] font-bold text-[hsl(var(--aepw-blue))]">
+      {{ metric().metricCode }}
+    </span>
+
+    <span [class]="'min-w-0 flex-1 truncate text-[13px]' + (metric().isTopLevel ? ' font-semibold text-foreground' : ' text-foreground')">
+      {{ metric().metricName }}
+    </span>
+
+    @if (metric().optional) {
+      <ui-badge variant="outline" styleClass="ml-2 text-[9px] font-normal text-muted-foreground border-dashed shrink-0">
+        Optional
+      </ui-badge>
+    }
+
+    <!-- Reported value + unit -->
+    <div class="w-28 shrink-0 text-right">
+      @if (isEditingValue()) {
+        <input type="text"
+          [ngModel]="editValue()"
+          (ngModelChange)="editValue.set($event)"
+          (keydown.enter)="$event.stopPropagation(); confirmEdit()"
+          (keydown.escape)="$event.stopPropagation(); cancelEdit()"
+          (blur)="confirmEdit()"
+          (click)="$event.stopPropagation()"
+          class="w-full rounded border border-input bg-background px-1.5 py-0.5 text-right text-[12px] outline-none focus:border-primary"
+          autofocus />
+      } @else {
+        <span [class]="'text-[13px] font-semibold' + (metric().isTopLevel ? ' text-[hsl(var(--aepw-blue))]' : ' text-foreground')">
+          {{ metric().reportedValue }}
+        </span>
+        <span class="ml-1 text-[10px] text-muted-foreground">{{ metric().unit }}</span>
+        @if (!metric().isTopLevel) {
+          <button type="button"
+            (click)="$event.stopPropagation(); startEdit()"
+            class="ml-1 inline-flex items-center text-muted-foreground hover:text-foreground">
+            <lucide-icon name="pencil" [size]="11" />
+          </button>
+        }
+      }
+    </div>
+
+    @if (metric().isTopLevel) {
+      <span class="text-[9px] text-muted-foreground italic shrink-0">= sum of L1 metrics</span>
+      <button type="button"
+        (click)="$event.stopPropagation(); aiProcess.emit()"
+        [disabled]="aiLoading()"
+        class="ml-2 inline-flex shrink-0 items-center gap-1.5 rounded-md bg-[hsl(var(--aepw-green))] px-2.5 py-1 text-[11px] font-semibold text-white shadow-sm hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50">
+        @if (aiLoading()) {
+          <lucide-icon name="loader-circle" [size]="11" class="animate-spin" />
+          Processing…
+        } @else {
+          <lucide-icon name="sparkles" [size]="11" />
+          Process with AI
+        }
+      </button>
+    } @else {
+      <!-- PM / Reviewer / Lead approval badges -->
+      <!-- <div class="flex shrink-0 items-center gap-1">
+        <ui-badge variant="secondary" [styleClass]="'text-[9px] font-semibold ' + pmClass()">PM</ui-badge>
+        <ui-badge variant="secondary" [styleClass]="'text-[9px] font-semibold ' + reviewClass()">Rev</ui-badge>
+        <ui-badge variant="secondary" [styleClass]="'text-[9px] font-semibold ' + leadClass()">Lead</ui-badge>
+      </div> -->
+
+      <!-- Evidence count badge -->
+      <div [class]="evidenceBadgeClass()">
+        <lucide-icon name="paperclip" [size]="12" />
+        {{ metric().evidenceUploadCount }}/{{ metric().evidenceCount }}
+      </div>
+
+      <!-- Evidence completeness indicator -->
+      <!-- @if (metric().evidenceFiles.length > 0) {
+        @if (completeCount() === metric().evidenceFiles.length) {
+          <lucide-icon data-ev-complete name="circle-check"   [size]="16" class="shrink-0 text-[hsl(var(--aepw-green))]" />
+        } @else if (completeCount() > 0) {
+          <lucide-icon data-ev-partial  name="triangle-alert" [size]="16" class="shrink-0 text-[hsl(var(--aepw-orange))]" />
+        } @else {
+          <lucide-icon data-ev-pending  name="clock"          [size]="16" class="shrink-0 text-muted-foreground/40" />
+        }
+      } -->
+    }
+
+  </button><!-- end row header -->
+
+  <!-- Validation warning banner -->
+  @if (metric().validationWarning) {
+    <div data-flagged
+      class="mx-3 mb-2 flex items-center gap-1.5 rounded bg-[hsl(var(--aepw-orange)/0.08)] px-2 py-1 text-[11px] text-[hsl(var(--aepw-orange))]">
+      <lucide-icon name="triangle-alert" [size]="12" class="shrink-0" />
+      {{ metric().validationWarning }}
+    </div>
+  }
+
+  <!-- Inline evidence list (shown when expanded and not a top-level row) -->
+  @if (isExpanded() && !metric().isTopLevel) {
+    <app-inline-evidence-list
+      data-evidence-section
+      [items]="metric().evidenceFiles"
+      [evidenceRequired]="0"
+      [clearTrigger]="clearTrigger()"
+      [readonly]="readOnly()"
+      [metricUnit]="metric().unit"
+      [reportedValue]="metric().reportedValue" 
+      [fromQueue]="fromQueue()"
+      [role]="role()"
+      (selectionChange)="selectedFileIds.set($event)"
+      (deleteFile)="deleteEvidence.emit($event)"
+    />
+  }
+
+</div>

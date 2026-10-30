@@ -1,0 +1,54 @@
+:root {
+  /* Base */
+  --background:              0 0% 98%;
+  --foreground:              197 29% 25%;
+  --card:                    0 0% 100%;
+  --card-foreground:         197 29% 25%;
+  --popover:                 0 0% 100%;
+  --popover-foreground:      197 29% 25%;
+  --primary:                 200 100% 30%;
+  --primary-foreground:      0 0% 100%;
+  --secondary:               190 43% 91%;
+  --secondary-foreground:    197 29% 25%;
+  --muted:                   200 15% 95%;
+  --muted-foreground:        205 10% 48%;
+  --accent:                  148 86% 23%;
+  --accent-foreground:       0 0% 100%;
+  --destructive:             12 66% 62%;
+  --destructive-foreground:  0 0% 100%;
+  --border:                  200 15% 88%;
+  --input:                   200 15% 88%;
+  --ring:                    200 100% 30%;
+  --radius:                  0.5rem;
+
+  /* Charts */
+  --chart-1: 200 100% 30%;
+  --chart-2: 148 86% 23%;
+  --chart-3: 90 50% 60%;
+  --chart-4: 12 66% 62%;
+  --chart-5: 190 43% 71%;
+
+  /* Sidebar */
+  --sidebar-background:          197 29% 25%;
+  --sidebar-foreground:          0 0% 95%;
+  --sidebar-primary:             190 43% 71%;
+  --sidebar-primary-foreground:  197 29% 20%;
+  --sidebar-accent:              197 29% 30%;
+  --sidebar-accent-foreground:   0 0% 100%;
+  --sidebar-border:              197 29% 32%;
+  --sidebar-ring:                200 100% 30%;
+
+  /* AEPW brand tokens */
+  --aepw-green:        148 86% 23%;
+  --aepw-blue:         200 100% 30%;
+  --aepw-light-blue:   190 43% 71%;
+  --aepw-yellow:       45 93% 47%;
+  --aepw-orange:       12 66% 62%;
+  --aepw-accent-green: 90 50% 60%;
+  --aepw-dark-grey:    197 29% 25%;
+  --aepw-light-grey:   205 10% 48%;
+
+  /* Google Font variables (set by @import below) */
+  --font-josefin:    'Josefin Sans';
+  --font-montserrat: 'Montserrat';
+}

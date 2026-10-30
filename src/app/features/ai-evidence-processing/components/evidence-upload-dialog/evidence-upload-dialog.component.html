@@ -1,0 +1,35 @@
+@if (visible()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center" data-dialog>
+    <div class="fixed inset-0 bg-black/40" (click)="close.emit()"></div>
+    <div class="relative z-10 w-full max-w-md bg-card rounded-lg shadow-xl p-6 flex flex-col gap-4">
+      <h2 class="text-base font-semibold">Upload Evidence Files</h2>
+      <p class="text-sm text-muted-foreground -mt-2">Select a project and drag files or click to browse</p>
+
+      <ui-select
+        [options]="projects()"
+        [ngModel]="selectedProject()"
+        (ngModelChange)="selectedProject.set($event)"
+        placeholder="Select project" />
+
+      <div class="border-2 border-dashed rounded-lg p-8 text-center cursor-pointer hover:border-[hsl(var(--aepw-blue))] hover:bg-muted/20 transition-colors"
+        (click)="fileInput()?.nativeElement?.click()"
+        data-drop-zone>
+        <lucide-icon name="upload" class="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+        <p class="text-sm text-muted-foreground">Drop files here or click to browse</p>
+        <p class="text-xs text-muted-foreground mt-1">PDF, JPG, PNG, XLSX up to 10MB each</p>
+        <input #fileInputRef type="file" multiple accept=".pdf,.jpg,.jpeg,.png,.xlsx" class="hidden" />
+      </div>
+
+      <div class="flex justify-end gap-2 pt-2">
+        <button type="button"
+          class="rounded-md border px-4 py-2 text-sm hover:bg-muted"
+          (click)="close.emit()"
+          data-cancel-btn>Cancel</button>
+        <button type="button"
+          class="rounded-md bg-[hsl(var(--aepw-blue))] text-white px-4 py-2 text-sm hover:bg-[hsl(var(--aepw-blue)/0.9)]"
+          (click)="upload.emit()"
+          data-upload-btn>Upload</button>
+      </div>
+    </div>
+  </div>
+}

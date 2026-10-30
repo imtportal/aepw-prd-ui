@@ -1,0 +1,175 @@
+<div class="border-t border-dashed border-border/60 bg-muted/5 px-4 py-2.5">
+
+  <!-- Section header -->
+  <div class="mb-2 flex items-center justify-between">
+    <div class="flex min-w-0 flex-col flex-1 gap-3">
+
+      @if (excelComment()) {
+      <span data-excel-comment class="min-w-0 truncate text-[10px] text-muted-foreground" [title]="excelComment()!">
+        <span class="font-semibold uppercase tracking-wide">Additional Details:</span> {{ excelComment() }}
+      </span>
+      }
+    </div>
+
+    @if (!readonly()) {
+    <app-add-evidence-dropdown [fromQueue]="fromQueue()" (filesSelected)="filesSelected.emit($event)" />
+    }
+  </div>
+
+  <!-- Empty state -->
+  @if (items()?.length === 0) {
+  <div class="flex items-center justify-center gap-2 rounded border border-dashed border-border px-4 py-3">
+    <p class="text-xs text-muted-foreground">No evidence yet. Click "Add Evidence" to upload files.</p>
+  </div>
+  } @else {
+
+  <!-- Evidence table -->
+  <div class="overflow-x-auto rounded border border-border/50">
+    <table class="w-full min-w-[520px] table-fixed">
+
+      <colgroup>
+        <col> <!-- file — fills remaining space -->
+        <col class="hidden sm:table-column" style="width:12%"> <!-- evidence category -->
+        <col class="hidden lg:table-column" style="width:10%"> <!-- site -->
+        <col class="hidden md:table-column" style="width:10%"> <!-- date -->
+        <col class="hidden xl:table-column" style="width:12%"> <!-- AI % -->
+        <col class="hidden xl:table-column" style="width:12%"> <!-- captured value -->
+        <col class="hidden xl:table-column" style="width:12%"> <!-- % contribution -->
+        <col style="width:9%"> <!-- actions: view + delete -->
+      </colgroup>
+
+      <thead>
+        <tr class="border-b bg-muted/30">
+          <th class="px-2 py-1.5 text-left text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+            File
+          </th>
+          <th
+            class="hidden px-2 py-1.5 text-left text-[10px] font-semibold uppercase tracking-wider text-muted-foreground sm:table-cell">
+            Evidence Category
+          </th>
+          <th
+            class="hidden px-2 py-1.5 text-left text-[10px] font-semibold uppercase tracking-wider text-muted-foreground lg:table-cell">
+            Site
+          </th>
+          <th
+            class="hidden px-2 py-1.5 text-left text-[10px] font-semibold uppercase tracking-wider text-muted-foreground md:table-cell">
+            Date
+          </th>
+          <th
+            class="hidden px-2 py-1.5 text-center text-[10px] font-semibold uppercase tracking-wider text-muted-foreground xl:table-cell">
+            AI Confidence (%)
+          </th>
+          <th
+            class="hidden px-2 py-1.5 text-right text-[10px] font-semibold uppercase tracking-wider text-muted-foreground xl:table-cell">
+            Evidenced Value
+          </th>
+          <th
+            class="hidden px-2 py-1.5 text-right text-[10px] font-semibold uppercase tracking-wider text-muted-foreground xl:table-cell">
+            % Contribution
+          </th>
+          <th
+            class="px-2 py-1.5 text-right text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+            Actions
+          </th>
+        </tr>
+      </thead>
+
+      <tbody>
+        @for (file of items(); track file.id) {
+        <tr class="border-b last:border-0 text-xs transition-colors hover:bg-card/70">
+
+          <!-- File name + icon -->
+          <td class="max-w-[180px] px-2 py-1.5">
+            <div class="flex min-w-0 items-center gap-1.5">
+              @if (file.fileName.endsWith('.pdf')) {
+              <lucide-icon name="file-text" [size]="12" class="shrink-0 text-destructive" />
+              } @else if (file.fileName.endsWith('.xlsx') || file.fileName.endsWith('.csv')) {
+              <lucide-icon name="file-spreadsheet" [size]="12" class="shrink-0 text-[hsl(var(--aepw-green))]" />
+              } @else {
+              <lucide-icon name="image" [size]="12" class="shrink-0 text-[hsl(var(--aepw-blue))]" />
+              }
+              <span class="truncate font-medium text-foreground" [title]="file.fileName">{{ file.fileName }}</span>
+            </div>
+          </td>
+
+          <!-- Evidence type -->
+          <td class="hidden px-2 py-1.5 text-muted-foreground sm:table-cell whitespace-nowrap">
+            {{ file.evidenceType }}
+          </td>
+
+          <!-- Site name -->
+          <td class="hidden px-2 py-1.5 text-muted-foreground lg:table-cell">
+            {{ file.siteTag ?? '—' }}
+          </td>
+
+          <!-- Upload date -->
+          <td class="hidden px-2 py-1.5 text-muted-foreground md:table-cell whitespace-nowrap">
+            {{ file.uploadedDate }}
+          </td>
+
+          <!-- AI confidence % -->
+          <td class="hidden px-2 py-1.5 text-center xl:table-cell">
+            @if (file.confidence !== undefined) {
+            <span [class]="confidenceClass(file.confidence)">{{ file.confidence }}%</span>
+            } @else {
+            <span class="text-muted-foreground/25">—</span>
+            }
+          </td>
+
+          <!-- Evidence Captured value -->
+          <td class="hidden px-2 py-1.5 text-right xl:table-cell">
+            @if (extractedForFile(file.id); as val) {
+            <span class="text-[10px] font-semibold text-[hsl(var(--aepw-blue)/0.75)]">{{ formatExtracted(val) }}</span>
+            } @else {
+            <span class="text-[10px] text-muted-foreground/25">—</span>
+            }
+          </td>
+
+          <!-- % Contribution to reported value -->
+          <td class="hidden px-2 py-1.5 text-right xl:table-cell">
+            @if (contributionForFile(file.id); as pct) {
+            <span class="text-[10px] font-semibold text-foreground">{{ formatContribution(pct) }}</span>
+            } @else {
+            <span class="text-[10px] text-muted-foreground/25">—</span>
+            }
+          </td>
+
+
+
+          <!-- View Details / Delete: kept in a single column, tight together, at the end -->
+          <td class="px-2 py-1.5">
+           <div class="flex items-center justify-end gap-1">
+              <button type="button" (click)="$event.stopPropagation(); openViewDetails(file)"
+                [disabled]="!canViewDetails(file)"
+                [title]="canViewDetails(file) ? 'View AI extraction details' : 'Available after review is complete'"
+                class="inline-flex items-center rounded px-2 py-0.5 text-[10px] font-medium transition-colors" [class]="canViewDetails(file)
+                          ? 'bg-[hsl(var(--aepw-blue)/0.08)] text-[hsl(var(--aepw-blue))] hover:bg-[hsl(var(--aepw-blue)/0.15)]'
+                          : 'cursor-not-allowed text-muted-foreground/25'">
+                View
+              </button>
+              @if(fromQueue() && !readonly()) {
+                <button type="button" data-delete-evidence-btn (click)="$event.stopPropagation(); onDelete(file)"
+                title="Delete this evidence file"
+                class="inline-flex items-center rounded p-1 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive">
+                <lucide-icon name="trash-2" [size]="12" />
+              </button>
+              }
+              
+            </div>
+          </td>
+
+        </tr>
+        }
+      </tbody>
+
+    </table>
+  </div>
+  }
+
+</div>
+
+<!-- AI detail sheet (readonly) — fixed overlay, works regardless of DOM nesting -->
+<!-- <app-ai-detail-sheet [item]="selectedDetailFile()" [readonlyMode]="true" [viewComment]="selectedDetailComment()"
+  [fromQueue]="fromQueue()"
+  [role]="role()"
+  (close)="closeViewDetails()" /> -->

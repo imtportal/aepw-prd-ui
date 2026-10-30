@@ -1,0 +1,960 @@
+
+  @if (loading()) {
+     <div class="bg-[hsl(var(--aepw-blue)/0.08)] border flex gap-4 items-center justify-center p-4 rounded-lg">
+    <lucide-icon
+      name="loader-circle"
+      [size]="16"
+      class="animate-spin"
+    />
+    Loading... please wait
+  </div>
+  } @else {
+  <div class="w-full p-5">
+  <!-- ================================= -->
+  <!-- PORTFOLIO HEADER -->
+  <!-- ================================= -->
+
+  <div class="flex items-center justify-between mb-4">
+    <!-- Title -->
+
+    <h2 class="text-[14px] font-bold text-[#17324D]">AEPW Portfolio</h2>
+
+    <!-- Period -->
+@if (canUseYearQuarterFilter()) {
+    <!-- Period -->
+    <div class="flex items-center gap-2">
+
+         <!-- Since Inception -->
+      <label class="flex items-center gap-2 cursor-pointer text-sm text-gray-600">
+        <input
+          type="checkbox"
+          [ngModel]="isSinceInceptionSelected()"
+          (ngModelChange)="isSinceInceptionSelected.set($event)"
+          class="h-4 w-4 rounded border-gray-300 cursor-pointer"
+        />
+
+        <span>Since Inception</span>
+      </label>
+
+
+    <!-- Year
+    <ui-select
+      [options]="yearOptions"
+      optionLabel="label"
+      optionValue="value"
+      styleClass="w-[120px] max-h-[30px]"
+      [ngModel]="selectedYear()"
+      (ngModelChange)="selectedYear.set($event)"
+      [disabled]="isSinceInceptionSelected()" /> -->
+
+      <!-- Year -->
+      <ng-select
+        class="filter-multi-select w-[120px]"
+        [items]="yearOptions"
+        bindLabel="label"
+        bindValue="value"
+        [multiple]="true"
+        [searchable]="true"
+        [clearable]="true"
+        [hideSelected]="false"
+        [closeOnSelect]="false"
+        [clearSearchOnAdd]="true"
+        placeholder="Year"
+        [ngModel]="selectedYears()"
+        (ngModelChange)="selectedYears.set($event)"
+        [disabled]="isSinceInceptionSelected()">
+
+        <!-- Select All -->
+        <!-- <ng-template ng-header-tmp>
+          <div
+            class="cursor-pointer border-b border-gray-200 px-3 py-2 text-sm
+                  font-semibold text-gray-700 hover:bg-gray-100"
+            (click)="selectAllYears()">
+            Select All
+          </div>
+        </ng-template> -->
+
+        <!-- Option -->
+        <ng-template ng-option-tmp let-item="item">
+          {{ item.label }}
+        </ng-template>
+
+        <!-- Selected -->
+        <ng-template ng-label-tmp let-item="item" let-clear="clear">
+          <span class="ng-value-label">
+            {{ item.label }}
+          </span>
+
+          <span
+            class="ng-value-icon right cursor-pointer"
+            (click)="clear(item)"
+            aria-hidden="true">
+            ×
+          </span>
+        </ng-template>
+
+      </ng-select>
+
+    <!-- Period -->
+  
+    <ng-select
+      class="filter-multi-select w-[120px]"
+      [items]="periodOptions"
+      bindLabel="label"
+      bindValue="value"
+      [multiple]="true"
+      [searchable]="false"
+      [clearable]="true"
+      [hideSelected]="false"
+      [closeOnSelect]="false"
+      placeholder="Period"
+      [ngModel]="selectedPeriods()"
+      (ngModelChange)="onPeriodChange($event)"
+      [disabled]="isSinceInceptionSelected()">
+
+      <ng-template ng-option-tmp let-item="item">
+        {{ item.label }}
+      </ng-template>
+
+      <ng-template ng-label-tmp let-item="item" let-clear="clear">
+        <span class="ng-value-label">
+          {{ item.label }}
+        </span>
+
+        <span
+          class="ng-value-icon right cursor-pointer"
+          (click)="clear(item)"
+          aria-hidden="true">
+          ×
+        </span>
+      </ng-template>
+
+</ng-select>
+
+    <button
+      type="button"
+      (click)="resetFilters()"
+      class="px-4 py-2 text-sm border border-gray-300 rounded-md
+            hover:bg-gray-100 transition-colors">
+      Reset
+    </button>
+   
+    </div>
+  }
+  </div>
+
+  <!-- ================================= -->
+  <!-- CATEGORY FILTER -->
+  <!-- ================================= -->
+
+  @if (canUseYearQuarterFilter()) {
+
+  <div class="flex items-center mb-4 px-2">
+
+    @for (category of categories(); track category.code) {
+    <button
+      type="button"
+      (click)="selectCategory(category.code)"
+      class="category-btn h-7 px-3 rounded-md text-xs font-medium
+            transition-all duration-200 ease-in-out
+            hover:bg-gray-200 hover:text-[#17324D]"
+      [class.bg-gray-200]="selectedCategory() === category.code"
+      [class.text-[#17324D]]="selectedCategory() === category.code"
+      [class.text-gray-500]="selectedCategory() !== category.code"
+      [style.--hover-color]="category.color">
+
+      @if (category.code !== 'ALL') {
+      <span class="inline-flex items-center justify-center min-w-[28px] h-6 px-2 mr-1
+         rounded-full font-semibold transition-all duration-300 ease-in-out
+         hover:opacity-20" [style.background-color]="category.color" [style.color]="category.textColor">
+        {{ category.code }}
+      </span>
+      }
+
+      @if (category.code === 'ALL') {
+      <span>All Categories</span>
+      }
+
+    </button>
+
+    }
+
+  </div>
+
+
+  <!-- ================================= -->
+  <!-- YEAR AND QUARTER FILTER -->
+  <!-- ================================= -->
+  
+
+  <!-- ================================= -->
+  <!-- METRIC CARD -->
+  <!-- ================================= -->
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
+    @if (metrics().length > 0) {
+    @for (metric of metrics(); track metric.metricId || metric.code) {
+    <app-impact-metric-card [metric]="metric" />
+    }
+    } @else {
+    <div class="text-sm text-gray-500">No metric data found.</div>
+    }
+  </div>
+
+  <!-- Table section -->
+
+  <!-------------------------------Filter and Search------------------------------------------  -->
+  <div class="flex items-center justify-left gap-3 my-4">
+
+    <!-- Search -->
+
+    <div class="flex items-center gap-2">
+      <div class="w-[25rem]">
+        <input type="text" placeholder="Search by  IM Name ,Program or Funding Recipient" class="w-full h-9 rounded-md border border-input bg-card px-3 text-sm text-foreground
+                focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" [ngModel]="searchTerm()"
+          (ngModelChange)="onSearchChange($event)" />
+      </div>
+
+
+    </div>
+
+
+    <div class="w-44">
+      <ui-select [ngModel]="selectedProgramId()" [options]="programsFilteroptions()"
+        (ngModelChange)="onProgramFilterChange($any($event))" optionLabel="name" optionValue="programId"
+        placeholder="All Programs" />
+    </div>
+
+    <div class="w-44">
+      <ui-select [ngModel]="selectedRecordTypeId()" [options]="recordTypesFilterOptions()"
+        (ngModelChange)="onRecordTypeFilterChange($any($event))" optionLabel="name" optionValue="recordTypeId"
+        placeholder="All Sources" />
+    </div>
+
+
+    <div class="w-44">
+      <ui-select [ngModel]="selectedStatusId()" [options]="statusFilterOptions()"
+        (ngModelChange)="onStatusFilterChange($any($event))" optionLabel="statusName" optionValue="statusId"
+        placeholder="All Status" />
+    </div>
+
+    <div class="ml-auto">
+      <button type="button" class="h-9 rounded-md border px-3 text-sm hover:bg-muted" (click)="clearTablefilter()">
+        Clear Filters
+      </button>
+    </div>
+
+  </div>
+
+ <!-- ===================================================== -->
+
+<!-- PORTFOLIO TABLE                                      -->
+<!-- ===================================================== -->
+
+<div class="portfolio-container">
+
+  <!-- =================================================== -->
+  <!-- PORTFOLIO TITLE                                     -->
+  <!-- =================================================== -->
+
+  <div class="portfolio-title">
+
+    <span class="text-xs font-medium text-[#17324D]">
+      Portfolio
+    </span>
+
+  </div>
+
+
+  <!-- =================================================== -->
+  <!-- TABLE AREA                                          -->
+  <!-- =================================================== -->
+
+  <div class="portfolio-table-wrapper">
+
+    <div class="portfolio-table-scroll">
+
+      <table
+        class="portfolio-table w-max min-w-full border-collapse">
+
+
+        <!-- ================================================= -->
+        <!-- PROGRAM HEADER                                    -->
+        <!-- ================================================= -->
+
+        <thead>
+
+          <tr
+            class="portfolio-main-header
+                   border-b border-gray-200
+                   bg-gray-50">
+
+
+            <!-- ============================================= -->
+            <!-- PROGRAM                                       -->
+            <!-- ============================================= -->
+
+            <th
+              class="sticky left-0
+                     min-w-[140px]
+                     bg-gray-50
+                     px-2
+                     text-left
+                     text-[10px]
+                     font-medium
+                     uppercase
+                     tracking-wide
+                     text-[#536B7A]">
+
+              Program
+
+            </th>
+
+
+            <!-- ============================================= -->
+            <!-- SPACER                                        -->
+            <!-- ============================================= -->
+
+            <th
+              class="w-[20px]
+                     min-w-[20px]
+                     bg-gray-50
+                     px-0">
+
+            </th>
+
+
+            <!-- ============================================= -->
+            <!-- PROJECTS                                      -->
+            <!-- ============================================= -->
+
+            <th
+              class="min-w-[80px]
+                     bg-gray-50
+                     px-2
+                     text-center
+                     text-[10px]
+                     font-medium
+                     uppercase
+                     tracking-wide
+                     text-[#536B7A]">
+
+              Projects
+
+            </th>
+
+
+            <!-- ============================================= -->
+            <!-- DYNAMIC METRICS                               -->
+            <!-- ============================================= -->
+
+            @for (
+              metric of tableMetrics();
+              track metric.metricId
+            ) {
+
+              <th
+                class="min-w-[70px]
+                       bg-gray-50
+                       px-2
+                       pr-8
+                       text-right
+                       text-[10px]
+                       font-medium
+                       uppercase
+                       tracking-wide
+                       text-[#536B7A]"
+                [title]="metric.metricName">
+
+                {{ metric.metricCode }}
+
+              </th>
+
+            }
+
+          </tr>
+
+        </thead>
+
+
+        <!-- ================================================= -->
+        <!-- TABLE BODY                                        -->
+        <!-- ================================================= -->
+
+        <tbody>
+
+
+          <!-- ================================================= -->
+          <!-- NO DATA                                          -->
+          <!-- ================================================= -->
+
+          @if (tableRows().length === 0) {
+
+            <tr>
+
+              <td
+                [attr.colspan]="
+                  3 + tableMetrics().length
+                "
+                class="h-32
+                       text-center
+                       text-sm
+                       text-gray-500">
+
+                No records found.
+
+              </td>
+
+            </tr>
+
+          }
+
+
+          <!-- ================================================= -->
+          <!-- PROGRAM LOOP                                     -->
+          <!-- ================================================= -->
+
+          @for (
+            program of tableRows();
+            track program.programId
+          ) {
+
+
+            <!-- ================================================= -->
+            <!-- PROGRAM ROW                                       -->
+            <!-- ================================================= -->
+
+            <tr
+              class="group
+                     h-9
+                     cursor-pointer
+                     border-b
+                     border-gray-200"
+              (click)="
+                toggleProgram(
+                  program.programId || ''
+                )
+              ">
+
+
+              <!-- =============================================== -->
+              <!-- PROGRAM                                         -->
+              <!-- =============================================== -->
+
+              <td
+                class="sticky
+                       left-0
+                       z-10
+                       min-w-[140px]
+                       bg-white
+                       px-2
+                       text-sm
+                       font-medium
+                       text-[#17324D]
+                       group-hover:bg-gray-100">
+
+
+                <div
+                  class="flex
+                         items-center
+                         gap-1">
+
+
+                  <!-- Expand / Collapse -->
+                  <span
+                    class="w-3
+                           text-[10px]
+                           text-gray-500">
+
+                    @if (
+                      isProgramExpanded(
+                        program.programId || ''
+                      )
+                    ) {
+
+                      ▾
+
+                    } @else {
+
+                      ▸
+
+                    }
+
+                  </span>
+
+
+                  <!-- Program Name -->
+                  <span class="hover:underline">
+
+                    {{ program.programName }}
+
+                  </span>
+
+                </div>
+
+              </td>
+
+
+              <!-- =============================================== -->
+              <!-- SPACER                                          -->
+              <!-- =============================================== -->
+
+              <td
+                class="w-[20px]
+                       min-w-[20px]
+                       bg-white
+                       px-0
+                       group-hover:bg-gray-100">
+
+              </td>
+
+
+              <!-- =============================================== -->
+              <!-- PROJECT COUNT                                   -->
+              <!-- =============================================== -->
+
+              <td
+                class="min-w-[80px]
+                       bg-white
+                       px-2
+                       text-center
+                       text-sm
+                       font-medium
+                       text-[#17324D]
+                       group-hover:bg-gray-100">
+
+                {{ program.projectCount }}
+
+              </td>
+
+
+              <!-- =============================================== -->
+              <!-- PROGRAM METRICS                                 -->
+              <!-- =============================================== -->
+
+              @for (
+                metric of tableMetrics();
+                track metric.metricId
+              ) {
+
+                <td
+                  class="min-w-[70px]
+                         bg-white
+                         px-2
+                         pr-8
+                         text-right
+                         text-sm
+                         font-medium
+                         text-[#17324D]
+                         group-hover:bg-gray-100">
+
+                  {{
+                    formatMetricValue(
+                      program.metricValues?.[
+                        metric.metricCode ?? ''
+                      ]
+                    )
+                  }}
+
+                </td>
+
+              }
+
+            </tr>
+
+
+            <!-- ================================================= -->
+            <!-- EXPANDED PROJECT SECTION                          -->
+            <!-- ================================================= -->
+
+            @if (
+              isProgramExpanded(
+                program.programId || ''
+              )
+            ) {
+
+
+              <!-- ================================================= -->
+              <!-- PROJECT HEADER                                   -->
+              <!-- ================================================= -->
+
+              <tr
+                class="project-header-row
+                       border-b
+                       border-gray-200
+                       bg-white">
+
+
+                <!-- ============================================= -->
+                <!-- IM ID / PIN                                   -->
+                <!-- ============================================= -->
+
+                <th
+                  class="min-w-[110px]
+                         bg-white
+                         px-2
+                         text-left
+                         text-[9px]
+                         font-medium
+                         uppercase
+                         tracking-wide
+                         text-[#536B7A]
+                         whitespace-nowrap">
+
+                  IM ID / PIN
+
+                </th>
+
+
+                <!-- ============================================= -->
+                <!-- IM NAME                                       -->
+                <!-- ============================================= -->
+
+                <th
+                  class="min-w-[180px]
+                         bg-white
+                         px-2
+                         text-left
+                         text-[9px]
+                         font-medium
+                         uppercase
+                         tracking-wide
+                         text-[#536B7A]">
+
+                  IM NAME
+
+                </th>
+
+
+                <!-- ============================================= -->
+                <!-- FUNDING / STATUS                              -->
+                <!-- ============================================= -->
+
+                <th
+                  class="min-w-[170px]
+                         bg-white
+                         px-2
+                         text-left
+                         text-[9px]
+                         font-medium
+                         uppercase
+                         tracking-wide
+                         text-[#536B7A]">
+
+                  FUNDING RECIPIENT / STATUS
+
+                </th>
+
+
+                <!-- ============================================= -->
+                <!-- PROJECT METRICS                              -->
+                <!-- ============================================= -->
+
+                @for (
+                  metric of tableMetrics();
+                  track metric.metricId
+                ) {
+
+                  <th
+                    class="min-w-[70px]
+                           bg-white
+                           px-2
+                           pr-8
+                           text-right
+                           text-[9px]
+                           font-medium
+                           uppercase
+                           tracking-wide
+                           text-[#536B7A]"
+                    [title]="metric.metricName">
+
+                    {{ metric.metricCode }}
+
+                  </th>
+
+                }
+
+              </tr>
+
+
+              <!-- ================================================= -->
+              <!-- PROJECT ROWS                                     -->
+              <!-- ================================================= -->
+
+              @for (
+                project of program.projects;
+                track project.impactMasterId
+              ) {
+
+                <tr class="project-data-row border-b border-gray-100 bg-gray-50/40 font-medium">
+
+
+                  <!-- ============================================= -->
+                  <!-- IM ID / PIN                                   -->
+                  <!-- ============================================= -->
+
+              <td class="min-w-[110px] max-w-[110px] bg-white px-2 py-1">
+
+                  <div class="pl-1 min-w-0">
+
+                    <!-- Impact Master ID -->
+                    <div
+                      class="text-[10px] text-gray-900
+                            whitespace-nowrap">
+                      
+                      {{ project.impactMasterId }}
+
+                    </div>
+
+
+                    <!-- PIN -->
+                    <div
+                      class="text-[9px] text-gray-400
+                            truncate
+                            whitespace-nowrap"
+                      [title]="project.pin || '—'">
+
+                      {{ project.pin || '—' }}
+
+                    </div>
+
+                  </div>
+
+                </td>
+
+
+                  <!-- ============================================= -->
+                  <!-- IM NAME                                       -->
+                  <!-- ============================================= -->
+
+                  <td
+                    class="min-w-[180px]
+                           px-2
+                           py-1">
+
+
+                    <div>
+
+
+                      <div
+                        class="text-[11px]
+                               font-medium
+                               text-[#17324D]">
+
+                        {{ project.impactName }}
+
+                      </div>
+
+
+                      <!-- Record Type -->
+                      <span
+                        class="mt-0.5
+                               inline-flex
+                               rounded-full
+                               px-2
+                               py-0.5
+                               text-[9px]"
+                        [ngClass]="
+                          recordTypeColors[
+                            project.recordTypeName || ''
+                          ] ||
+                          'bg-gray-100 text-gray-500'
+                        ">
+
+                        {{ project.recordTypeName || '—' }}
+
+                      </span>
+
+
+                    </div>
+
+                  </td>
+
+
+                  <!-- ============================================= -->
+                  <!-- FUNDING / STATUS                              -->
+                  <!-- ============================================= -->
+
+                  <td
+                    class="min-w-[170px]
+                           px-2
+                           py-1">
+
+
+                    <!-- Funding Recipient -->
+                    <div
+                      class="max-w-[150px]
+                             truncate
+                             text-[10px]
+                             text-gray-500"
+                      [title]="
+                        project.fundingRecipients || '—'
+                      ">
+
+                      {{ project.fundingRecipients || '—' }}
+
+                    </div>
+
+
+                    <!-- Status -->
+                    <span
+                      class="mt-0.5
+                             inline-flex
+                             rounded-full
+                             px-2
+                             py-0.5
+                             text-[9px]"
+                      [ngClass]="
+                        statusColors[
+                          project.statusName || ''
+                        ] ||
+                        'bg-gray-100 text-gray-500'
+                      ">
+
+                      {{ project.statusName || '—' }}
+
+                    </span>
+
+
+                  </td>
+
+
+                  <!-- ============================================= -->
+                  <!-- PROJECT METRICS                              -->
+                  <!-- ============================================= -->
+
+                  @for (
+                    metric of tableMetrics();
+                    track metric.metricId
+                  ) {
+
+                    <td
+                      class="min-w-[70px]
+                             bg-white
+                             px-2
+                             pr-8
+                             py-1
+                             text-right
+                             text-sm
+                             text-[#17324D]">
+
+
+                      <span
+                        class="cursor-pointer
+                               font-medium
+                               text-[#276597]
+                               transition-all
+                               duration-200
+                               hover:text-[#0a1c2d]
+                               hover:underline
+                               hover:drop-shadow-[0_0_6px_rgba(39,101,151,0.45)]"
+                        (click)="
+                          onMetricValueClick(
+                            project,
+                            metric,
+                            $event
+                          )
+                        ">
+
+
+                        {{
+                          formatMetricValue(
+                            project.metricValues?.[
+                              metric.metricCode ?? ''
+                            ]
+                          )
+                        }}
+
+
+                      </span>
+
+
+                    </td>
+
+                  }
+
+
+                </tr>
+
+              }
+
+            }
+
+          }
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+  </div>
+
+
+ 
+
+  
+</div>
+
+    <!-- =================================================== -->
+    <!-- PAGINATION                                          -->
+    <!-- =================================================== -->
+
+    <div class="flex items-center justify-between border-t border-gray-200 px-3 py-2">
+      <!-- RECORD COUNT -->
+
+      <div class="text-[10px] text-gray-500">
+        {{ pageStart() }}–{{ pageEnd() }}
+        of
+        {{ totalRecords() }}
+      </div>
+
+      <!-- PAGINATION CONTROLS -->
+
+      <div class="flex items-center gap-2">
+        <!-- ROWS PER PAGE -->
+
+        <div class="flex items-center gap-1 text-[10px] text-gray-500">
+          <span> Rows per page </span>
+
+          <select class="h-7 rounded border border-gray-200 bg-white px-2 text-[10px] text-[#17324D]"
+            [value]="pageSize()" (change)="changePageSize(+$any($event.target).value)">
+            @for (size of pageSizeOptions; track size) {
+            <option [value]="size">
+              {{ size }}
+            </option>
+            }
+          </select>
+        </div>
+
+        <!-- PAGE -->
+
+        <div class="text-[10px] text-gray-500">
+          Page
+          {{ currentPage() }}
+          /
+          {{ totalPages() }}
+        </div>
+
+        <!-- PREVIOUS -->
+
+        <button type="button" class="h-7 w-7 rounded border border-gray-200 text-gray-500 disabled:opacity-40"
+          [disabled]="currentPage() === 1" (click)="previousPage()">
+          ‹
+        </button>
+
+        <!-- NEXT -->
+
+        <button type="button" class="h-7 w-7 rounded border border-gray-200 text-gray-500 disabled:opacity-40"
+          [disabled]="currentPage() >= totalPages()" (click)="nextPage()">
+          ›
+        </button>
+      </div>
+    </div>
+  } @else {
+    <div class="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800" role="alert">
+      You do not have permission to access this page.
+    </div>
+  }
+  </div>
+  }

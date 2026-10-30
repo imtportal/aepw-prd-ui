@@ -1,0 +1,11 @@
+<div class="relative inline-block">
+  <div (click)="$event.stopPropagation(); isOpen.set(!isOpen())">
+    <ng-content select="[dropdownTrigger]" />
+  </div>
+  @if (isOpen()) {
+    <div data-dropdown-menu
+         class="absolute right-0 z-50 mt-1 w-44 rounded-md border bg-popover shadow-md">
+      <ng-content select="[dropdownContent]" />
+    </div>
+  }
+</div>

@@ -1,0 +1,64 @@
+.bottom-shadow-inner {
+    box-shadow: inset 0px -10px 10px -10px rgb(165 177 187 / 50%);
+
+}
+ .mobile-response-btn {
+    justify-content: center;
+}
+
+.review-stage-management-footer {
+    display:flex;
+    justify-content: flex-end;
+    column-gap: 5px;
+    row-gap: 5px;
+    flex-wrap: wrap;
+    margin-top: 0.5rem;
+}
+
+.aepw-blue-on-hover:hover {
+    background-color: hsl(var(--aepw-blue)/0.08);
+}
+
+.toggle-box-shadow-active:focus, .toggle-box-shadow-inactive:focus {
+    outline: none;
+}
+
+.toggle-box-shadow-active:focus {
+    box-shadow: 0 0 10px 2px #006699;
+}
+
+.toggle-box-shadow-inactive:focus {
+    box-shadow: 0 0 10px 2px rgb(101, 101, 101);
+}
+
+/* for mobiles */
+@media (max-width: 426px) {
+    .mobile-response-btn {
+        width: 100%;
+
+        /* padding: 5px 0; */
+    }
+     
+    .review-stage-management-footer {
+        flex-direction: column-reverse;
+    }
+}
+/* for tablets */
+@media (min-width: 427px) and (max-width: 768px) {
+    .mobile-response-btn { 
+        width: 25%; 
+    }
+}
+
+
+/* for mobiles and tablets */
+@media (max-width: 768px) {
+    /* .hover:bg-[hsl(var(--aepw-blue)/0.08)] */
+}
+
+.period-option-list-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: color 90ms;
+} 

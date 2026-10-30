@@ -1,0 +1,44 @@
+<tr data-queue-row class="border-b last:border-0 hover:bg-muted/30">
+  <td class="whitespace-nowrap px-4 py-3 font-mono text-xs text-[hsl(var(--aepw-blue))]">
+    {{ item().projectId }}
+  </td>
+  <td class="px-3 py-3 text-sm font-medium text-foreground">{{ item().projectName }}</td>
+  <td class="whitespace-nowrap px-3 py-3 text-sm text-muted-foreground">{{ item().periodCode }}</td>
+  <td class="whitespace-nowrap px-3 py-3">
+    <app-step-dots [currentStage]="item().currentApprovalStage" />
+  </td>
+  <td class="whitespace-nowrap px-3 py-3 text-sm text-muted-foreground">{{ item().pm }}</td>
+  <td class="whitespace-nowrap px-3 py-3 text-sm text-muted-foreground">
+    {{ item().approvedMetrics }}/{{ item().totalMetrics }}
+  </td>
+  <td class="whitespace-nowrap px-3 py-3">
+    @if (item().materialFlags > 0) {
+      <ui-badge data-flags-badge variant="secondary"
+        styleClass="text-[10px] text-[hsl(var(--aepw-orange))]">
+        {{ item().materialFlags }} flags
+      </ui-badge>
+    }
+  </td>
+  <td class="whitespace-nowrap px-3 py-3 text-sm text-muted-foreground">
+    {{ formatDate(item().lastActivity) }}
+  </td>
+  <td class="whitespace-nowrap px-3 py-3">
+    <div class="flex gap-1.5">
+      <button data-approve-btn
+        (click)="approve.emit(item().projectId)"
+        class="rounded-md bg-green-100 px-2.5 py-1 text-xs font-medium text-green-700 hover:bg-green-200">
+        Approve
+      </button>
+      <button data-reject-btn
+        (click)="reject.emit(item().projectId)"
+        class="rounded-md bg-red-100 px-2.5 py-1 text-xs font-medium text-red-700 hover:bg-red-200">
+        Reject
+      </button>
+      <button data-recycle-btn
+        (click)="recycle.emit(item().projectId)"
+        class="rounded-md bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground hover:bg-muted/70">
+        Recycle
+      </button>
+    </div>
+  </td>
+</tr>

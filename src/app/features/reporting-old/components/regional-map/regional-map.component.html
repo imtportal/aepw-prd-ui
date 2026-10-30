@@ -1,0 +1,38 @@
+<div class="rounded-lg border bg-card shadow-sm">
+  <div class="px-3 py-2 border-b">
+    <h4 class="text-xs font-semibold text-muted-foreground">Regional Performance (MW1.1 tonnes)</h4>
+  </div>
+  <div class="p-2 relative">
+    <svg viewBox="0 0 320 200" class="w-full h-[180px]">
+      <rect x="0" y="0" width="320" height="200" fill="#f0f7fa" rx="6" />
+      <!-- Simplified land masses -->
+      <path d="M 80,20 Q 140,10 200,30 Q 240,50 280,40 L 295,60 Q 280,100 290,130 Q 270,155 250,175 Q 200,195 160,185 Q 120,175 100,145 Q 80,115 70,75 Q 75,45 80,20 Z" fill="#d4e5d4" opacity="0.5" />
+      <path d="M 95,65 Q 110,55 130,60 Q 145,75 140,95 Q 130,125 115,135 Q 100,130 95,110 Q 90,85 95,65 Z" fill="#c8dcc8" />
+      <path d="M 170,75 Q 190,70 210,80 Q 225,95 230,115 Q 220,135 200,145 Q 180,140 175,120 Q 170,100 170,75 Z" fill="#c8dcc8" />
+      <ellipse cx="230" cy="165" rx="45" ry="18" fill="#c8dcc8" />
+      <path d="M 25,115 Q 50,110 60,135 Q 65,165 55,195 Q 40,205 25,190 Q 15,165 20,135 Q 22,120 25,115 Z" fill="#c8dcc8" opacity="0.8" />
+      <!-- Connection lines from Singapore HQ -->
+      @for (region of nonHqRegions; track region.id) {
+        <line [attr.x1]="200" [attr.y1]="140"
+          [attr.x2]="region.cx" [attr.y2]="region.cy"
+          stroke="#1e3a5f" stroke-width="1" stroke-dasharray="3,3" opacity="0.25" />
+      }
+      <!-- Region bubbles -->
+      @for (region of regions; track region.id) {
+        <circle
+          [attr.cx]="region.cx"
+          [attr.cy]="region.cy"
+          [attr.r]="region.r"
+          [attr.fill]="region.color"
+          opacity="0.75"
+          [attr.data-region-id]="region.isHQ ? null : region.id"
+          [class]="region.isHQ ? '' : 'cursor-pointer'"
+          (click)="onRegionClick(region)" />
+        @if (region.isHQ) {
+          <text [attr.x]="region.cx" [attr.y]="region.cy + 2"
+            text-anchor="middle" font-size="5" fill="#fff" font-weight="bold">HQ</text>
+        }
+      }
+    </svg>
+  </div>
+</div>

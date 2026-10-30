@@ -1,0 +1,297 @@
+<div class="flex flex-col gap-6">
+
+  @if (!launched()) {
+    <app-wizard-stepper [currentStep]="currentStep()" [steps]="wizardSteps()" />
+  }
+
+  @if (currentStep() === -1 && !launched()) {
+    <ui-card styleClass="border-none shadow-sm">
+        <ui-card-header>
+          <ui-card-title styleClass="font-heading text-lg font-bold"> 
+            <lucide-icon name="hourglass" [size]="16" />
+            Loading Review Details...
+          </ui-card-title>
+          <ui-card-description></ui-card-description>
+        </ui-card-header>
+  
+        <ui-card-content>
+        </ui-card-content>
+    </ui-card>
+  }
+
+  <!-- ── Step 0: Select Project & Period ────────────────────────────── -->
+  @if (currentStep() === 0 && !launched()) {
+    <ui-card styleClass="border-none shadow-sm">
+      <ui-card-header>
+        <ui-card-title styleClass="font-heading text-lg font-bold">{{ 'CREATE_REVIEW.PROJECT.PROJECT_SELECTION_TEXT' | transloco }}</ui-card-title>
+        <ui-card-description>{{ 'CREATE_REVIEW.PROJECT.PROJECT_SELECTION_DESCRIPTION' | transloco }}</ui-card-description>
+      </ui-card-header>
+      <ui-card-content>
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div class="flex flex-col gap-2">
+            <label class="text-sm font-medium text-foreground">{{ 'CREATE_REVIEW.PROJECT.PROJECT_DROPDOWN_LABEL' | transloco }}</label>
+            <ui-select
+              [(ngModel)]="projectModel"
+              (ngModelChange)="updateMetricsByProject($event)"
+              [options]="projectOptions()"
+              placeholder="{{ 'CREATE_REVIEW.PROJECT.PROJECT_DROPDOWN_PLACEHOLDER' | transloco }}"
+            />
+          </div>
+          <div class="flex flex-col gap-2">
+            <label class="text-sm font-medium text-foreground">{{ (loadingReviewPeriods() ? 'CREATE_REVIEW.PROJECT.PERIOD_DROPDOWN_LABEL_LOADING' : 'CREATE_REVIEW.PROJECT.PERIOD_DROPDOWN_LABEL') | transloco }}</label>
+            <ui-select
+              [(ngModel)]="periodModel"
+              [options]="periodOptions()"
+              [disabled]="loadingReviewPeriods()"
+              placeholder="{{ 'CREATE_REVIEW.PROJECT.PERIOD_DROPDOWN_PLACEHOLDER' | transloco }}"
+            />
+          </div>
+        </div>
+        <div class="mt-4 flex justify-end">
+          <button type="button"
+            (click)="goNext()"
+            [disabled]="!canProceedStep0()"
+            class="inline-flex items-center gap-1.5 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50">
+            Continue <lucide-icon name="chevron-right" [size]="16" />
+          </button>
+        </div>
+      </ui-card-content>
+    </ui-card>
+  }
+
+  <!-- ── Step 1: Select Metrics ─────────────────────────────────────── -->
+  @if (currentStep() === 1 && !launched()) {
+    <ui-card styleClass="border-none shadow-sm">
+      <ui-card-header>
+        <ui-card-title styleClass="font-heading text-lg font-bold">Select Applicable Metrics</ui-card-title>
+        <ui-card-description>
+          <!-- Choose the metrics applicable to this project across all 5 categories. -->
+          {{ 'CREATE_REVIEW.METRICS.SELECTION_DESCRIPTION' | transloco : { categorycount: metricCategoryCount() } }} 
+          <span class="ml-2 font-medium text-foreground">{{ 'CREATE_REVIEW.METRICS.NUMBER_OF_MANDATORY_METRICS' | transloco : { metricscount: selectedCodes().size } }}</span>
+        </ui-card-description>
+      </ui-card-header>
+      <ui-card-content>
+        <app-metric-selection-step
+          [metricsByCategory]="metricsByCategory()"
+          [metricsLoading]="metricsLoading()"
+          [selectedCodes]="selectedCodes()"
+          [selectedParentMetricIds]="selectedParentMetricCodes()"
+          (selectedParentMetricIdUpdated)="selectedParentMetricIdUpdated($event)"
+          [excludedCodes]="excludedCodes()"
+          (toggleCode)="onToggleCode($event)"
+          (toggleCategoryAll)="onToggleCategoryAll($event)"
+          (toggleExclude)="onToggleExclude($event)"
+        />
+        <div class="mt-4 flex items-center justify-between gap-4">
+          <button type="button" (click)="goBack()"
+            class="rounded-md border border-input bg-card px-4 py-2 text-sm font-medium hover:bg-muted">
+            Back
+          </button>
+          <div class="flex items-center gap-3">
+            @if (selectedCodes().size === 0) {
+              <p class="text-xs text-destructive">Select at least 1 mandatory metric to continue.</p>
+            }
+            <button type="button"
+              (click)="goNext()"
+              [disabled]="!atleastOneTopLevelMetricSelected()"
+              class="inline-flex items-center gap-1.5 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50">
+              Continue to Risk Adjustment <lucide-icon name="chevron-right" [size]="16" />
+            </button>
+          </div>
+        </div>
+      </ui-card-content>
+    </ui-card>
+  }
+
+  <!-- ── Step 2: Risk Adjustment ────────────────────────────────────── -->
+  @if (currentStep() === 2 && !launched()) {
+    <ui-card styleClass="border-none shadow-sm">
+      <ui-card-header>
+        <div class="flex items-start justify-between gap-4">
+          <div>
+            <ui-card-title styleClass="font-heading text-lg font-bold">{{'CREATE_REVIEW.RISK_ADJUSTMENT.SELECTION_TEXT' | transloco}}</ui-card-title>
+            <ui-card-description>
+              {{'CREATE_REVIEW.RISK_ADJUSTMENT.SELECTION_DESCRIPTION' | transloco}}
+            </ui-card-description>
+          </div>
+          @if (pendingStatus() === 'none' || pendingStatus() === 'draft' || pendingStatus() === 'DRAFT') {
+            <button type="button" (click)="onSaveDraft()"
+              class="inline-flex shrink-0 items-center gap-1.5 rounded-md border border-input bg-card px-3 py-1.5 text-sm font-medium hover:bg-muted"
+              [class.disabled:opacity-60]="savingAsDraft()"
+              [disabled]="savingAsDraft()"
+              >
+              <lucide-icon name="bookmark" [size]="14" /> {{ savingAsDraft() ? ('CREATE_REVIEW.RISK_ADJUSTMENT.SAVE_AS_DRAFT_BTN_TEXT' | transloco) : ('CREATE_REVIEW.RISK_ADJUSTMENT.SAVE_AS_DRAFT_BTN_TEXT' | transloco) }}
+            </button>
+          }
+        </div>
+      </ui-card-header>
+      <ui-card-content>
+        <app-risk-adjustment-step
+          [selectedMetrics]="selectedMetrics()"
+          [mandatoryCodes]="selectedCodes()"
+          [riskOverrides]="riskOverrides()"
+          [readOnly]="isReadOnlyRisk()"
+          [rejectionInfo]="rejectionInfo()"
+          [pendingStatus]="pendingStatus()"
+          [submittedOverrides]="submittedOverrides()" 
+          [previousRAResponseMap]="previousRAResponseMap()"
+          (overrideChange)="onOverrideChange($event)"
+        />
+        <div class="mt-4 flex justify-between">
+          <button type="button" (click)="goBack()"
+            class="rounded-md border border-input bg-card px-4 py-2 text-sm font-medium hover:bg-muted">
+            Back
+          </button>
+          @if (pendingStatus() === 'pending_approval' || pendingStatus() == "PENDINGRISKADJUST") {
+            <button type="button" disabled
+              class="inline-flex items-center gap-1.5 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:cursor-not-allowed disabled:opacity-50">
+              Continue to Launch <lucide-icon name="chevron-right" [size]="16" />
+            </button>
+          } @else {
+            <button type="button" (click)="onContinueToLaunch()"
+              [disabled]="(pendingStatus() === 'approved' ? hasChangesFromApproved() : hasRiskChanges()) && !allChangedHaveReasons()"
+              class="inline-flex items-center gap-1.5 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50">
+              Continue to Launch <lucide-icon name="chevron-right" [size]="16" />
+            </button>
+          }
+        </div>
+      </ui-card-content>
+    </ui-card>
+  }
+
+  <!-- Risk-change confirmation modal (read-only view + Submit for Approval) -->
+  @if (showRiskConfirmModal()) {
+    <app-approval-review-modal
+      [review]="riskConfirmReview()"
+      [showActionsColumn]="false"
+      [pendingStatus]="pendingStatus()"
+      [previousRAResponseMap]="previousRAResponseMap()"
+      [riskOverrides]="riskOverrides()"
+      [submitForApprovalInProgress]="submitForApprovalInProgress()"
+      (close)="showRiskConfirmModal.set(false)"
+      (submitForApproval)="onSubmitForApproval()"
+    />
+  }
+
+  <!-- ── Step 3: Launch Review ─────────────────────────────────── -->
+  @if (currentStep() === 3 && !launched()) {
+    <div class="flex items-center justify-between">
+      <h2 class="font-heading text-lg font-bold text-foreground">{{'CREATE_REVIEW.LAUNCH_STEP.HEADING' | transloco}}</h2>
+    </div>
+    <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+
+      <!-- Excel Template card -->
+      <ui-card styleClass="border-none shadow-sm">
+        <ui-card-header>
+          <ui-card-title styleClass="font-heading text-lg font-bold">{{'CREATE_REVIEW.LAUNCH_STEP.GENERATE_EXCEL_TEMPLATE' | transloco}}</ui-card-title>
+          <ui-card-description>
+            {{'CREATE_REVIEW.LAUNCH_STEP.GENERATE_EXCEL_TEMPLATE_DESCRIPTION' | transloco:{metricscount: selectedMetrics().length} }}
+          </ui-card-description>
+        </ui-card-header>
+        <ui-card-content>
+          <div class="rounded-lg border border-dashed border-border p-6 text-center">
+            <lucide-icon name="download" [size]="40"
+              class="mx-auto mb-3 text-[hsl(var(--aepw-blue))]" />
+            <p class="text-sm font-medium text-foreground">{{'CREATE_REVIEW.LAUNCH_STEP.EXCEL_TEMPLATE_READY' | transloco}}</p>
+            <p class="mt-1 text-xs text-muted-foreground">
+              {{ 'CREATE_REVIEW.LAUNCH_STEP.EXCEL_TEMPLATE_READY_DESCRIPTION' | transloco:{metricscount: selectedMetrics().length, categorycount: selectedCategoryCount()} }}
+              <!-- {{ selectedMetrics().length }} metrics across {{ selectedCategoryCount() }} categories -->
+            </p>
+            <button type="button"
+              class="mt-4 inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
+              <lucide-icon name="download" [size]="16" /> {{ 'CREATE_REVIEW.LAUNCH_STEP.DOWNLOAD_TEMPLATE_BTN_TEXT' | transloco }}
+            </button>
+          </div>
+        </ui-card-content>
+      </ui-card>
+
+      <!-- Launch Review card -->
+      <ui-card styleClass="border-none shadow-sm">
+        <ui-card-header>
+          <ui-card-title styleClass="font-heading text-lg font-bold">{{'CREATE_REVIEW.LAUNCH_STEP.HEADING' | transloco}}</ui-card-title>
+          <ui-card-description>
+            {{'CREATE_REVIEW.LAUNCH_STEP.DESCRIPTION' | transloco}}
+          </ui-card-description>
+        </ui-card-header>
+        <ui-card-content>
+          <div class="rounded-lg p-4" style="background:hsl(var(--aepw-blue)/0.05)">
+            <div class="flex flex-col gap-2 text-sm">
+              <div class="flex justify-between">
+                <span class="text-muted-foreground">Project:</span>
+                <span class="font-medium text-foreground">{{ selectedProjectName() }}</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-muted-foreground">Period:</span>
+                <span class="font-medium text-foreground">{{ selectedPeriod() }}</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-muted-foreground">Metrics:</span>
+                <span class="font-medium text-foreground">{{ selectedMetrics().length }} included</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-muted-foreground">Evidence Window:</span>
+                <span class="font-medium text-foreground">60 days</span>
+              </div>
+            </div>
+          </div>
+          <div class="mt-4 flex gap-3">
+            <button type="button" (click)="goBack()"
+              class="flex-1 rounded-md border border-input bg-card px-4 py-2 text-sm font-medium hover:bg-muted">
+              {{ 'CREATE_REVIEW.LAUNCH_STEP.BACK_BTN_TEXT' | transloco }}
+
+            </button>
+            <button type="button" (click)="onLaunch()"
+              class="flex-1 inline-flex items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-medium text-[hsl(var(--accent-foreground))] hover:opacity-90"
+              [class.disabled:opacity-40]="launchInProgress()"
+              style="background:hsl(var(--aepw-green))"
+              [disabled]="launchInProgress()"
+              >
+              @if (!launchInProgress()) {
+                <lucide-icon name="send" [size]="16" /> 
+              }
+              @else {
+                <lucide-icon name="hourglass" [size]="16" />
+              }
+              @if (!launchInProgress()) {
+                {{ 'CREATE_REVIEW.LAUNCH_STEP.LAUNCH_REVIEW_BTN_TEXT' | transloco }}
+              }
+              @else {
+                {{ 'CREATE_REVIEW.LAUNCH_STEP.LAUNCH_IN_PROGRESS_BTN_TEXT' | transloco }}
+              }
+            </button>
+          </div>
+        </ui-card-content>
+      </ui-card>
+
+    </div>
+  }
+
+  <!-- ── Launched success state ─────────────────────────────────────── -->
+  @if (launched()) {
+    <ui-card styleClass="border-none shadow-sm">
+      <ui-card-content styleClass="flex flex-col items-center gap-4 py-12">
+        <div class="flex h-16 w-16 items-center justify-center rounded-full"
+          style="background:hsl(var(--aepw-green)/0.15)">
+          <lucide-icon name="circle-check" [size]="32"
+            class="text-[hsl(var(--aepw-green))]" />
+        </div>
+        <h2 class="font-heading text-xl font-bold text-foreground">Review Launched Successfully</h2>
+        <p class="max-w-md text-center text-sm text-muted-foreground">
+          The quarterly review has been initiated. An email with the Excel template has been sent
+          to the funding recipient. The 60-day evidence window is now open.
+        </p>
+        <div class="mt-4 flex gap-3">
+          <button type="button" (click)="createAnother()"
+            class="rounded-md border border-input bg-card px-4 py-2 text-sm font-medium hover:bg-muted">
+            Create Another
+          </button>
+          <a routerLink="/"
+            class="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
+            Back to Dashboard
+          </a>
+        </div>
+      </ui-card-content>
+    </ui-card>
+  }
+
+</div>

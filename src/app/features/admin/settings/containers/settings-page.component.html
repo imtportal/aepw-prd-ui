@@ -1,0 +1,246 @@
+<div class="flex flex-col gap-6 font-sans text-foreground">
+  <!-- Header -->
+  <div>
+    <h1 class="font-heading text-xl font-bold">System Settings</h1>
+    <p class="text-sm text-muted-foreground">
+      Configure review cycles, notifications, evidence requirements, and integrations
+    </p>
+  </div>
+
+  <!-- Tab bar -->
+  <div class="flex gap-1 rounded-md border bg-muted p-1 w-fit">
+    @for (tab of tabs; track tab.id) {
+      <button
+        [attr.data-tab-btn]="tab.id"
+        (click)="activeTab.set(tab.id)"
+        [class]="activeTab() === tab.id ? activeTabClass : inactiveTabClass"
+      >
+        {{ tab.label }}
+      </button>
+    }
+  </div>
+  @if (activeTab() === 'business-roles') {
+    <business-role-component />
+  }
+  <!-- @if (activeTab() === 'email-template') {
+    <email-template-component />
+  } -->
+
+  <!-- @if (activeTab() === 'review-stage-config') {
+    <review-stage-config />
+  } -->
+
+  <!-- Review Cycles tab -->
+  @if (activeTab() === 'review') {
+    <div data-review-tab class="flex flex-col gap-6">
+      <ui-card>
+        <ui-card-header>
+          <ui-card-title>Quarterly Deadlines</ui-card-title>
+          <ui-card-description>Data submission deadlines for each quarter</ui-card-description>
+        </ui-card-header>
+        <ui-card-content>
+          <div class="grid grid-cols-2 gap-4 text-sm">
+            @for (q of quarters; track q.label) {
+              <div class="flex items-center justify-between rounded-md border p-3">
+                <span class="font-medium">{{ q.label }}</span>
+                <input
+                  type="text"
+                  [value]="q.sig()"
+                  class="w-24 rounded border px-2 py-1 text-sm text-right"
+                  (input)="q.sig.set($any($event.target).value)"
+                />
+              </div>
+            }
+          </div>
+        </ui-card-content>
+      </ui-card>
+
+      <ui-card>
+        <ui-card-header>
+          <ui-card-title>Annual Settings</ui-card-title>
+        </ui-card-header>
+        <ui-card-content>
+          <div class="flex flex-col gap-4 text-sm">
+            <div class="flex items-center justify-between">
+              <span>Data Collection Window (days)</span>
+              <input
+                type="number"
+                min="1"
+                [value]="dataCollectionDays()"
+                class="w-24 rounded border px-2 py-1 text-sm text-right"
+                (input)="dataCollectionDays.set(+$any($event.target).value)"
+              />
+            </div>
+            <div class="flex items-center justify-between">
+              <span>Evidence Submission Window (days)</span>
+              <input
+                type="number"
+                min="1"
+                [value]="evidenceWindowDays()"
+                class="w-24 rounded border px-2 py-1 text-sm text-right"
+                (input)="evidenceWindowDays.set(+$any($event.target).value)"
+              />
+            </div>
+            <div class="flex items-center justify-between">
+              <span>Approval Stages</span>
+              <ui-select
+                [(ngModel)]="approvalStagesModel"
+                [options]="approvalStagesOptions"
+                styleClass="w-32"
+              />
+            </div>
+          </div>
+        </ui-card-content>
+      </ui-card>
+    </div>
+  }
+
+  <!-- Notifications tab -->
+  @if (activeTab() === 'notifications') {
+    <div data-notifications-tab class="flex flex-col gap-4">
+      <ui-card>
+        <ui-card-content styleClass="flex flex-col gap-4 p-4">
+          <div class="flex items-center justify-between">
+            <span class="text-sm font-medium">Review Launch Notifications</span>
+            <ui-toggle
+              [checked]="notifyReviewLaunch()"
+              (checkedChange)="notifyReviewLaunch.set($event)"
+            />
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-sm font-medium">Deadline Reminders</span>
+            <ui-toggle
+              [checked]="notifyDeadlines()"
+              (checkedChange)="notifyDeadlines.set($event)"
+            />
+          </div>
+          @if (notifyDeadlines()) {
+            <div class="flex items-center justify-between pl-4">
+              <span class="text-sm text-muted-foreground">Remind (days before)</span>
+              <ui-select
+                [(ngModel)]="deadlineReminderDaysModel"
+                [options]="reminderDaysOptions"
+                styleClass="w-32"
+              />
+            </div>
+          }
+          <div class="flex items-center justify-between">
+            <span class="text-sm font-medium">Approval Notifications</span>
+            <ui-toggle [checked]="notifyApproval()" (checkedChange)="notifyApproval.set($event)" />
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-sm font-medium">Evidence Upload Notifications</span>
+            <ui-toggle [checked]="notifyEvidence()" (checkedChange)="notifyEvidence.set($event)" />
+          </div>
+        </ui-card-content>
+      </ui-card>
+    </div>
+  }
+
+  <!-- Evidence tab -->
+  @if (activeTab() === 'evidence') {
+    <div data-evidence-tab class="flex flex-col gap-4">
+      <ui-card>
+        <ui-card-content styleClass="flex flex-col gap-4 p-4 text-sm">
+          <div class="flex items-center justify-between">
+            <span class="font-medium">Max File Size (MB)</span>
+            <input
+              type="number"
+              min="1"
+              [value]="maxFileSizeMb()"
+              class="w-24 rounded border px-2 py-1 text-sm text-right"
+              (input)="maxFileSizeMb.set(+$any($event.target).value)"
+            />
+          </div>
+          <div class="flex items-center gap-2 flex-wrap">
+            <span class="font-medium">Accepted file types:</span>
+            @for (t of fileTypes; track t) {
+              <span class="rounded bg-muted px-2 py-0.5 text-xs font-mono">{{ t }}</span>
+            }
+          </div>
+        </ui-card-content>
+      </ui-card>
+      <ui-card>
+        <ui-card-header>
+          <ui-card-title>AI Validation</ui-card-title>
+        </ui-card-header>
+        <ui-card-content styleClass="flex flex-col gap-4 p-4 text-sm">
+          <div class="flex items-center justify-between">
+            <span class="font-medium">Enable AI Validation</span>
+            <ui-toggle [checked]="aiEnabled()" (checkedChange)="aiEnabled.set($event)" />
+          </div>
+          <div class="flex items-center justify-between">
+            <span>Confidence Threshold (%)</span>
+            <input
+              type="number"
+              min="0"
+              max="100"
+              [value]="aiConfidenceThreshold()"
+              class="w-24 rounded border px-2 py-1 text-sm text-right"
+              (input)="aiConfidenceThreshold.set(+$any($event.target).value)"
+            />
+          </div>
+          <div class="flex items-center justify-between">
+            <span>Manual Review Threshold (%)</span>
+            <input
+              type="number"
+              min="0"
+              max="100"
+              [value]="aiManualReviewThreshold()"
+              class="w-24 rounded border px-2 py-1 text-sm text-right"
+              (input)="aiManualReviewThreshold.set(+$any($event.target).value)"
+            />
+          </div>
+        </ui-card-content>
+      </ui-card>
+    </div>
+  }
+
+  <!-- Integrations tab -->
+  @if (activeTab() === 'integrations') {
+    <div data-integrations-tab class="flex flex-col gap-4">
+      <ui-card>
+        <ui-card-content styleClass="p-4">
+          <div class="flex flex-col gap-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="font-medium text-sm">Salesforce</p>
+                <p class="text-xs text-muted-foreground">CRM integration for project data</p>
+              </div>
+              <div class="flex items-center gap-2">
+                <ui-badge
+                  styleClass="bg-[hsl(var(--aepw-green)/0.12)] text-[hsl(var(--aepw-green))]"
+                  >Connected</ui-badge
+                >
+                <button class="rounded-md border px-3 py-1 text-sm">Configure</button>
+              </div>
+            </div>
+            <hr class="border-border" />
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="font-medium text-sm">AEPW Dashboard</p>
+                <p class="text-xs text-muted-foreground">Power BI reporting integration</p>
+              </div>
+              <div class="flex items-center gap-2">
+                <ui-badge variant="secondary">Not Configured</ui-badge>
+                <button class="rounded-md bg-[hsl(var(--aepw-blue))] px-3 py-1 text-sm text-white">
+                  Setup
+                </button>
+              </div>
+            </div>
+          </div>
+        </ui-card-content>
+      </ui-card>
+    </div>
+  }
+
+  <!-- Footer -->
+  <div class="flex justify-end border-t pt-4">
+    <!-- <button
+      (click)="onSave()"
+      class="rounded-md bg-[hsl(var(--aepw-blue))] px-6 py-2 text-sm font-medium text-white hover:opacity-90"
+    >
+      Save Settings
+    </button> -->
+  </div>
+</div>

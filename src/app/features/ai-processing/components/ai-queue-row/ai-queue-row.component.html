@@ -1,0 +1,67 @@
+<td class="px-3 py-2">
+  <div class="flex flex-col">
+    <span class="font-medium text-foreground truncate max-w-[160px]" data-project-name>{{ item().projectName }}</span>
+    <span class="text-xs text-muted-foreground font-mono" data-project-id>{{ item().projectId }}</span>
+  </div>
+</td>
+<td class="px-3 py-2 text-sm text-muted-foreground" data-period>{{ item().period }}</td>
+<td class="px-3 py-2">
+  <div class="flex items-center gap-1.5">
+    @if (item().fileType === 'pdf') {
+      <lucide-icon name="file-text" class="h-4 w-4 text-red-500" />
+    } @else if (item().fileType === 'image') {
+      <lucide-icon name="image" class="h-4 w-4 text-blue-500" />
+    } @else {
+      <lucide-icon name="file-check" class="h-4 w-4 text-green-600" />
+    }
+    <button type="button"
+      class="font-medium text-foreground hover:text-[hsl(var(--aepw-blue))] hover:underline truncate max-w-[160px] text-sm"
+      (click)="openDetail.emit(item().id)"
+      data-file-btn>
+      {{ item().fileName }}
+    </button>
+  </div>
+</td>
+<td class="px-3 py-2">
+  <div class="flex flex-col">
+    <span class="font-mono text-[hsl(var(--aepw-blue))] font-semibold text-xs" data-metric-code>{{ item().metricCode }}</span>
+    <span class="text-xs text-muted-foreground truncate max-w-[100px]">{{ item().metricName }}</span>
+  </div>
+</td>
+<td class="px-3 py-2 text-sm text-muted-foreground" data-uploaded-at>{{ item().uploadedAt }}</td>
+<td class="px-3 py-2 text-center text-xs">
+  @if (item().processingTime) {
+    <span class="flex items-center justify-center gap-0.5 text-muted-foreground" data-processing-time>
+      <lucide-icon name="zap" class="h-3 w-3" />{{ item().processingTime }}
+    </span>
+  } @else {
+    <span class="text-muted-foreground">—</span>
+  }
+</td>
+<td class="px-3 py-2 text-center text-xs" data-confidence>
+  @if (item().confidence !== undefined) {
+    <span [class]="confidenceClass()">{{ item().confidence }}%</span>
+  } @else {
+    <span class="text-muted-foreground">—</span>
+  }
+</td>
+<td class="px-3 py-2">
+  <ui-badge variant="secondary" [styleClass]="statusBadgeClass()" data-status>
+    {{ statusLabel() }}
+  </ui-badge>
+</td>
+<td class="px-3 py-2 text-sm" data-notes>
+  @if (item().validationNote) {
+    <span [class]="noteClass()">{{ item().validationNote }}</span>
+  } @else {
+    <span class="text-muted-foreground">—</span>
+  }
+</td>
+<td class="px-3 py-2">
+  <button type="button"
+    class="h-8 w-8 flex items-center justify-center rounded hover:bg-muted"
+    (click)="openDetail.emit(item().id)"
+    data-eye-btn>
+    <lucide-icon name="eye" class="h-3.5 w-3.5 text-muted-foreground" />
+  </button>
+</td>

@@ -1,0 +1,13 @@
+
+@let percentageValue = clampedValue();
+@let firstMilestonePct = firstMilestonePercentage();
+@let secondMilestonePct = secondMilestonePercentage();
+
+<div [class]="trackClasses()">
+  <div class="h-full  transition-all"
+    [class.bg-[hsl(var(--aepw-orange))]]="percentageValue <= firstMilestonePct"
+    [class.bg-[hsl(var(--aepw-accent-green))]]="(firstMilestonePct < percentageValue) && (percentageValue < secondMilestonePct)"
+    [class.bg-primary]="percentageValue >= secondMilestonePct"
+    [style.width.%]="percentageValue"></div>
+    <!-- [class.bg-[hsl(var(--aepw-green))]]="percentageValue > 33.33 && percentageValue < 66.66" -->
+</div>

@@ -1,0 +1,393 @@
+<div>
+  <div class="flex flex-wrap items-center justify-between gap-4">
+    <div class="flex items-center gap-3">
+      <!-- <app-back-button (back)="onCancel()" /> -->
+      <ui-button (clicked)="onBack()" variant="outline">Back</ui-button>
+    </div>
+    <div class="flex items-center gap-2">
+      @if (canSaveFR()) {
+        <ui-button
+          [disabled]="saving()"
+          (clicked)="onSave()"
+          styleClass="rounded-md bg-[hsl(var(--aepw-blue))] px-4 py-2 text-sm font-medium text-white hover:opacity-90"
+        >
+          {{ saving() ? 'Saving...' : isEditMode() ? 'Save Changes' : 'Create Funding Recipient' }}
+        </ui-button>
+      }
+    </div>
+  </div>
+  <!-- FR DETAILS FORM -->
+  <div class="mt-4 rounded-lg border bg-card p-6">
+    <h2 class="mb-4 text-base font-semibold">
+      {{ isEditMode() ? 'Edit Funding Recipient' : 'Create Funding Recipient' }}
+    </h2>
+    <div class="mt-4 rounded-lg border bg-card p-6">
+      <div [formGroup]="fundingRecipientForm" class="grid grid-cols-1 gap-4 py-4 md:grid-cols-2">
+        <!-- Funding Recipient Organisation -->
+        <div class="space-y-2">
+          <label class="text-sm font-medium" for="orgName">
+            Funding Recipient Organisation <span class="text-destructive">*</span>
+          </label>
+
+          <input
+            id="orgName"
+            formControlName="orgName"
+            placeholder="Enter organisation name"
+            class="flex h-10 w-full rounded-md border border-input px-3 py-1 text-sm outline-none"
+            [class.border-destructive]="
+              fundingRecipientForm.controls.orgName.invalid &&
+              fundingRecipientForm.controls.orgName.touched
+            "
+          />
+
+          @if (
+            fundingRecipientForm.controls.orgName.hasError('required') &&
+            fundingRecipientForm.controls.orgName.touched
+          ) {
+            <p class="text-xs text-destructive">Organisation name is required.</p>
+          }
+        </div>
+
+        <!-- Address -->
+        <div class="space-y-2">
+          <label class="text-sm font-medium" for="address">
+            Address <span class="text-destructive">*</span>
+          </label>
+
+          <textarea
+            id="address"
+            formControlName="address"
+            placeholder="Enter address"
+            rows="2"
+            class="flex h-10 w-full rounded-md border border-input px-3 py-2 text-sm outline-none"
+            [class.border-destructive]="
+              fundingRecipientForm.controls.address.invalid &&
+              fundingRecipientForm.controls.address.touched
+            "
+          ></textarea>
+
+          @if (
+            fundingRecipientForm.controls.address.hasError('required') &&
+            fundingRecipientForm.controls.address.touched
+          ) {
+            <p class="text-xs text-destructive">Address is required.</p>
+          }
+        </div>
+
+        <!-- Country -->
+        <!-- Country -->
+        <div class="space-y-2">
+          <label class="text-sm font-medium">
+            Country
+            <span class="text-destructive">*</span>
+          </label>
+
+          <ng-select
+            [items]="countries()"
+            bindLabel="countryName"
+            bindValue="countryName"
+            formControlName="countryName"
+            placeholder="Select Country"
+            [clearable]="false"
+            [ngClass]="{
+              'ng-invalid ng-touched':
+                fundingRecipientForm.controls.countryName.invalid &&
+                fundingRecipientForm.controls.countryName.touched,
+            }"
+          >
+          </ng-select>
+
+          @if (
+            fundingRecipientForm.controls.countryName.hasError('required') &&
+            fundingRecipientForm.controls.countryName.touched
+          ) {
+            <p class="text-xs text-destructive">Country is required.</p>
+          }
+        </div>
+        <!-- Cities -->
+        <div class="space-y-2" #cityDropdownContainer>
+          <label class="text-sm font-medium">
+            Cit(ies)
+            <span class="text-destructive">*</span>
+          </label>
+
+          <div class="relative">
+            <!-- Selector -->
+            <div
+              class="flex min-h-[2.5rem] w-full cursor-pointer flex-wrap items-center gap-2 rounded-md border border-input px-3 py-2 text-sm outline-none transition-colors hover:border-ring"
+              [class.border-destructive]="
+                fundingRecipientForm.controls.cityIds.invalid &&
+                fundingRecipientForm.controls.cityIds.touched
+              "
+              [class.opacity-50]="!selectedCountryName()"
+              [class.cursor-not-allowed]="!selectedCountryName()"
+              (click)="selectedCountryName() ? toggleDropdown($event) : null"
+            >
+              <!-- Selected City Chips -->
+              @if (selectedCities().length > 0) {
+                @for (city of selectedCities(); track city.cityId) {
+                  <span
+                    class="inline-flex items-center gap-1 rounded-md bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary"
+                  >
+                    {{ city.cityName }}
+
+                    <button
+                      type="button"
+                      class="ml-0.5 rounded-sm hover:bg-primary/20 hover:text-destructive"
+                      (click)="removeCity(city.cityId); $event.stopPropagation()"
+                      [attr.aria-label]="'Remove ' + city.cityName"
+                    >
+                      <svg
+                        class="h-3 w-3"
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z"
+                        />
+                      </svg>
+                    </button>
+                  </span>
+                }
+              } @else {
+                <span class="text-muted-foreground">
+                  {{ selectedCountryName() ? 'Select cities' : 'Select a country first' }}
+                </span>
+              }
+
+              <!-- Dropdown Arrow -->
+              <svg
+                class="ml-auto h-4 w-4 flex-shrink-0 text-muted-foreground transition-transform"
+                [class.rotate-180]="dropdownOpen()"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M19 9l-7 7-7-7"
+                />
+              </svg>
+            </div>
+
+            <!-- Validation -->
+            @if (
+              fundingRecipientForm.controls.cityIds.hasError('required') &&
+              fundingRecipientForm.controls.cityIds.touched
+            ) {
+              <p class="mt-1 text-xs text-destructive">At least one city is required.</p>
+            }
+
+            <!-- Dropdown -->
+            @if (dropdownOpen() && selectedCountryName()) {
+              <div
+                class="absolute left-0 top-full z-50 mt-1 w-full overflow-hidden rounded-lg border border-input bg-popover shadow-lg"
+                (click)="$event.stopPropagation()"
+              >
+                <div class="flex h-96 flex-col">
+                  <!-- Header -->
+                  <div
+                    class="flex items-center justify-between border-b border-border bg-muted/20 px-4 py-3"
+                  >
+                    <span class="text-sm font-semibold text-foreground">
+                      Cities in {{ selectedCountryName() }}
+                    </span>
+
+                    <button
+                      type="button"
+                      class="rounded-sm p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                      (click)="dropdownOpen.set(false)"
+                      aria-label="Close"
+                    >
+                      <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M6 18L18 6M6 6l12 12"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+
+                  <!-- Search -->
+                  <div class="border-b border-border p-3">
+                    <input
+                      type="text"
+                      placeholder="Search cities..."
+                      class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                      [value]="citySearch()"
+                      (input)="citySearch.set($any($event.target).value)"
+                      (click)="$event.stopPropagation()"
+                    />
+                  </div>
+
+                  <!-- Cities -->
+                  <div class="flex-1 overflow-y-auto p-3">
+                    @for (city of availableCities(); track city.cityId) {
+                      @if (
+                        !citySearch() ||
+                        city.cityName.toLowerCase().includes(citySearch().toLowerCase())
+                      ) {
+                        <label
+                          class="flex cursor-pointer items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors hover:bg-muted/50"
+                        >
+                          <input
+                            type="checkbox"
+                            [checked]="selectedCityIds().includes(city.cityId)"
+                            (change)="toggleCity(city)"
+                            class="h-4 w-4 cursor-pointer rounded text-primary"
+                          />
+
+                          <span class="flex-1">
+                            {{ city.cityName }}
+                          </span>
+                        </label>
+                      }
+                    }
+
+                    @if (availableCities().length === 0) {
+                      <div class="py-8 text-center text-sm text-muted-foreground">
+                        No cities available for selected country
+                      </div>
+                    }
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Zip Code -->
+        <div class="space-y-2">
+          <label class="text-sm font-medium" for="zipCode">
+            Zip Code <span class="text-destructive">*</span>
+          </label>
+
+          <input
+            id="zipCode"
+            formControlName="zipCode"
+            placeholder="Enter zip code"
+            class="flex h-9 w-full rounded-md border border-input px-3 py-1 text-sm outline-none"
+            [class.border-destructive]="
+              fundingRecipientForm.controls.zipCode.invalid &&
+              fundingRecipientForm.controls.zipCode.touched
+            "
+          />
+
+          @if (
+            fundingRecipientForm.controls.zipCode.hasError('required') &&
+            fundingRecipientForm.controls.zipCode.touched
+          ) {
+            <p class="text-xs text-destructive">Zip code is required.</p>
+          }
+        </div>
+        <!-- Contact Name -->
+        <div class="space-y-2">
+          <label class="text-sm font-medium" for="contactName">
+            Contact <span class="text-destructive">*</span>
+          </label>
+
+          <input
+            id="contactName"
+            formControlName="contactName"
+            placeholder="Enter contact name"
+            class="flex h-10 w-full rounded-md border border-input px-3 py-1 text-sm outline-none"
+            [class.border-destructive]="
+              fundingRecipientForm.controls.contactName.invalid &&
+              fundingRecipientForm.controls.contactName.touched
+            "
+          />
+
+          @if (
+            fundingRecipientForm.controls.contactName.hasError('required') &&
+            fundingRecipientForm.controls.contactName.touched
+          ) {
+            <p class="text-xs text-destructive">Contact Name is required.</p>
+          }
+        </div>
+        <!-- Email -->
+        <div class="space-y-2">
+          <label class="text-sm font-medium" for="email">
+            Email <span class="text-destructive">*</span>
+          </label>
+
+          <input
+            id="email"
+            type="email"
+            formControlName="email"
+            placeholder="Enter email"
+            class="flex h-9 w-full rounded-md border border-input px-3 py-1 text-sm outline-none"
+            [class.border-destructive]="
+              fundingRecipientForm.controls.email.invalid &&
+              fundingRecipientForm.controls.email.touched
+            "
+          />
+
+          @if (
+            fundingRecipientForm.controls.email.hasError('required') &&
+            fundingRecipientForm.controls.email.touched
+          ) {
+            <p class="text-xs text-destructive">Email is required.</p>
+          }
+
+          @if (
+            fundingRecipientForm.controls.email.hasError('email') &&
+            fundingRecipientForm.controls.email.touched
+          ) {
+            <p class="text-xs text-destructive">Please enter a valid email address.</p>
+          }
+        </div>
+
+        <!-- Phone -->
+        <div class="space-y-2">
+          <label class="text-sm font-medium" for="phone">Phone</label>
+
+          <input
+            id="phone"
+            formControlName="phone"
+            placeholder="Enter phone number"
+            class="flex h-9 w-full rounded-md border border-input px-3 py-1 text-sm outline-none"
+            [class.border-destructive]="
+              fundingRecipientForm.controls.phone.invalid &&
+              fundingRecipientForm.controls.phone.touched
+            "
+          />
+        </div>
+
+        <!-- Status -->
+        <div class="space-y-2">
+          <label class="text-sm font-medium">
+            Status <span class="text-destructive">*</span>
+          </label>
+
+          <ng-select
+            [items]="statusOptions"
+            bindLabel="label"
+            bindValue="value"
+            formControlName="isActive"
+            placeholder="Select Status"
+            [clearable]="false"
+            [ngClass]="{
+              'ng-invalid ng-touched':
+                fundingRecipientForm.controls.isActive.invalid &&
+                fundingRecipientForm.controls.isActive.touched,
+            }"
+          >
+          </ng-select>
+
+          @if (
+            fundingRecipientForm.controls.isActive.hasError('required') &&
+            fundingRecipientForm.controls.isActive.touched
+          ) {
+            <p class="text-xs text-destructive">Status is required.</p>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,380 @@
+<div class="flex h-full min-h-0 flex-col px-2">
+  <!-- ====================================================== -->
+  <!-- HEADER                                                 -->
+  <!-- ====================================================== -->
+
+  <div class="shrink-0 flex flex-wrap items-center justify-between gap-4">
+    <div>
+      <p class="text-sm text-muted-foreground">
+        Configure impact metrics, funding recipients, and metric assignments for bulk review
+        launches.
+      </p>
+    </div>
+    @if (canAddProject() || canAddCorporate()) {
+      <div #createMenuContainer class="relative inline-block">
+        <ui-button
+          (clicked)="toggleCreateMenu()"
+          styleClass="flex items-center gap-2 rounded-md bg-[hsl(var(--aepw-green))] px-4 py-2 text-sm font-medium text-[hsl(var(--accent-foreground))] hover:bg-[hsl(var(--aepw-green)/0.9)]"
+        >
+          <lucide-icon name="plus" class="h-4 w-4" />
+
+          Create Impact record
+
+          <lucide-icon name="chevron-down" class="h-4 w-4" />
+        </ui-button>
+
+        @if (showCreateMenu()) {
+          <div
+            class="absolute right-0 z-50 mt-2 w-52 overflow-hidden rounded-md border bg-white shadow-lg"
+          >
+            <p class="border-b px-3 py-2 text-xs font-thin uppercase tracking-wider">
+              Select IM Record Type
+            </p>
+
+            @for (recordType of recordTypes(); track recordType.recordTypeId) {
+              @if (
+                (recordType.name === 'Project' && canAddProject()) ||
+                (recordType.name === 'Corporate' && canAddCorporate())
+              ) {
+                <button
+                  type="button"
+                  class="block w-full px-4 py-3 text-left text-sm hover:bg-gray-100"
+                  (click)="createImpact(recordType)"
+                >
+                  {{ recordType.name }}
+                </button>
+              }
+            }
+          </div>
+        }
+      </div>
+    }
+  </div>
+
+  <!-- ====================================================== -->
+  <!-- FILTERS                                                -->
+  <!-- ====================================================== -->
+
+  <div class="shrink-0 py-2">
+    <div class="flex flex-wrap items-center justify-start gap-2">
+      <!-- SEARCH  -->
+      <div class="flex items-center gap-2">
+        <div class="w-[25rem]">
+          <ng-select
+            #impactMasterSelect
+            [items]="(impactmasters$ | async) ?? []"
+            bindLabel="title"
+            bindValue="impactMasterId"
+            [typeahead]="impactMasterSearch$"
+            [minTermLength]="3"
+            [clearable]="true"
+            [markFirst]="false"
+            placeholder="Search by IM ID, PIN, IM Name or FR"
+            [ngModel]="selectedImpactMasterId()"
+            (ngModelChange)="onProjectFilterChange($event)"
+            (search)="onImpactMasterSearch($event)"
+            (keydown.enter)="onImpactMasterSearchEnter($event)"
+          >
+            <ng-template ng-option-tmp let-item="item">
+              <div class="flex flex-col">
+                <span class="font-medium">
+                  {{ item.impactMasterId }} | {{ item.pin }} -
+                  {{ item.title }}
+                </span>
+
+                <span class="text-xs text-muted-foreground">
+                  {{ item.fundingRecipientName }}
+                </span>
+              </div>
+            </ng-template>
+
+            <ng-template ng-label-tmp let-item="item">
+              {{ item.pin }} - {{ item.title }}
+            </ng-template>
+          </ng-select>
+        </div>
+
+        <button
+          type="button"
+          class="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border text-muted-foreground hover:bg-muted hover:text-foreground"
+          aria-label="Search"
+          title="Search"
+          (click)="onGlobalSearchClick()"
+        >
+          <lucide-icon name="Search" [size]="16" [strokeWidth]="2" />
+        </button>
+      </div>
+
+      <!-- ================================================== -->
+      <!-- PROGRAM                                             -->
+      <!-- ================================================== -->
+
+      <div class="w-44">
+        <ui-select
+          [ngModel]="selectedProgramId()"
+          [options]="impactMasterFilterOptions()?.programOptions ?? []"
+          (ngModelChange)="onProgramFilterChange($event)"
+          optionLabel="programName"
+          optionValue="programId"
+          placeholder="All Programs"
+        />
+      </div>
+
+      <!-- ================================================== -->
+      <!-- RECORD TYPE                                         -->
+      <!-- ================================================== -->
+
+      <div class="w-44">
+        <ui-select
+          [ngModel]="selectedRecordTypeId()"
+          [options]="impactMasterFilterOptions()?.recordTypeOptions ?? []"
+          (ngModelChange)="onRecordTypeFilterChange($event)"
+          optionLabel="recordTypeName"
+          optionValue="recordTypeId"
+          placeholder="All Sources"
+        />
+      </div>
+
+      <!-- ================================================== -->
+      <!-- STATUS                                              -->
+      <!-- ================================================== -->
+
+      <div class="w-44">
+        <ui-select
+          [ngModel]="selectedStatusId()"
+          [options]="impactMasterFilterOptions()?.statusOptions ?? []"
+          (ngModelChange)="onStatusFilterChange($event)"
+          optionLabel="statusName"
+          optionValue="statusId"
+          placeholder="All Status"
+        />
+      </div>
+      <!-- ================================================== -->
+      <!-- MY PROJECTS                                         -->
+      <!-- ================================================== -->
+
+      <div class="flex items-center gap-2">
+        <input
+          type="checkbox"
+          [checked]="isMyProjects()"
+          (change)="onMyProjectsChange($event)"
+          class="hover:cursor-pointer"
+        />
+
+        <label class="text-sm"> My Projects </label>
+      </div>
+
+      <!-- ================================================== -->
+      <!-- CLEAR FILTERS                                      -->
+      <!-- ================================================== -->
+
+      <div class="w-full justify-between flex gap-2">
+        <div class="flex items-center gap-1.5 px-2">
+          @if (searchQuery()) {
+            <span class="text-sm text-muted-foreground"> Searched Keyword: </span>
+            <span
+              class="inline-flex max-w-[18rem] items-center rounded-xl border bg-muted px-2.5 py-0.5 text-sm font-medium"
+            >
+              {{ searchQuery() }}
+            </span>
+          }
+        </div>
+
+        <button
+          type="button"
+          class="h-9 rounded-md border px-3 text-sm hover:bg-muted"
+          (click)="clearFilters()"
+        >
+          Clear Filters
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====================================================== -->
+  <!-- PROJECT TABLE                                         -->
+  <!-- ====================================================== -->
+
+  <div class="min-h-0 flex-1">
+    <ui-card class="h-full">
+      <ui-card-content styleClass="h-full min-h-0 p-0">
+        <ui-data-table
+          [columns]="tableColumns()"
+          [data]="pageData()"
+          [total]="pageTotal()"
+          [loading]="loading()"
+          [rowTemplate]="impactMasterRow"
+          [maxBodyHeight]="'calc(100vh - 180px)'"
+          (pageChange)="onPageChange($event)"
+        />
+      </ui-card-content>
+    </ui-card>
+  </div>
+
+  <!-- ====================================================== -->
+  <!-- SUMMARY                                               -->
+  <!-- ====================================================== -->
+
+  <div
+    class="shrink-0 flex items-center justify-between border-t pt-3 text-sm text-muted-foreground"
+  >
+    <span> {{ pageTotal() }} projects </span>
+  </div>
+
+  <!-------------------------------------- Row template ------------------------------------>
+  <ng-template #impactMasterRow let-impactMaster let-index="index">
+    <tr
+      [attr.data-impact-master-row]="impactMaster.impactMasterId"
+      class="border-b last:border-0 hover:bg-muted/20 cursor-pointer"
+      (click)="canEditImpactMaster(impactMaster) && onEditImpactMaster(impactMaster)"
+    >
+      <td class="px-4 py-3 text-[hsl(var(--aepw-blue))]">IM-{{ impactMaster.impactMasterId }}</td>
+      <td class="px-4 py-3 text-[hsl(var(--aepw-blue))]
+      break-words
+      " [title]="impactMaster.pin || '-'">
+        {{ impactMaster.pin || '-' }}
+      </td>
+
+      <td class="px-3 py-3">
+        <div class="line-clamp-2 break-words" [title]="impactMaster.title">
+          {{ impactMaster.title }}
+        </div>
+      </td>
+
+      <td class="px-3 py-3">
+        <div class="line-clamp-2 break-words" [title]="impactMaster.fundingRecipientNames || '-'">
+          {{ impactMaster.fundingRecipientNames || '-' }}
+        </div>
+      </td>
+
+      <td class="px-3 py-3">{{ impactMaster.programName || '-' }}</td>
+      <!-- <td class="px-3 py-3 text-muted-foreground">{{ impactMaster.l1UserName }}</td> -->
+      <td class="px-3 py-3">
+        <span
+          [class]="
+            'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ' +
+            recordTypeColors[impactMaster.recordTypeName]
+          "
+        >
+          {{ impactMaster.recordTypeName }}
+        </span>
+      </td>
+      <td class="px-3 py-3 text-muted-foreground">
+        <span
+          [class]="
+            'inline-flex items-center rounded-full px-2 py-0.5 text-center text-xs font-medium ' +
+            projectCategoryColors[impactMaster.categoryName]
+          "
+        >
+          {{ impactMaster.categoryName || '-' }}
+        </span>
+      </td>
+
+      <td class="px-3 py-3">
+        <span
+          class="text-center"
+          [class]="
+            'inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ' +
+            statusColors[impactMaster.statusName]
+          "
+        >
+          {{ impactMaster.statusName }}
+        </span>
+      </td>
+      @if (canDuplicateIM() || canDeleteIM()) {
+        <td>
+          <div class="relative flex items-center justify-center">
+            <button
+              #menuButton
+              type="button"
+              (click)="
+                toggleActionMenu(impactMaster.impactMasterId, menuButton); $event.stopPropagation()
+              "
+            >
+              <lucide-icon name="MoreVertical" [size]="16" />
+            </button>
+
+            <!-- Action Menu -->
+            @if (openActionMenuId() === impactMaster.impactMasterId) {
+              <div
+                class="absolute right-0 z-20 w-40 rounded-md border border-gray-200 bg-white shadow-lg py-1"
+                [class.top-full]="!openMenuUpward()"
+                [class.mt-1]="!openMenuUpward()"
+                [class.bottom-full]="openMenuUpward()"
+                [class.mb-1]="openMenuUpward()"
+                (click)="$event.stopPropagation()"
+              >
+                <!-- Duplicate -->
+                @if (canDuplicateIM()) {
+                  <button
+                    type="button"
+                    class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                    (click)="onCopyImpactMaster(impactMaster)"
+                  >
+                    <lucide-icon name="Copy" [size]="15" [strokeWidth]="1.8" />
+                    <span>Duplicate</span>
+                  </button>
+                }
+                <!-- Divider -->
+                @if (canDuplicateIM() && canDeleteIM()) {
+                  <div class="my-1 border-t border-gray-100"></div>
+                }
+                @if (canDeleteIM()) {
+                  <!-- Delete -->
+                  <button
+                    type="button"
+                    class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-red-500 hover:bg-red-50 transition-colors"
+                    (click)="openDeleteConfirmation(impactMaster)"
+                  >
+                    <lucide-icon name="Trash2" [size]="15" [strokeWidth]="1.8" />
+                    <span>Delete</span>
+                  </button>
+                }
+              </div>
+            }
+          </div>
+        </td>
+      }
+    </tr>
+  </ng-template>
+  <!-- Delete Impact Master Dialog -->
+  <ui-dialog [(visible)]="showDeleteModal" header="Delete Impact Master" styleClass="max-w-lg">
+    <div class="flex flex-col gap-5 p-5">
+      <!-- Confirmation content -->
+      <div class="flex items-start gap-3">
+        <div
+          class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-50 text-red-600"
+        >
+          <lucide-icon name="Trash2" class="h-5 w-5" />
+        </div>
+
+        <div class="min-w-0 flex-1">
+          <p class="text-sm text-muted-foreground">Are you sure you want to delete this Record?</p>
+
+          @if (deletingImpactMaster(); as impactMaster) {
+            <p class="mt-1 text-base font-semibold text-foreground">
+              {{ impactMaster.title }}
+            </p>
+
+            <p class="mt-1 text-xs text-muted-foreground">IM-{{ impactMaster.impactMasterId }}</p>
+          }
+
+          <p class="mt-2 text-xs text-muted-foreground">This action will delete the record.</p>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="flex justify-end gap-2 border-t pt-4">
+        <ui-button variant="outline" (clicked)="cancelDeleteImpactMaster()"> Cancel </ui-button>
+
+        <ui-button
+          styleClass="bg-red-600 text-white hover:bg-red-700"
+          (clicked)="confirmDeleteImpactMaster()"
+        >
+          <lucide-icon name="Trash2" class="mr-1.5 h-4 w-4" />
+          Delete
+        </ui-button>
+      </div>
+    </div>
+  </ui-dialog>
+</div>

@@ -1,0 +1,167 @@
+<div class="flex flex-col gap-6 p-6 font-sans text-foreground">
+  <!-- Header -->
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="font-heading text-xl font-bold">Metric Configuration</h1>
+      <p class="text-sm text-muted-foreground">
+        Configure metrics, evidence requirements, and risk factors
+      </p>
+    </div>
+    @if (canEdit()) {
+      <button
+        (click)="save()"
+        class="flex items-center gap-2 rounded-md bg-[hsl(var(--aepw-blue))] px-4 py-2 text-sm font-medium text-white hover:opacity-90"
+      >
+        Save Changes
+      </button>
+    }
+  </div>
+
+  <!-- Category cards -->
+  @for (category of categories(); track category.categoryId) {
+    <app-metric-category-card
+      [category]="category"
+      [categoryForm]="getCategoryForm(category.categoryId)"
+      [getMetricForm]="getMetricForm.bind(this)"
+      [metricSources]="metricSources()"
+      [invalidMetricIds]="invalidMetricIds()"
+      [invalidTopMetricIds]="invalidTopMetricIds()"
+      (configureCategory)="openCategorySidebar($event)"
+      (configureMetric)="openMetricSidebar($event, category)"
+      [expanded]="expandedCategories().has(category.categoryId)"
+      (toggleExpand)="onToggleCategory(category.categoryId)"
+      [canEdit]="canEdit()"
+      [canApplicable]="canApplicable()"
+      [canICPRequired]="canICPRequired()"
+      [canSource]="canSource()"
+      [canRiskRequired]="canRiskRequired()"
+    >
+    </app-metric-category-card>
+  }
+  <app-sidebar
+    [isOpen]="showSidebar()"
+    [title]="sidebarTitle()"
+    [badgeText]="sidebarCategory()?.categoryCode ?? ''"
+    [badgeColor]="sidebarCategory()?.categoryColor ?? ''"
+    (closed)="closeSidebar()"
+    (cancel)="closeSidebar()"
+    (save)="saveSidebar()"
+  >
+    <!-- For category form -->
+    @if (sidebarMode() === 'category' && selectedCategory(); as category) {
+      <form [formGroup]="selectedCategoryForm()!">
+        <div class="space-y-1 mb-6 flex gap-2 items-center">
+          <!-- <p class="text-sm">
+            <ui-badge [backgroundColor]="category.categoryColor!" class="text-white">{{
+              category.categoryCode
+            }}</ui-badge>
+          </p> -->
+          <!-- <h3 class="font-semibold">{{ category.categoryName }}</h3> -->
+        </div>
+        <div class="flex flex-col gap-4">
+          <div class="flex flex-col gap-1">
+            <label class="font-semibold" for="description">Topic Description</label>
+            <textarea
+              id="description"
+              formControlName="categoryDescription"
+              rows="4"
+              maxlength="500"
+              placeholder="Enter description..."
+              class="h-60 w-full rounded-md border border-slate-300 px-3 py-2 text-sm placeholder:text-slate-400 focus:border-[hsl(var(--aepw-blue))] focus:outline-none focus:ring-1 focus:ring-[hsl(var(--aepw-blue))]"
+            >
+            </textarea>
+            <p class="text-xs text-slate-500">
+              {{ selectedCategoryForm()?.get('categoryDescription')?.value?.length || 0 }}/500
+            </p>
+          </div>
+          <div class="space-y-2">
+            <label class="text-sm font-medium" class="font-semibold">
+              Senior Leadership team
+            </label>
+            <ng-select
+              formControlName="l4ApproverUserId"
+              [items]="l4Users()"
+              bindLabel="displayName"
+              bindValue="userId"
+              [searchable]="true"
+              [clearable]="true"
+              placeholder="Select Senior Leadership team"
+            >
+            </ng-select>
+          </div>
+        </div>
+      </form>
+    }
+    <!-- Metric form -->
+    @if (sidebarMode() === 'metric' && selectedMetric(); as metric) {
+      <form [formGroup]="selectedMetricForm()!">
+        <div class="space-y-1 mb-6">
+          <h3 class="font-semibold">{{ metric.metricName }}</h3>
+          <p class="text-sm text-muted-foreground">
+            {{ metric.metricCode }}
+          </p>
+        </div>
+        <div class="flex flex-col gap-4">
+          <div class="flex flex-col gap-1">
+            <label class="font-semibold" for="description">
+              {{ isParentMetric() ? 'Metric Description' : ' Guiding Notes' }}
+            </label>
+            <textarea
+              id="description"
+              formControlName="description"
+              rows="4"
+              maxlength="500"
+              placeholder="Metric description..."
+              class="h-60 w-full rounded-md border border-slate-300 px-3 py-2 text-sm placeholder:text-slate-400 focus:border-[hsl(var(--aepw-blue))] focus:outline-none focus:ring-1 focus:ring-[hsl(var(--aepw-blue))]"
+            >
+            </textarea>
+            <span class="text-xs">
+              {{ selectedMetricForm()?.get('description')?.value?.length || 0 }}/500</span
+            >
+          </div>
+          <!-- Keep for future -->
+          <!-- <div class="flex flex-col gap-1">
+            <label class="font-semibold" for="metricHeader">Metric Header</label>
+            <textarea
+              id="description"
+              formControlName="metricHeader"
+              rows="4"
+              placeholder="Metric header"
+              class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm placeholder:text-slate-400 focus:border-[hsl(var(--aepw-blue))] focus:outline-none focus:ring-1 focus:ring-[hsl(var(--aepw-blue))]"
+            >
+            </textarea>
+          </div> -->
+
+          @if (!isParentMetric()) {
+            <div class="space-y-2">
+              <label class="text-sm font-medium"> ICP Approver </label>
+              <ng-select
+                formControlName="icpApproverUserId"
+                [items]="icpUsers()"
+                bindLabel="displayName"
+                bindValue="userId"
+                [searchable]="true"
+                [clearable]="true"
+                placeholder="Select ICP Approver"
+                [class.opacity-50]="
+                  !canICPRequired() || !selectedMetricForm()?.get('isICPRequired')?.value
+                "
+              >
+              </ng-select>
+              @if (!selectedMetricForm()?.get('isICPRequired')?.value) {
+                <p class="text-sm text-red-600">
+                  Please select ICP Required before selecting an ICP Approver.
+                </p>
+              }
+              <!-- @if (icpApproverValidationMessage(); as message) {
+                <p class="text-sm text-red-600">
+                  {{ message }}
+                </p>
+              } -->
+            </div>
+          }
+        </div>
+      </form>
+    }
+  </app-sidebar>
+</div>

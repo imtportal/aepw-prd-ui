@@ -1,0 +1,78 @@
+<div>
+  <div class="flex flex-wrap items-center justify-between gap-4">
+    <div class="flex items-center gap-3">
+      <!-- <app-back-button (back)="onCancel()" /> -->
+      <ui-button (clicked)="onBack()" variant="outline">Back</ui-button>
+    </div>
+    <div class="flex flex-wrap items-center justify-end gap-2 text-xs text-muted-foreground">
+      <label for="review-metrics-from-date">Start</label>
+      <input
+        id="review-metrics-from-date"
+        type="date"
+        [value]="metricsFromDate()"
+        [max]="metricsToDate() || null"
+        (change)="onMetricsDateChange('from', $any($event.target).value)"
+        class="h-8 rounded border border-input bg-background px-2 text-foreground"
+      />
+      <label for="review-metrics-to-date">End</label>
+      <input
+        id="review-metrics-to-date"
+        type="date"
+        [value]="metricsToDate()"
+        [min]="metricsFromDate() || null"
+        (change)="onMetricsDateChange('to', $any($event.target).value)"
+        class="h-8 rounded border border-input bg-background px-2 text-foreground"
+      />
+      <button
+        type="button"
+        class="px-1 text-[hsl(var(--aepw-blue))] underline-offset-2 hover:underline"
+        [disabled]="!metricsFromDate() && !metricsToDate()"
+        (click)="clearMetricsDateFilter()"
+      >
+        Clear filter
+      </button>
+    </div>
+  </div>
+
+  @if (projectDetailsId(); as impactMasterId) {
+    <app-project-details class="-mx-6 block" [impactMasterId]="impactMasterId" />
+  }
+
+  @if (projectDetailsId()) {
+    @if (reviewIdsLoading()) {
+      <section class="rounded-xl border border-border bg-card px-4 py-8 text-center text-sm text-muted-foreground">
+        Loading impact metrics...
+      </section>
+    } @else if (reviewIdsLoadError()) {
+      <section class="rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-8 text-center text-sm text-destructive">
+        Unable to load impact metrics.
+      </section>
+    } @else if (reviewIds().length) {
+      <app-aggregated-impact-metrics [reviewIds]="reviewIds()" />
+
+      @for (reviewId of reviewIds(); track $index) {
+        <app-review-metrics-by-id
+          class="-mx-6"
+          [reviewId]="reviewId"
+          [stageId]="null"
+          [refreshReviewMetricsData]="false"
+          [fromDate]="metricsFromDate()"
+          [toDate]="metricsToDate()"
+          [reviewId]="reviewId"
+          [sourcePage]="reviewMetricsByIdSourceNames.ProjectLibrary"
+          [showViewProgressButton]="projectLibraryPermissions()[projectLibraryPermissionKeys.TRACKPROGRESS]"
+          [showRecallButton]="projectLibraryPermissions()[projectLibraryPermissionKeys.RECALL]"
+          [showRestatementButton]="projectLibraryPermissions()[projectLibraryPermissionKeys.RESTATEMENT]"
+          [detailsExpanded]="expandedReviewIds().has(reviewId)"
+          [projectId]="impactMasterId()"
+          [projectName]="projectDetail()?.title || ''"
+          (detailsExpansionChange)="onReviewDetailsExpansionChange($event)"
+        />
+      }
+    } @else {
+      <section class="rounded-xl border border-border bg-card px-4 py-8 text-center text-sm text-muted-foreground">
+        No impact metrics found.
+      </section>
+    }
+  }
+</div>

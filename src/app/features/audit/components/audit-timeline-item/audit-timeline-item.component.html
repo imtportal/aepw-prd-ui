@@ -1,0 +1,73 @@
+<div class="group relative flex items-start gap-4 rounded-xl p-3 font-sans transition-colors hover:bg-muted/30">
+  <!-- Time column -->
+  <div
+    class="w-16 shrink-0 pt-1 text-right text-xs font-semibold text-muted-foreground whitespace-nowrap tabular-nums -translate-x-2">
+    {{ item().changedOn | date:'hh:mm:ss a' }}
+  </div>
+
+  <!-- Timeline Node Icon -->
+  <div
+    class="relative z-10 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-[hsl(var(--aepw-blue)/0.3)] bg-[hsl(var(--aepw-blue)/0.1)] text-[hsl(var(--aepw-blue))] shadow-sm">
+    @if (item().eventAction === 'created') {
+    <lucide-icon name="plus-circle" class="h-3.5 w-3.5 text-[hsl(var(--aepw-green))]" />
+    } @else {
+    <lucide-icon name="pencil" class="h-3.5 w-3.5" />
+    }
+  </div>
+
+  <!-- Content Card -->
+  <div class="flex-1 space-y-2">
+    <!-- Header Row (Clean, natural sentence with NO duplicate names) -->
+    <div class="flex flex-wrap items-center gap-2 text-sm">
+      <span class="font-bold text-foreground">{{ item().changedBy }}</span>
+      <span class="text-muted-foreground font-medium">
+        {{ item().eventAction === 'created' ? 'Created' : 'Modified' }} <span class="font-semibold text-foreground">{{
+          item().fieldName }}</span> of
+      </span>
+      @if (item().recordTitle) {
+      <ui-badge variant="secondary" styleClass="text-[11px] font-medium py-0.5">
+        {{ item().recordTitle }}
+      </ui-badge>
+      }
+    </div>
+
+    <!-- Old -> New Value Badge Row (1 Row per field change) -->
+    <div class="inline-flex flex-wrap items-center gap-2 rounded-lg border border-border bg-card p-2 text-xs">
+      <span class="font-medium text-muted-foreground">{{ item().fieldName }}:</span>
+
+      @if (item().eventAction === 'created') {
+      <!-- CREATED: Only show new value in green badge -->
+      <span
+        class="inline-flex items-center rounded-full bg-[hsl(var(--aepw-green)/0.12)] px-2 py-1 text-xs font-medium text-[hsl(var(--aepw-green))]">
+        {{ item().newValue || '—' }}
+      </span>
+      } @else {
+      <!-- MODIFIED: Show Old Value Strikethrough Red/Orange box -> New Value Green box -->
+      <span
+        class="inline-flex items-center rounded-full bg-[hsl(var(--aepw-orange)/0.12)] px-2 py-1 text-xs font-medium text-[hsl(var(--aepw-orange))] line-through">
+        {{ item().oldValue || 'Empty' }}
+      </span>
+
+      <lucide-icon name="arrow-right" class="h-3.5 w-3.5 text-muted-foreground" />
+
+      <span
+        class="inline-flex items-center rounded-full bg-[hsl(var(--aepw-green)/0.12)] px-2 py-1 text-xs font-medium text-[hsl(var(--aepw-green))]">
+        {{ item().newValue || 'Empty' }}
+      </span>
+      }
+    </div>
+
+    <!-- Companion Comment Box (e.g. Approval or Rejection Comment) -->
+    @if (item().comment) {
+    <div class="mt-2 max-w-2xl flex items-start gap-2.5 rounded-lg border border-border/70 bg-muted/40 p-2.5 text-xs text-foreground shadow-xs">
+      <div class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
+        <lucide-icon name="message-square" class="h-3.5 w-3.5" />
+      </div>
+      <div class="flex-1 space-y-0.5 min-w-0">
+        <span class="text-[10px] font-bold tracking-wider uppercase text-muted-foreground">Comment</span>
+        <p class="text-xs text-foreground/90 whitespace-pre-wrap leading-relaxed font-normal">{{ item().comment }}</p>
+      </div>
+    </div>
+    }
+  </div>
+</div>

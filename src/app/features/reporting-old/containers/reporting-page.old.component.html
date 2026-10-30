@@ -1,0 +1,135 @@
+<div class="flex flex-col gap-3 p-6 font-sans text-foreground">
+  <!-- Header -->
+  <div class="flex flex-wrap items-center justify-between gap-2">
+    <div class="flex items-center gap-2">
+      @if (drillLevel() !== 'aepw') {
+        <button type="button" data-back-btn
+          class="flex items-center gap-1 h-9 px-3 text-sm rounded hover:bg-muted"
+          (click)="onNavigateBack()">
+          <lucide-icon name="arrow-left" class="h-3.5 w-3.5" />Back
+        </button>
+      }
+      <nav data-breadcrumb class="flex items-center gap-1 text-xs">
+        <button type="button" class="hover:underline font-medium" (click)="onNavigateToAepw()">
+          AEPW Portfolio
+        </button>
+        @if (drillLevel() !== 'aepw' && currentProgram()) {
+          <lucide-icon name="chevron-right" class="h-3 w-3 text-muted-foreground" />
+          @if (drillLevel() === 'program') {
+            <span class="font-semibold">{{ currentProgram()!.name }}</span>
+          } @else {
+            <button type="button" class="hover:underline"
+              (click)="drillLevel.set('program'); selectedProjectPin.set(null); expandedCodes.set([])">
+              {{ currentProgram()!.name }}
+            </button>
+          }
+        }
+        @if (drillLevel() === 'project' && currentProject()) {
+          <lucide-icon name="chevron-right" class="h-3 w-3 text-muted-foreground" />
+          <span class="font-semibold">{{ currentProject()!.pin }}</span>
+        }
+      </nav>
+    </div>
+    <div class="flex items-center gap-2">
+      <ui-select [(ngModel)]="selectedYearModel" [options]="yearOptions"
+        styleClass="w-20" />
+      <ui-select [(ngModel)]="selectedPeriodModel" [options]="periodOptions"
+        styleClass="w-28" />
+      <button type="button"
+        class="flex items-center gap-1 h-9 px-3 text-sm rounded border hover:bg-muted">
+        <lucide-icon name="download" class="h-3.5 w-3.5" />Export
+      </button>
+    </div>
+  </div>
+
+  <!-- Category filter tabs -->
+  <div class="flex items-center gap-1 p-1 rounded-lg bg-muted/50 w-fit">
+    <button type="button" (click)="onCategoryChange('all')"
+      class="px-2.5 py-1 text-xs rounded transition-colors"
+      [class.bg-background]="selectedCategory() === 'all'"
+      [class.shadow-sm]="selectedCategory() === 'all'"
+      [class.font-medium]="selectedCategory() === 'all'"
+      [class.text-muted-foreground]="selectedCategory() !== 'all'">
+      All Categories
+    </button>
+    @for (cat of availableCategories(); track cat) {
+      <button type="button" (click)="onCategoryChange(cat)"
+        class="px-2.5 py-1 text-xs rounded transition-colors"
+        [class.bg-background]="selectedCategory() === cat"
+        [class.shadow-sm]="selectedCategory() === cat"
+        [class.font-medium]="selectedCategory() === cat"
+        [class.text-muted-foreground]="selectedCategory() !== cat">
+        <ui-badge variant="secondary" [styleClass]="categoryBadgeClasses[cat]">
+          {{ cat }}
+        </ui-badge>
+      </button>
+    }
+  </div>
+
+  <!-- Metric KPI cards -->
+  <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
+    @for (m of currentMetrics(); track m.code) {
+      <app-metric-kpi-card
+        data-metric-card
+        [metric]="m"
+        [expanded]="expandedCodes().includes(m.code)"
+        (toggleExpand)="onToggleMetric($event)" />
+    }
+  </div>
+
+  <!-- L1 breakdown (AEPW level only) -->
+  @if (expandedCodes().length > 0 && drillLevel() === 'aepw') {
+    <app-l1-breakdown-table
+      [metrics]="reportingSvc.aepwMetrics()"
+      [expandedCodes]="expandedCodes()" />
+  }
+
+  <!-- AEPW level content -->
+  @if (drillLevel() === 'aepw') {
+    <div data-drill-aepw class="flex flex-col gap-3">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
+        <ui-power-bi-panel data-pbi-yoy title="Year-over-Year Trend" [embedConfig]="null" />
+        <ui-power-bi-panel data-pbi-pie  title="MW1.1 by Program"    [embedConfig]="null" />
+      </div>
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-3">
+        <app-regional-map
+          [programs]="reportingSvc.programs()"
+          (programSelected)="onSelectProgram($event)" />
+        <div class="lg:col-span-2">
+          <app-programs-table
+            [programs]="reportingSvc.programs()"
+            (programSelected)="onSelectProgram($event)" />
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Program level content -->
+  @if (drillLevel() === 'program') {
+    <div data-drill-program>
+      <app-projects-table
+        [projects]="programProjects()"
+        (projectSelected)="onSelectProject($event)" />
+    </div>
+  }
+
+  <!-- Project level content -->
+  @if (drillLevel() === 'project' && currentProject()) {
+    <div data-drill-project>
+      <ui-card>
+        <div data-project-summary class="p-4 flex items-center justify-between">
+          <div>
+            <p class="text-sm font-semibold">{{ currentProject()!.title }}</p>
+            <p class="text-xs text-muted-foreground">
+              PM: {{ currentProject()!.pm }} | Status: {{ currentProject()!.status }}
+            </p>
+          </div>
+          <a [routerLink]="['/reviews', currentProject()!.pin]"
+            class="flex items-center gap-1.5 rounded-md bg-[hsl(var(--aepw-blue))] text-white px-3 py-1.5 text-sm hover:bg-[hsl(var(--aepw-blue)/0.9)]">
+            Open Review
+          </a>
+        </div>
+      </ui-card>
+    </div>
+  }
+</div>

@@ -1,0 +1,28 @@
+@if (filters().length > 0) {
+  <div class="flex flex-wrap items-center gap-2">
+    @for (f of filters(); track f.key) {
+      <span
+        data-chip
+        class="inline-flex items-center gap-1 rounded-full bg-[hsl(var(--aepw-blue)/0.08)] pl-2.5 pr-1.5 text-xs text-[hsl(var(--aepw-blue))]"
+      >
+        {{ f.label }}
+        <button
+          type="button"
+          data-clear-btn
+          (click)="clear.emit(f.key)"
+          class="ml-0.5 rounded-full p-0.5 hover:bg-[hsl(var(--aepw-blue)/0.15)]"
+        >
+          <lucide-icon name="x" [size]="12" />
+        </button>
+      </span>
+    }
+    <button
+      type="button"
+      data-clear-all
+      (click)="clearAll.emit()"
+      class="text-xs text-muted-foreground hover:text-foreground"
+    >
+      Clear all
+    </button>
+  </div>
+}

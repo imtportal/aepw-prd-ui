@@ -1,0 +1,121 @@
+<div>
+  <div class="flex flex-wrap items-center justify-between gap-4">
+    <div class="flex items-center gap-3">
+      <!-- <app-back-button (back)="onCancel()" /> -->
+      <ui-button (clicked)="onBack()" variant="outline">Back</ui-button>
+    </div>
+    <div class="flex items-center gap-2">
+      @if (canSaveProgram()) {
+        <ui-button
+          [disabled]="saving()"
+          (clicked)="onSave()"
+          styleClass="rounded-md bg-[hsl(var(--aepw-blue))] px-4 py-2 text-sm font-medium text-white hover:opacity-90"
+        >
+          {{ saving() ? 'Saving...' : isEditMode() ? 'Save Changes' : 'Create Program' }}
+        </ui-button>
+      }
+    </div>
+  </div>
+  <!-- FR DETAILS FORM -->
+  <div class="mt-4 rounded-lg border bg-card p-6">
+    <h2 class="mb-4 text-base font-semibold">
+      {{ isEditMode() ? 'Edit Program' : 'Create Program' }}
+    </h2>
+
+    <div [formGroup]="programForm" class="grid gap-4 py-4">
+      <div class="flex flex-col gap-6">
+        <!-- Name -->
+        <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <!-- Code -->
+          <div class="space-y-2">
+            <label class="text-sm font-medium" for="code">
+              Program Code <span class="text-destructive">*</span></label
+            >
+            <input
+              id="code"
+              formControlName="code"
+              placeholder="Enter Program Code"
+              class="flex h-9 w-full rounded-md border border-input px-3 py-1 text-sm outline-none"
+              [class.border-destructive]="
+                programForm.controls.code.invalid && programForm.controls.code.touched
+              "
+            />
+            @if (
+              programForm.controls.code.hasError('required') && programForm.controls.code.touched
+            ) {
+              <p class="text-xs text-destructive">Program Code is required.</p>
+            }
+          </div>
+          <div class="space-y-2">
+            <label class="text-sm font-medium" for="name"
+              >Program Name <span class="text-destructive">*</span></label
+            >
+            <input
+              id="name"
+              formControlName="name"
+              placeholder="Enter program name"
+              class="flex h-9 w-full rounded-md border border-input px-3 py-1 text-sm outline-none"
+              [class.border-destructive]="
+                programForm.controls.name.invalid && programForm.controls.name.touched
+              "
+            />
+            @if (
+              programForm.controls.name.hasError('required') && programForm.controls.name.touched
+            ) {
+              <p class="text-xs text-destructive">Program name is required.</p>
+            }
+          </div>
+
+          <!-- Status -->
+          <div class="space-y-2">
+            <label class="text-sm font-medium">
+              Status <span class="text-destructive">*</span>
+            </label>
+
+            <ng-select
+              [items]="statusOptions"
+              bindLabel="label"
+              bindValue="value"
+              formControlName="isActive"
+              placeholder="Select Status"
+              [clearable]="false"
+              [ngClass]="{
+                'ng-invalid ng-touched':
+                  programForm.controls.isActive.invalid && programForm.controls.isActive.touched,
+              }"
+            >
+            </ng-select>
+
+            @if (
+              programForm.controls.isActive.hasError('required') &&
+              programForm.controls.isActive.touched
+            ) {
+              <p class="text-xs text-destructive">Status is required.</p>
+            }
+          </div>
+        </div>
+        <!-- Description -->
+        <div class="space-y-2 w-1/2">
+          <label class="text-sm font-medium" for="description">
+            Program Description <span class="text-destructive">*</span></label
+          >
+          <textarea
+            id="description"
+            formControlName="description"
+            placeholder="Enter organization name"
+            class="flex w-full rounded-md border border-input px-3 py-1 text-sm outline-none"
+            [class.border-destructive]="
+              programForm.controls.description.invalid && programForm.controls.description.touched
+            "
+          ></textarea>
+          @if (
+            programForm.controls.description.hasError('required') &&
+            programForm.controls.description.touched
+          ) {
+            <p class="text-xs text-destructive">Program Description is required.</p>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

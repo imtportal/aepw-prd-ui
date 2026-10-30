@@ -1,0 +1,34 @@
+.metric-config-table {
+  .metric-col-code,
+  .metric-col-unit,
+  .metric-col-risk,
+  .metric-col-baseline,
+  .metric-col-active {
+    text-align: center;
+  }
+
+  .metric-col-name {
+    text-align: left;
+  }
+}
+
+::ng-deep .funding-recipient-select
+  .ng-select-container
+  .ng-value-container
+  .ng-placeholder {
+  font-size: 10px !important;
+}
+
+::ng-deep .funding-recipient-select
+  .ng-select-container
+  .ng-value-container
+  .ng-placeholder,
+::ng-deep .funding-recipient-select
+  .ng-select-container
+  .ng-value-container
+  .ng-input
+  > input::placeholder {
+  font-size: 12px !important;
+}
+
+

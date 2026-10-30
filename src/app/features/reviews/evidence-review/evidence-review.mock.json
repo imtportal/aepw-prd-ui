@@ -1,0 +1,234 @@
+{
+    "headerData": {
+        "submissionId": "S-2026-0918-4471",
+        "agentRunId": "run_5f3a92c1", //missing
+        "projectName": "X002D ARO (K105 TKTK)",
+        "metricCode": "MW1.1",
+        "evidenceType": "Hand-filled delivery note",
+        "reportingPeriod": "Q2 2026",
+        "uploadedAt": "18-Sep-2026 14:32",
+        "evidenceFile": {
+            "fileName": "Ehothia4001.jpeg",
+            "fileType": "JPEG",
+            "evidenceUrl": "https://example.com/Ehothia4001.jpeg",
+            "downloadUrl": "https://example.com/Ehothia4001.jpeg",
+            "fileSize": "1.2 MB",
+            "uploadedBy": "Sarah Kimani (BBC)",
+            "uploadedAt": "18-Sep-2026 14:32",
+            "blobContainer": "aepw-evidence-raw/2026/Q2",
+            "sourceLabel": "Source Evidence"
+        },
+        "extractionSummary": {
+            "status": "Failed",
+            "statusTitle": "Extraction Complete – 1 Validation Failed",
+            "statusMessage": "13 fields extracted. 5 validation rules passed, 2 warnings, 1 failed. Correction required before submission.",
+            "fieldsExtracted": 13,
+            "requiredFields": 7,
+            "rulesPassed": 5,
+            "warnings": 2,
+            "failed": 1,
+            "agentQuality": "High"    //missing: confidence score: confidence
+         
+        }
+    },
+    "evidenceDetail": [
+        {
+            "property": "ticket_no",
+            "label": "Ticket No.",
+            "value": "WB-2026-04-4471",
+            "dataType": "string",
+            "required": true,
+            "validationCode": null //missing: remove
+        },
+        {
+            "property": "date",
+            "label": "Date",
+            "value": "2026-04-14",
+            "dataType": "date",
+            "required": true,
+            "validationCode": "VR-03"
+        },
+        {
+            "property": "time",
+            "label": "Time",
+            "value": "09:42",
+            "dataType": "time",
+            "required": false,
+            "validationCode": null
+        },
+        {
+            "property": "vendor_name",
+            "label": "Vendor / Company",
+            "value": "Ehothia Recyclers",
+            "dataType": "string",
+            "required": true,
+            "validationCode": null
+        },
+        {
+            "property": "vendor_address",
+            "label": "Vendor Address",
+            "value": "Ind. Area, Nairobi",
+            "dataType": "string",
+            "required": false,
+            "validationCode": null
+        },
+        {
+            "property": "location",
+            "label": "Location / Site",
+            "value": "Nairobi, Kenya",
+            "dataType": "string",
+            "required": true,
+            "validationCode": null
+        },
+        {
+            "property": "vehicle_no",
+            "label": "Vehicle Reg.",
+            "value": "KAB 123 N",
+            "dataType": "string",
+            "required": true,
+            "validationCode": "VR-05"
+        },
+        {
+            "property": "driver_name",
+            "label": "Driver Name",
+            "value": "John Otieno",
+            "dataType": "string",
+            "required": false,
+            "validationCode": null
+        },
+        {
+            "property": "material",
+            "label": "Material",
+            "value": "PET",
+            "dataType": "lookup",
+            "required": true,
+            "validationCode": null
+        },
+        {
+            "property": "sub_material",
+            "label": "Sub-Material",
+            "value": "Clear bottles",
+            "dataType": "string",
+            "required": false,
+            "validationCode": null
+        },
+        {
+            "property": "gross_kg",
+            "label": "Gross Weight (kg)",
+            "value": 750,
+            "dataType": "number",
+            "required": true,
+            "validationCode": null
+        },
+        {
+            "property": "tare_kg",
+            "label": "Tare Weight (kg)",
+            "value": 230,
+            "dataType": "number",
+            "required": true,
+            "validationCode": null
+        },
+        {
+            "property": "net_kg",
+            "label": "Net Weight (kg)",
+            "value": 480,
+            "dataType": "number",
+            "required": true,
+            "validationCode": "VR-07"
+        }
+    ],
+    // show evidenced in card at starting
+    // evidence show in card
+    // what is line items and evidenced? validation?
+    "rawOutput": {
+        "json": {
+            "submission_id": "S-2026-0918-4471",
+            "agent_run_id": "run_5f3a92c1",
+            "evidence_url": "https://example.com/Ehothia4001.jpeg",
+            "fields": {
+                "delivery_note_no": "Ehothia4001",
+                "vendor_name": "Ehothia Recyclers",
+                "date": "2026-04-14",
+                "location": "Nairobi, Kenya",
+                "vehicle_no": "KAB 123 N",
+                "material": "PET",
+                "weight_kg": 4820
+            }
+        }
+    },
+    // validation data will have same field names?
+    "validationData": [
+        {
+            "ruleCode": "VR-01",
+            "validationName": "Required fields present",
+            "validationMessage": "All required fields were extracted.",
+            "validationStatus": "Success",
+            "details": "7 of 7 required fields found.",
+            "source": "Rule Engine",
+            "property": null
+        },
+        {
+            "ruleCode": "VR-02",
+            "validationName": "Vendor identified",
+            "validationMessage": "Vendor name is present.",
+            "validationStatus": "Success",
+            "details": "vendor_name contains a value.",
+            "source": "Rule Engine",
+            "property": "vendor_name"
+        },
+        {
+            "ruleCode": "VR-03",
+            "validationName": "Date validation",
+            "validationMessage": "Date differs from the expected reporting period.",
+            "validationStatus": "Warning",
+            "details": "Verify the date against the source evidence.",
+            "source": "Rule Engine",
+            "property": "date"
+        },
+        {
+            "ruleCode": "VR-04",
+            "validationName": "Location validation",
+            "validationMessage": "Location was extracted.",
+            "validationStatus": "Success",
+            "details": "location contains a value.",
+            "source": "Rule Engine",
+            "property": "location"
+        },
+        {
+            "ruleCode": "VR-05",
+            "validationName": "Vehicle registration",
+            "validationMessage": "Vehicle registration requires verification.",
+            "validationStatus": "Warning",
+            "details": "Verify the vehicle number against the source.",
+            "source": "Rule Engine",
+            "property": "vehicle_no"
+        },
+        {
+            "ruleCode": "VR-06",
+            "validationName": "Material validation",
+            "validationMessage": "Material was identified.",
+            "validationStatus": "Success",
+            "details": "Material is PET.",
+            "source": "Rule Engine",
+            "property": "material"
+        },
+        {
+            "ruleCode": "VR-07",
+            "validationName": "Weight reconciliation",
+            "validationMessage": "Net weight does not match the expected value.",
+            "validationStatus": "Error",
+            "details": "Gross weight minus tare weight is 520 kg, not 480 kg.",
+            "source": "Rule Engine",
+            "property": "net_kg"
+        },
+        {
+            "ruleCode": "VR-08",
+            "validationName": "Evidence file available",
+            "validationMessage": "Evidence file metadata is available.",
+            "validationStatus": "Success",
+            "details": "File metadata has been populated.",
+            "source": "Rule Engine",
+            "property": null
+        }
+    ]
+}

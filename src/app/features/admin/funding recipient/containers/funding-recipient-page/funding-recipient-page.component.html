@@ -1,0 +1,136 @@
+<div class="flex h-full min-h-0 flex-col px-2">
+  <!-- ====================================================== -->
+  <!-- HEADER                                                 -->
+  <!-- ====================================================== -->
+
+  <div class="shrink-0 flex flex-wrap items-center justify-between gap-4">
+    <div>
+      <p class="text-sm text-muted-foreground">Configure funding recipients.</p>
+    </div>
+    @if (canAddFR()) {
+      <ui-button
+        (clicked)="onAddFundingRecipient()"
+        styleClass="flex items-center gap-2 rounded-md bg-[hsl(var(--aepw-green))] px-4 py-2 text-sm font-medium text-[hsl(var(--accent-foreground))] hover:bg-[hsl(var(--aepw-green)/0.9)]"
+      >
+        <lucide-icon name="plus" class="h-4 w-4" />
+        Add Funding Recipient
+      </ui-button>
+    }
+  </div>
+
+  <!-- ====================================================== -->
+  <!-- FILTERS                                                -->
+  <!-- ====================================================== -->
+
+  <div class="shrink-0 py-2">
+    <div class="flex flex-wrap items-center gap-3">
+      <!-- Funding Recipient -->
+      <div class="w-[25rem]">
+        <ng-select
+          [items]="fundingRecipientLookups()"
+          bindValue="fundingRecipientId"
+          bindLabel="orgName"
+          [searchable]="true"
+          [clearable]="true"
+          placeholder="Funding Recipient Organisation"
+          [ngModel]="selectedFundingRecipientId()"
+          (ngModelChange)="onFundingRecipientFilterChange($event)"
+          (clear)="onFundingRecipientClear()"
+        >
+        </ng-select>
+      </div>
+
+      <!-- Status -->
+      <div class="w-44">
+        <ui-select
+          [options]="statusOptions"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Status"
+          [ngModel]="selectedIsActive()"
+          (ngModelChange)="onStatusFilterChange($event)"
+        />
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="ml-auto flex gap-2">
+        <button
+          type="button"
+          class="h-9 rounded-md border px-3 text-sm hover:bg-muted"
+          (click)="clearFilters()"
+        >
+          Clear Filters
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====================================================== -->
+  <!-- TABLE                                                  -->
+  <!-- ====================================================== -->
+
+  <div class="min-h-0 flex-1">
+    <ui-card class="h-full">
+      <ui-card-content styleClass="h-full min-h-0 p-0">
+        <ui-data-table
+          [columns]="tableColumns"
+          [data]="pageData()"
+          [total]="pageTotal()"
+          [loading]="loading()"
+          [rowTemplate]="fundingRecipientRow"
+          [maxBodyHeight]="'calc(100vh - 150px)'"
+          (pageChange)="onPageChange($event)"
+        />
+      </ui-card-content>
+    </ui-card>
+  </div>
+
+  <!-- ====================================================== -->
+  <!-- ROW TEMPLATE                                           -->
+  <!-- ====================================================== -->
+
+  <ng-template #fundingRecipientRow let-item>
+    <tr
+      class="cursor-pointer border-b last:border-0 hover:bg-muted/20"
+      (click)="onEditFundingRecipient(item.fundingRecipientId)"
+    >
+      <!-- Organization -->
+      <td class="px-3 py-3">
+        <div class="truncate" [title]="item.orgName">
+          {{ item.orgName }}
+        </div>
+      </td>
+
+      <!-- Email -->
+      <td class="px-3 py-3">
+        <div class="truncate" [title]="item.email">
+          {{ item.email }}
+        </div>
+      </td>
+
+      <!-- Phone -->
+      <td class="px-3 py-3">
+        {{ item.phone }}
+      </td>
+
+      <!-- City -->
+      <td class="px-3 py-3">
+        {{ item.cityName }}
+      </td>
+
+      <!-- Status -->
+      <td class="px-3 py-3">
+        <span
+          [class]="
+            'inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ' +
+            (item.isActive
+              ? 'bg-[hsl(var(--aepw-green)/0.12)] text-[hsl(var(--aepw-green))]'
+              : 'bg-muted text-muted-foreground')
+          "
+        >
+          {{ item.isActive ? 'Active' : 'Inactive' }}
+        </span>
+      </td>
+    </tr>
+  </ng-template>
+</div>

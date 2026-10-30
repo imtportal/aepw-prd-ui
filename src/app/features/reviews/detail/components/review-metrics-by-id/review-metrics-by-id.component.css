@@ -1,0 +1,22 @@
+
+@media screen and (max-width: 1000px) {
+    .reported-baseline-action-btns-row { 
+        width: 100%;
+        justify-content: space-between;
+    }
+} 
+@media screen and (max-width: 400px) {
+    .reported-baseline-action-btns-row { 
+        width: 100%;
+        justify-content: flex-end;
+    }
+} 
+
+.textarea-words-counter-text {
+    position: absolute; bottom: 5px; right: 2px; background: white; color: grey;
+}
+
+.focus-outline-green:focus {
+    outline: 2px solid hsl(var(--aepw-green));
+    outline-offset: 2px;
+}

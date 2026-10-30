@@ -1,0 +1,31 @@
+@if (isDue()) {
+  <button
+    type="button"
+    (click)="initiate.emit()"
+    class="inline-flex h-7 items-center gap-1.5 rounded-md bg-[hsl(var(--aepw-blue))] px-3 text-xs font-medium text-[hsl(var(--primary-foreground))] hover:bg-[hsl(var(--aepw-blue)/0.9)]"
+  >
+    <lucide-icon name="play" [size]="12" />
+    Initiate
+  </button>
+} @else if (isDraft()) {
+  <span class="text-xs text-muted-foreground">Configuring</span>
+} @else {
+  <div class="flex flex-col gap-1.5">
+    <div class="flex items-center gap-2">
+      <span class="w-7 text-[10px] text-muted-foreground">Data</span>
+      <ui-progress [value]="review().dataCompletionPct" styleClass="h-1.5 w-16" />
+      <span class="w-7 text-right text-[10px] font-medium text-foreground">
+        {{ review().dataCompletionPct }}%
+      </span>
+    </div>
+    @if (showEvidenceBar()) {
+      <div class="flex items-center gap-2">
+        <span class="w-7 text-[10px] text-muted-foreground">Evid</span>
+        <ui-progress [value]="review().evidenceConfirmedPct" styleClass="h-1.5 w-16" />
+        <span class="w-7 text-right text-[10px] font-medium text-foreground">
+          {{ review().evidenceConfirmedPct }}%
+        </span>
+      </div>
+    }
+  </div>
+}

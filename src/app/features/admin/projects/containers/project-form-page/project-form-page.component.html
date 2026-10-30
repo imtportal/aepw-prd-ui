@@ -1,0 +1,1023 @@
+<div>
+  <div class="flex flex-wrap items-center justify-between gap-4">
+    <div class="flex items-center gap-3">
+      <!-- <app-back-button (back)="onCancel()" /> -->
+      <ui-button (clicked)="onBack()" variant="outline">Back</ui-button>
+    </div>
+    <div class="flex items-center gap-2">
+      @if (canSaveRecord()) {
+        @if (canSaveAsDraft()) {
+          <ui-button
+            (clicked)="saveAsDraft()"
+            styleClass="rounded-md bg-[hsl(var(--aepw-blue))] px-4 py-2 text-sm font-medium text-white hover:opacity-90"
+          >
+            Save as Draft
+          </ui-button>
+        }
+
+        <ui-button
+          (clicked)="onSave()"
+          styleClass="rounded-md bg-[hsl(var(--aepw-blue))] px-4 py-2 text-sm font-medium text-white hover:opacity-90"
+        >
+          {{ saveButtonText() }}
+        </ui-button>
+      }
+    </div>
+  </div>
+  <!------------------------------ FORM --------------------------------------------------->
+  <div class="mt-4 rounded-lg border bg-card p-6">
+    <h2 class="mb-4 text-base font-semibold">
+      {{ isProject() ? 'Project Details' : 'Corporate Details' }}
+    </h2>
+
+    <div [formGroup]="impactForm" class="grid gap-4 py-4">
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-2">
+        <!-- PROJECT FIELDS -->
+        @if (isProject()) {
+          <!-------------- PIN ------------------------->
+          <div class="space-y-2">
+            <label class="text-sm font-medium" for="pin">
+              PIN
+              <span class="text-destructive">*</span></label
+            >
+            <input
+              id="pin"
+              formControlName="pin"
+              placeholder="Enter PIN"
+              class="flex h-9 w-full rounded-md border border-input px-3 py-1 text-sm outline-none"
+              [class.border-destructive]="
+                (impactForm.controls.pin.hasError('required') ||
+                  impactForm.controls.pin.hasError('invalidSharePointCharacters')) &&
+                impactForm.controls.pin.touched
+              "
+            />
+            @if (impactForm.controls.pin.hasError('required') && impactForm.controls.pin.touched) {
+              <p class="text-xs text-destructive">PIN is required.</p>
+            }
+            @if (
+              impactForm.controls.pin.hasError('invalidSharePointCharacters') &&
+              impactForm.controls.pin.touched
+            ) {
+              <p class="text-xs text-destructive">
+                Invalid characters. Not allowed: * " : &lt; &gt; ? / \ |
+              </p>
+            }
+          </div>
+        }
+
+        <!------------------------------ TITLE ---------------------->
+        <div class="space-y-2">
+          <label class="text-sm font-medium" for="title">
+            {{ isProject() ? 'Project Title' : 'Corporate Name' }}
+            <span class="text-destructive">*</span></label
+          >
+          <input
+            id="text-base"
+            formControlName="title"
+            [placeholder]="isProject() ? 'Enter project title' : 'Enter corporate name'"
+            class="flex h-9 w-full rounded-md border border-input px-3 py-1 text-sm outline-none"
+            [class.border-destructive]="
+              impactForm.controls.title.invalid && impactForm.controls.title.touched
+            "
+          />
+          @if (
+            impactForm.controls.title.hasError('required') && impactForm.controls.title.touched
+          ) {
+            <p class="text-xs text-destructive">
+              {{ isProject() ? 'Project Title' : 'Corporate Name' }} is required.
+            </p>
+          }
+        </div>
+        <!--------------------------------- PROGRAM ------------------------------>
+        @if (isProject()) {
+          <div class="space-y-2">
+            <label class="text-sm font-medium"
+              >Program <span class="text-destructive">*</span></label
+            >
+            <ng-select
+              formControlName="programId"
+              [items]="programs()"
+              bindLabel="name"
+              bindValue="programId"
+              placeholder="Select Program"
+              [clearable]="false"
+              [searchable]="true"
+              [ngClass]="{
+                'ng-invalid ng-touched':
+                  impactForm.controls.programId.invalid && impactForm.controls.programId.touched,
+              }"
+            />
+            @if (
+              impactForm.controls.programId.hasError('required') &&
+              impactForm.controls.programId.touched
+            ) {
+              <p class="text-xs text-destructive">Program is required.</p>
+            }
+          </div>
+        }
+        <!------------------------- cities ----------------->
+        @if (isProject()) {
+          <div class="space-y-2" #cityDropdownContainer>
+            <label class="text-sm font-medium">
+              Countries & Cit(ies)
+              <span class="text-destructive">*</span>
+            </label>
+
+            <div class="relative">
+              <!-- Selector Input -->
+              <div
+                class="flex min-h-[2.5rem] w-full cursor-pointer flex-wrap items-center gap-2 rounded-md border border-input px-3 py-2 text-sm outline-none transition-colors hover:border-ring"
+                (click)="toggleDropdown($event)"
+              >
+                <!-- Selected City Chips -->
+                @if (selectedCities().length > 0) {
+                  @for (city of selectedCities(); track city.cityId) {
+                    <span
+                      class="inline-flex items-center gap-1 rounded-md bg-[#e8f3fb] px-2 py-0.5 text-xs font-medium text-primary"
+                    >
+                      {{ city.countryName }}, {{ city.cityName }}
+                      <button
+                        type="button"
+                        class="ml-0.5 rounded-sm text-black font-bold hover:text-destructive"
+                        (click)="removeCity(city.cityId); $event.stopPropagation()"
+                        aria-label="Remove {{ city.cityName }}"
+                      >
+                        <svg
+                          class="h-3 w-3"
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 20 20"
+                          fill="currentColor"
+                        >
+                          <path
+                            d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z"
+                          />
+                        </svg>
+                      </button>
+                    </span>
+                  }
+                } @else {
+                  <span class="text-muted-foreground">Select cities</span>
+                }
+
+                <!-- Dropdown Arrow -->
+                <svg
+                  class="ml-auto h-4 w-4 flex-shrink-0 text-muted-foreground transition-transform"
+                  [class.rotate-180]="dropdownOpen()"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+              </div>
+              @if (
+                impactForm.controls.cityIds.hasError('required') &&
+                impactForm.controls.cityIds.touched
+              ) {
+                <p class="mt-1 text-xs text-destructive">At least one city is required.</p>
+              }
+              <!-- Dropdown Panel -->
+              @if (dropdownOpen()) {
+                <div
+                  class="absolute left-0 top-full z-50 mt-1 w-full max-w-5xl overflow-hidden rounded-lg border border-input bg-popover shadow-lg"
+                  (click)="$event.stopPropagation()"
+                >
+                  <div class="flex h-96">
+                    <!-- Countries Panel (Left ~30%) -->
+                    <div
+                      class="w-64 flex-shrink-0 overflow-y-auto border-r border-border bg-muted/30"
+                    >
+                      <div class="p-2">
+                        @for (country of countries(); track country.countryName) {
+                          <div
+                            class="cursor-pointer rounded-md px-3 py-2 text-sm transition-colors hover:bg-gray-100"
+                            [class.bg-gray-100]="
+                              hoveredCountry()?.countryName === country.countryName
+                            "
+                            [class.font-bold]="
+                              hoveredCountry()?.countryName === country.countryName
+                            "
+                            (mouseenter)="hoveredCountry.set(country)"
+                          >
+                            {{ country.countryName }}
+                          </div>
+                        }
+                      </div>
+                    </div>
+
+                    <!-- Cities Panel (Right ~70%) -->
+                    <div class="flex flex-1 flex-col overflow-hidden">
+                      <!-- Header with Selected Country Name -->
+                      <div
+                        class="flex items-center justify-between border-b border-border bg-muted/20 px-4 py-3"
+                      >
+                        <span class="text-sm font-semibold text-foreground">
+                          {{ hoveredCountry()?.countryName || 'Select a country' }}
+                        </span>
+                        <button
+                          type="button"
+                          class="rounded-sm p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                          (click)="dropdownOpen.set(false)"
+                          aria-label="Close"
+                        >
+                          <svg
+                            class="h-4 w-4"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M6 18L18 6M6 6l12 12"
+                            />
+                          </svg>
+                        </button>
+                      </div>
+
+                      <!-- Search Box -->
+                      <div class="border-b border-border p-3">
+                        <input
+                          type="text"
+                          placeholder="Search cities..."
+                          class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                          [value]="citySearch()"
+                          (input)="citySearch.set($any($event.target).value)"
+                          (click)="$event.stopPropagation()"
+                        />
+                      </div>
+
+                      <!-- Cities List with Checkboxes -->
+                      <div class="flex-1 overflow-y-auto p-3">
+                        @if (hoveredCountry()) {
+                          @for (city of filteredCities(); track city.cityId) {
+                            <label
+                              class="flex cursor-pointer items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors"
+                            >
+                              <input
+                                type="checkbox"
+                                [checked]="selectedCityIds().includes(city.cityId)"
+                                (change)="toggleCity(city)"
+                                class="h-4 w-4 cursor-pointer rounded text-primary"
+                              />
+                              <span class="flex-1">{{ city.cityName }}</span>
+                            </label>
+                          }
+
+                          @if (filteredCities().length === 0) {
+                            <div class="py-8 text-center text-sm text-muted-foreground">
+                              No cities found
+                            </div>
+                          }
+                        } @else {
+                          <div
+                            class="flex h-full items-center justify-center py-8 text-sm text-muted-foreground"
+                          >
+                            Hover over a country to see cities
+                          </div>
+                        }
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        }
+        <!-- CPM/Corporate Submitter -->
+        <div class="space-y-2">
+          <label class="text-sm font-medium">
+            {{ isProject() ? 'Contract Performance Manager' : 'Corporate Submitter' }}
+
+            <span class="text-destructive">*</span>
+          </label>
+          <ng-select
+            [items]="l1Users()"
+            bindLabel="displayName"
+            bindValue="userId"
+            [minTermLength]="3"
+            [clearable]="true"
+            formControlName="l1UserId"
+            [placeholder]="isProject() ? 'Enter CPM' : 'Enter CDP'"
+          />
+          @if (
+            impactForm.controls.l1UserId.hasError('required') &&
+            impactForm.controls.l1UserId.touched
+          ) {
+            <p class="text-xs text-destructive">
+              {{ isProject() ? 'CPM is required' : 'Corporate Submitter is required' }}
+            </p>
+          }
+        </div>
+        <!--  Till here the fields are common -->
+        <!-------------------------- FUNDING RECIPIENT --------------------------------->
+        @if (isProject()) {
+          <div class="space-y-2">
+            <label class="text-sm font-medium"
+              >Funding Recipients <span class="text-destructive">*</span></label
+            >
+            <!-- ng-select for multi-selection -->
+            <ng-select
+              class="funding-recipient-select"
+              [items]="fundingRecipients()"
+              bindLabel="name"
+              bindValue="fundingRecipientId"
+              [searchable]="true"
+              [multiple]="true"
+              [clearable]="true"
+              [hideSelected]="false"
+              [closeOnSelect]="false"
+              [clearSearchOnAdd]="true"
+              placeholder="Search and select funding recipients"
+              formControlName="fundingRecipientIds"
+              [ngClass]="{
+                'ng-invalid ng-touched':
+                  impactForm.controls.fundingRecipientIds.invalid &&
+                  impactForm.controls.fundingRecipientIds.touched,
+              }"
+            >
+              <ng-template ng-option-tmp let-item="item">
+                {{ item.orgName }} - {{ item.name }}
+              </ng-template>
+
+              <!-- <ng-template ng-label-tmp let-item="item">
+                {{ item.orgName }} - {{ item.name }}
+              </ng-template> -->
+            </ng-select>
+
+            <!-- Validation error message -->
+            @if (
+              impactForm.controls.fundingRecipientIds.hasError('required') &&
+              impactForm.controls.fundingRecipientIds.touched
+            ) {
+              <p class="text-xs text-destructive">At least one funding recipient is required.</p>
+            }
+          </div>
+        }
+        <!-- Project/Corporate Status -->
+        <div class="space-y-2">
+          <label class="text-sm font-medium">
+            {{ isProject() ? 'Project Status' : 'Corporate Status' }}
+            <span class="text-destructive">*</span>
+          </label>
+          <ng-select
+            [items]="projectStatus()"
+            bindLabel="statusName"
+            bindValue="statusId"
+            formControlName="statusId"
+            placeholder="Select Status"
+            [clearable]="false"
+          >
+          </ng-select>
+          @if (
+            impactForm.controls.statusId.hasError('required') &&
+            impactForm.controls.statusId.touched
+          ) {
+            <p class="text-xs text-destructive">Status is required.</p>
+          }
+          @if (
+            impactForm.controls.statusId.hasError('draftNotAllowed') &&
+            impactForm.controls.statusId.touched
+          ) {
+            <p class="text-xs text-destructive">Draft status cannot be used for save.</p>
+          }
+        </div>
+        @if (isProject()) {
+          <!-- Project Category -->
+          <div class="space-y-2">
+            <label class="text-sm font-medium">
+              Project Category <span class="text-destructive">*</span>
+            </label>
+            <ng-select
+              [items]="projectCategories()"
+              bindLabel="categoryName"
+              bindValue="categoryId"
+              formControlName="categoryId"
+              placeholder="Select category"
+              [clearable]="false"
+            >
+            </ng-select>
+            @if (
+              impactForm.controls.categoryId.hasError('required') &&
+              impactForm.controls.categoryId.touched
+            ) {
+              <p class="text-xs text-destructive">Category is required.</p>
+            }
+          </div>
+          <!-- Project START/END DATE -->
+
+          <div class="space-y-2">
+            <label class="text-sm font-medium">
+              Project Start Date <span class="text-destructive">*</span>
+              <!-- @if (isFinalSaveMode()) {
+                <span class="text-destructive">*</span>
+              } -->
+            </label>
+            <input
+              type="date"
+              formControlName="startDate"
+              max="9999-12-31"
+              class="flex h-9 w-full rounded-md border border-input px-3 py-1 text-sm outline-none"
+              [class.border-destructive]="
+                impactForm.controls.startDate.invalid && impactForm.controls.startDate.touched
+              "
+            />
+            @if (impactForm.controls.startDate.invalid && impactForm.controls.startDate.touched) {
+              <p class="text-xs text-destructive">Start date is required.</p>
+            }
+            @if (impactForm.hasError('endBeforeStart') && impactForm.controls.startDate.touched) {
+              <p class="text-xs text-destructive">Start date cannot be after end date.</p>
+            }
+          </div>
+          <div class="space-y-2">
+            <label class="text-sm font-medium">Project End Date </label>
+            <input
+              type="date"
+              formControlName="endDate"
+              max="9999-12-31"
+              class="flex h-9 w-full rounded-md border border-input px-3 py-1 text-sm outline-none"
+              [class.border-destructive]="
+                impactForm.hasError('endBeforeStart') && impactForm.controls.endDate.touched
+              "
+            />
+            <!-- @if (
+              impactForm.controls.endDate.hasError('required') &&
+              impactForm.controls.endDate.touched
+            ) {
+              <p class="text-xs text-destructive">End date is required.</p>
+            } -->
+            @if (impactForm.hasError('endBeforeStart') && impactForm.controls.endDate.touched) {
+              <p class="text-xs text-destructive">End date must be on or after start date.</p>
+            }
+          </div>
+          <!-- PROJECT BUDGET -->
+          <div class="space-y-2">
+            <label class="text-sm font-medium"
+              >Project Budget (USD) <span class="text-red-400">*</span>
+              <!-- @if (isFinalSaveMode()) {
+                <span class="text-destructive">*</span>
+              } -->
+            </label>
+            <input
+              #budgetInput
+              type="text"
+              inputmode="decimal"
+              formControlName="totalFunding"
+              placeholder="0.00"
+              min="0"
+              class="flex h-9 w-full rounded-md border border-input px-3 py-1 text-sm outline-none"
+              [class.border-destructive]="
+                impactForm.controls.totalFunding.invalid && impactForm.controls.totalFunding.touched
+              "
+              (focus)="onBudgetFocus(budgetInput)"
+              (input)="onBudgetInput($event)"
+              (blur)="onBudgetBlur(budgetInput)"
+            />
+            @if (
+              impactForm.controls.totalFunding.hasError('required') &&
+              impactForm.controls.totalFunding.touched
+            ) {
+              <p class="text-xs text-destructive">Total funding is required.</p>
+            }
+            @if (
+              impactForm.controls.totalFunding.hasError('min') &&
+              impactForm.controls.totalFunding.touched
+            ) {
+              <p class="text-xs text-destructive">Total funding must be non-negative.</p>
+            }
+          </div>
+
+          <!-- internalReferences, fieldCheckReport,   -->
+          <div class="space-y-2">
+            <label class="text-sm font-medium"> Project Folder Link </label>
+
+            <input
+              type="text"
+              formControlName="internalReferences"
+              placeholder="Enter internal reference URL"
+              class="w-full border p-2 rounded-md text-sm focus:outline-none focus:ring-0 focus:border-input"
+            />
+
+            @if (
+              impactForm.controls.internalReferences.hasError('url') &&
+              impactForm.controls.internalReferences.touched
+            ) {
+              <p class="text-xs text-destructive">
+                Please enter a valid URL starting with http:// or https://.
+              </p>
+            }
+          </div>
+          <!--  lastFieldCheckDate  -->
+          <div class="space-y-2">
+            <label class="text-sm font-medium">
+              Last Field Check Date <span class="text-gray-400">(CPM visited the site)</span>
+            </label>
+            <input
+              type="date"
+              max="9999-12-31"
+              formControlName="lastFieldCheckDate"
+              class="flex h-9 w-full rounded-md border border-input px-3 py-1 text-sm outline-none"
+            />
+          </div>
+
+          <!-- fieldCheckReport -->
+          <div class="space-y-2">
+            <label class="text-sm font-medium"> Field Check Report </label>
+
+            <input
+              type="text"
+              formControlName="fieldCheckReport"
+              placeholder="Enter field check report URL"
+              class="w-full border p-2 rounded-md text-sm focus:outline-none focus:ring-0 focus:border-input"
+            />
+
+            @if (
+              impactForm.controls.fieldCheckReport.hasError('url') &&
+              impactForm.controls.fieldCheckReport.touched
+            ) {
+              <p class="text-xs text-destructive">
+                Please enter a valid URL starting with http:// or https://.
+              </p>
+            }
+          </div>
+
+          <!-- End of project fields -->
+          <!-- Actual completion time -->
+          <div class="space-y-2">
+            <label class="text-sm font-medium">
+              Actual Completion Date
+              @if (isFinalSaveMode()) {
+                <span class="text-destructive"></span>
+              }
+            </label>
+            <input
+              type="date"
+              max="9999-12-31"
+              formControlName="actualCompletionDate"
+              class="flex h-9 w-full rounded-md border border-input px-3 py-1 text-sm outline-none"
+              [class.border-destructive]="
+                impactForm.controls.actualCompletionDate.invalid &&
+                impactForm.controls.actualCompletionDate.touched
+              "
+            />
+            @if (
+              impactForm.controls.actualCompletionDate.invalid &&
+              impactForm.controls.actualCompletionDate.touched
+            ) {
+              <p class="text-xs text-destructive">Actual completion date is required.</p>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- Description -->
+      <div class="space-y-2 w-1/2">
+        <label for="description" class="text-sm font-medium"> Brief Description </label>
+
+        <textarea
+          id="description"
+          formControlName="description"
+          rows="4"
+          maxlength="1000"
+          placeholder="Enter a brief description"
+          class="w-full rounded-md border border-input px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+        ></textarea>
+
+        <div class="flex justify-between text-xs text-muted-foreground">
+          <span>Maximum 1000 characters</span>
+          <span>{{ impactForm.controls.description.value?.length ?? 0 }}/1000</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- APPROVAL DETAILS continue from here, add project category, description for both then approval thing -->
+  <div [formGroup]="impactForm" class="mt-4 rounded-lg border bg-card p-6">
+    <h2 class="mb-4 text-base font-semibold">Approval Details</h2>
+    <p class="mb-4 text-sm font-medium text-foreground">
+      Select level of Approval required for this project
+    </p>
+
+    <div class="grid grid-cols-2 gap-4 md:grid-cols-2 lg:grid-cols-3">
+      @if (isProject()) {
+        <div class="space-y-2">
+          <div class="flex items-center gap-2 mb-2">
+            <input
+              type="checkbox"
+              [checked]="requireL2Approver()"
+              (change)="onL2CheckboxChange($any($event.target).checked)"
+              class="h-4 w-4 cursor-pointer rounded border-input"
+              id="require-l2"
+            />
+            <!-- L2 -->
+            <label for="require-l2" class="text-sm font-medium cursor-pointer">
+              Global Execution Leader
+              @if (requireL2Approver()) {
+                <span class="text-destructive">*</span>
+              }
+            </label>
+          </div>
+          @if (requireL2Approver()) {
+            <ng-select
+              [items]="l2Users()"
+              bindLabel="displayName"
+              bindValue="userId"
+              [searchable]="true"
+              [clearable]="true"
+              formControlName="l2ApproverUserId"
+              placeholder="Select Global Execution Leader"
+            />
+            @if (
+              impactForm.controls.l2ApproverUserId.hasError('required') &&
+              impactForm.controls.l2ApproverUserId.touched
+            ) {
+              <p class="text-xs text-destructive">Global Execution Leader is required</p>
+            }
+          }
+        </div>
+
+        <div class="space-y-2">
+          <div class="flex items-center gap-2 mb-2">
+            <input
+              type="checkbox"
+              [checked]="requireL3Approver()"
+              (change)="onL3CheckboxChange($any($event.target).checked)"
+              class="h-4 w-4 cursor-pointer rounded border-input"
+              id="require-l3"
+            />
+            <label for="require-l3" class="text-sm font-medium cursor-pointer">
+              <!-- L3 -->
+              Program Leader
+              @if (requireL3Approver()) {
+                <span class="text-destructive">*</span>
+              }
+            </label>
+          </div>
+          @if (requireL3Approver()) {
+            <ng-select
+              [items]="l3Users()"
+              bindLabel="displayName"
+              bindValue="userId"
+              [searchable]="true"
+              [clearable]="true"
+              formControlName="l3ApproverUserId"
+              placeholder="Select Program Leader"
+            />
+            @if (
+              impactForm.controls.l3ApproverUserId.hasError('required') &&
+              impactForm.controls.l3ApproverUserId.touched
+            ) {
+              <p class="text-xs text-destructive">Program Leader is required</p>
+            }
+          }
+        </div>
+      } @else {
+        <div class="space-y-2">
+          <div class="flex items-center gap-2 mb-2">
+            <input
+              type="checkbox"
+              [checked]="requireCorporateApprover()"
+              (change)="onCorporateApproverCheckboxChange($any($event.target).checked)"
+              class="h-4 w-4 cursor-pointer rounded border-input"
+              id="require-l2"
+            />
+            <label for="require-l2" class="text-sm font-medium cursor-pointer">
+              Corporate Approver
+              <!-- @if (requireCorporateApprover()) {
+                <span class="text-destructive">*</span>
+              } -->
+            </label>
+          </div>
+
+          @if (requireCorporateApprover()) {
+            <!-- <label class="text-sm font-medium">
+              Corporate Approver
+              <span class="text-destructive">*</span>
+            </label> -->
+            <ng-select
+              [items]="l2Users()"
+              bindLabel="displayName"
+              bindValue="userId"
+              [searchable]="true"
+              [clearable]="true"
+              formControlName="l2ApproverUserId"
+              placeholder="Select Corporate Approver"
+            />
+          }
+          <!-- @if (
+            impactForm.controls.l2ApproverUserId.hasError('required') &&
+            impactForm.controls.l2ApproverUserId.touched
+          ) {
+            <p class="text-xs text-destructive">Corporate Approver is required</p>
+          } -->
+        </div>
+      }
+      @if (isProject() && impactForm.hasError('atLeastOneApproverRequired') && isFinalSaveMode()) {
+        <p class="text-xs text-destructive mt-2">
+          At least one approver must be selected: Global Execution Leader or Program Leader.
+        </p>
+      }
+      <!-- @if (isCorporate() && impactForm.controls.l2ApproverUserId.hasError('required')) {
+        <p class="text-xs text-destructive">Corporate Approver is required</p>
+      } -->
+    </div>
+  </div>
+
+  <!----------------------------------------- METRIC DETAILS FORM ----------------------------------------------------------->
+  <div class="flex flex-col gap-4 border p-6 rounded-lg mt-4 bg-card">
+    @if (metricValidationError()) {
+      <div class="mb-4 rounded border border-destructive p-3 text-sm text-destructive">
+        {{ metricValidationError() }}
+      </div>
+    }
+    <h2 class="mb-4 text-base font-semibold">Metric Details</h2>
+    @for (cat of editableMetrics(); track cat.categoryId; let ci = $index) {
+      <ui-card>
+        <ui-card-content styleClass="p-0">
+          <!-- Category Header -->
+          <div
+            class="flex cursor-pointer items-center justify-between gap-3 border-b p-4 hover:bg-muted/30"
+            (click)="toggleCategory(cat.categoryCode)"
+          >
+            <div class="flex items-center gap-3">
+              <ui-badge [styleClass]="categoryColors[cat.categoryCode]">
+                {{ cat.categoryCode }}
+              </ui-badge>
+
+              <span class="font-medium">
+                {{ cat.categoryName }}
+              </span>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <span class="text-xs text-muted-foreground">
+                {{ selectedCountForCategory().get(cat.categoryCode) ?? 0 }}
+                selected
+              </span>
+
+              <lucide-icon
+                [name]="isExpanded(cat.categoryCode) ? 'chevron-down' : 'chevron-right'"
+                class="h-4 w-4 text-muted-foreground"
+              />
+            </div>
+          </div>
+          @if (isExpanded(cat.categoryCode)) {
+            <!-- Metrics Table -->
+            <div class="">
+              <div class="w-full overflow-x-auto">
+                <table
+                  class="metric-config-table w-full min-w-[900px] md:min-w-[1000px] lg:min-w-0 table-fixed text-sm"
+                >
+                  <colgroup>
+                    @if (isCorporate()) {
+                      <col style="width: 60px" />
+                      <!-- Active -->
+                      <col style="width: 90px" />
+                      <!-- Code -->
+                      <col />
+                      <!-- Name -->
+                      <col style="width: 180px" />
+                      <!-- Unit -->
+                      <col style="width: 150px" />
+                      <!-- Risk Adjustment -->
+                    }
+
+                    @if (isProject()) {
+                      <col style="width: 90px" />
+
+                      <!-- Name -->
+                      <col />
+
+                      <!-- Unit -->
+                      <col style="width: 140px" />
+
+                      <!-- Risk Adjustment -->
+                      <col style="width: 180px" />
+
+                      <!-- Baseline -->
+                      <col style="width: 140px" />
+                    }
+                  </colgroup>
+
+                  <thead>
+                    <tr class="border-b text-xs text-muted-foreground">
+                      @if (isCorporate()) {
+                        <th class="px-4 py-2 text-left">Active</th>
+                      }
+
+                      <th class="px-4 py-2 text-left">Code</th>
+                      <th class="px-4 py-2 text-left">Name</th>
+                      <th class="px-4 py-2 text-left whitespace-nowrap">Unit</th>
+                      <th class="px-4 py-2 text-left whitespace-nowrap">Risk %</th>
+                      @if (isProject()) {
+                        <th class="px-4 py-2 text-left whitespace-nowrap">
+                          Annual Baseline<span class="text-red-400"> *</span>
+                        </th>
+                      }
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    @for (metric of cat.metrics; track metric.metricId; let mi = $index) {
+                      <!-- Parent Metric -->
+                      <tr class="border-b bg-muted/20">
+                        @if (isCorporate()) {
+                          <td class="px-4 py-2">
+                            <input
+                              type="checkbox"
+                              [checked]="metric.isActive"
+                              [disabled]="isCorporate() && !canEditMetricApplicability()"
+                              (change)="toggleParent(ci, mi)"
+                              class="h-4 w-4 cursor-pointer rounded border-input"
+                            />
+                          </td>
+                        }
+                        <td class="px-4 py-2 font-mono text-xs text-[hsl(var(--aepw-blue))]">
+                          <div class="flex items-center gap-2">
+                            @if (metric.children && metric.children.length > 0) {
+                              <button type="button" (click)="toggleMetric(metric.metricId, $event)">
+                                <lucide-icon
+                                  [name]="
+                                    isMetricExpanded(metric.metricId)
+                                      ? 'chevron-down'
+                                      : 'chevron-right'
+                                  "
+                                  class="h-4 w-4"
+                                />
+                              </button>
+                            }
+                            <span>{{ metric.metricCode }}</span>
+                          </div>
+                        </td>
+
+                        <td class="px-4 py-2 font-medium">
+                          <div class="min-w-0 break-words">
+                            {{ metric.metricName }}
+                          </div>
+                        </td>
+
+                        <td class="px-4 py-2">{{ metric.unitName }}</td>
+                        <td class="px-4 py-2">
+                          <!-- @if (metric.riskPct !== null && metric.riskPct !== undefined) { -->
+                          <input
+                            type="number"
+                            [value]="metric.riskPct"
+                            disabled
+                            class="w-24 rounded border px-2 py-0.5 text-xs bg-muted cursor-not-allowed opacity-75"
+                            title="Auto-calculated average of active child metrics"
+                          />
+                          <!-- } @else {
+                        <span class="text-xs text-muted-foreground">—</span>
+                      } -->
+                        </td>
+                        @if (isProject()) {
+                          <td class="px-4 py-2">
+                            <div class="flex flex-col gap-1">
+                              <input
+                                type="number"
+                                min="0"
+                                [value]="metric.baselinePct"
+                                disabled
+                                [class]="'w-24 rounded border px-2 py-0.5 text-xs bg-muted cursor-not-allowed opacity-75 '"
+                              />
+                              <!--     (metricFieldErrors().get(metric.metricId)?.baselinePct
+                                    ? 'border-destructive bg-destructive/10'
+                                    : '') 
+                                    @if (metricFieldErrors().get(metric.metricId)?.baselinePct) {
+                                <span class="text-xs text-destructive">{{
+                                  metricFieldErrors().get(metric.metricId)?.baselinePct
+                                }}</span>
+                              }
+                                    -->
+                              <!-- <span>*</span> -->
+                            </div>
+                          </td>
+                        }
+                      </tr>
+
+                      <!-- Child Metrics -->
+                      @if (isMetricExpanded(metric.metricId)) {
+                        @for (child of metric.children; track child.metricId; let chi = $index) {
+                          <tr class="border-b">
+                            <!-- Active -->
+                            @if (isCorporate()) {
+                              <td class="metric-col-active px-4 py-2">
+                                <input
+                                  type="checkbox"
+                                  [checked]="child.isActive"
+                                  [disabled]="
+                                    selectedRecordTypeId() === 1 ||
+                                    (isCorporate() && !canEditMetricApplicability())
+                                  "
+                                  (change)="toggleChild(ci, mi, chi)"
+                                  class="h-4 w-4 cursor-pointer rounded border-input"
+                                />
+                              </td>
+                            }
+
+                            <!-- Code -->
+                            <td class="metric-col-code pl-8 py-2 font-mono text-xs">
+                              <div class="flex items-center gap-2 pl-4">
+                                <span class="text-[hsl(var(--aepw-blue))]">
+                                  {{ child.metricCode }}
+                                </span>
+                              </div>
+                            </td>
+
+                            <!-- Name -->
+                            <td class="metric-col-name px-4 py-2">
+                              <div class="min-w-0 break-words">
+                                {{ child.metricName }}
+                              </div>
+                            </td>
+                            <!-- Unit -->
+                            <td class="px-4 py-2">
+                              {{ child.unitName }}
+                            </td>
+
+                            <!-- Risk adjustment-->
+                            <td class="px-4 py-2">
+                              @if (child.isRiskAdjustmentRequired) {
+                                <div class="flex flex-col gap-1">
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    max="100"
+                                    [value]="child.riskPct"
+                                    [disabled]="
+                                      !child.isActive ||
+                                      !child.isRiskAdjustmentRequired ||
+                                      !canEditRiskAdjustment()
+                                    "
+                                    (change)="
+                                      updateRiskPctById(child.metricId, $any($event.target).value)
+                                    "
+                                    placeholder="0-100"
+                                    [class]="
+                                      'w-20 rounded border px-2 py-0.5 text-xs ' +
+                                      (metricFieldErrors().get(child.metricId)?.riskPct
+                                        ? 'border-destructive bg-destructive/10'
+                                        : '')
+                                    "
+                                  />
+                                  @if (metricFieldErrors().get(child.metricId)?.riskPct) {
+                                    <span class="text-xs text-destructive whitespace-nowrap">{{
+                                      metricFieldErrors().get(child.metricId)?.riskPct
+                                    }}</span>
+                                  }
+                                </div>
+                              } @else {
+                                <p>N/A</p>
+                              }
+                            </td>
+                            <!-- Baseline -->
+                            @if (isProject()) {
+                              <td class="px-4 py-2">
+                                <div class="flex flex-col gap-1">
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    [value]="child.baselinePct"
+                                    [disabled]="!child.isActive"
+                                    (input)="
+                                      updateBaselinePctById(
+                                        child.metricId,
+                                        $any($event.target).value
+                                      )
+                                    "
+                                    [class]="
+                                      'w-24 rounded border px-2 py-0.5 text-xs ' +
+                                      (metricFieldErrors().get(child.metricId)?.baselinePct
+                                        ? 'border-destructive bg-destructive/10'
+                                        : '')
+                                    "
+                                  />
+                                  @if (metricFieldErrors().get(child.metricId)?.baselinePct) {
+                                    <span class="text-xs text-destructive">{{
+                                      metricFieldErrors().get(child.metricId)?.baselinePct
+                                    }}</span>
+                                  }
+                                </div>
+                              </td>
+                            }
+                          </tr>
+                        }
+                      }
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          }
+        </ui-card-content>
+      </ui-card>
+    }
+  </div>
+</div>

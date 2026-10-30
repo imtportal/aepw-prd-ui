@@ -1,0 +1,14 @@
+<div class="grid grid-cols-3 gap-4 rounded-lg border border-border/50 bg-card p-4" data-kpi-bar>
+  <div data-kpi-pending class="flex flex-col gap-1">
+    <p class="text-2xl font-bold text-foreground">{{ pendingMetricsCount() }}</p>
+    <p class="text-sm text-muted-foreground">Pending Metrics</p>
+  </div>
+  <div data-kpi-flags class="flex flex-col gap-1">
+    <p class="text-2xl font-bold text-[hsl(var(--aepw-orange))]">{{ materialFlagsCount() }}</p>
+    <p class="text-sm text-muted-foreground">Material Flags</p>
+  </div>
+  <div data-kpi-rejections class="flex flex-col gap-1">
+    <p class="text-2xl font-bold text-destructive">{{ rejectionsCount() }}</p>
+    <p class="text-sm text-muted-foreground">Rejections</p>
+  </div>
+</div>

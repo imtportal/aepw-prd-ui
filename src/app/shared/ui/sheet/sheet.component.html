@@ -1,0 +1,10 @@
+<p-drawer
+  [(visible)]="visible"
+  [header]="header()"
+  [position]="position()"
+  [styleClass]="drawerClass()"
+  [style]="panelStyle()"
+  transitionOptions="320ms cubic-bezier(0.4, 0, 0.2, 1)"
+>
+  <ng-content />
+</p-drawer>

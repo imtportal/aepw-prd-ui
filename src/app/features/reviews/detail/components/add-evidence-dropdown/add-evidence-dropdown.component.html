@@ -1,0 +1,120 @@
+<input #fileInput type="file" multiple class="hidden" (change)="onFilePicked($event)" />
+
+<!-- Trigger -->
+@if (fromQueue()) {
+<button
+  type="button"
+  data-trigger
+  class="flex h-6 items-center gap-1 rounded border border-dashed border-border px-2 text-[10px] text-muted-foreground transition-colors hover:border-[hsl(var(--aepw-blue)/0.4)] hover:text-[hsl(var(--aepw-blue))]"
+  (click)="$event.stopPropagation(); openModal()"
+>
+  <lucide-icon name="plus" [size]="12" />
+  Add Evidence
+</button>
+}
+
+<!-- Modal -->
+@if (modalOpen()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+       (click)="closeModal()">
+    <div class="w-[440px] rounded-lg border bg-card shadow-xl"
+         (click)="$event.stopPropagation()">
+
+      <!-- Header -->
+      <div class="flex items-center justify-between border-b px-5 py-4">
+        <h3 id="uploadEvidenceModalHeader" class="text-sm font-semibold"> Upload Evidence 
+          @if (evidenceUploadMaxFileSize()) {
+            <span class="font-normal">
+              (max. file size: <span class="font-bold text-[hsl(var(--destructive))]">{{ evidenceUploadMaxFileSize() }}</span>) 
+            </span>
+
+          }  
+          
+        </h3>
+        <button type="button" (click)="closeModal()"
+                class="text-muted-foreground hover:text-foreground">
+          <lucide-icon name="x" [size]="16" />
+        </button>
+      </div>
+
+      <!-- Body -->
+      <div class="space-y-4 px-5 py-5">
+
+        <!-- Evidence type
+        <div class="space-y-1.5">
+          <label class="text-xs font-medium">Evidence Type <span class="text-destructive">*</span></label>
+          <select
+            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+            [value]="selectedType()"
+            (change)="onTypeChange($event)">
+            <option value="" disabled>Select evidence type…</option>
+            @for (type of evidenceTypes; track type) {
+              <option [value]="type">{{ type }}</option>
+            }
+          </select>
+        </div> -->
+
+        <!-- File upload area -->
+        <div class="space-y-1.5 relative">
+          <label class="text-xs font-medium">File <span class="text-destructive">*</span></label>
+          <button type="button"
+                  class="flex w-full flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed px-4 py-8 transition-colors"
+                  [class]="selectedFiles().length
+                    ? 'border-[hsl(var(--aepw-blue)/0.5)] bg-[hsl(var(--aepw-blue)/0.04)]'
+                    : isDragging()
+                      ? 'border-[hsl(var(--aepw-blue)/0.5)] bg-[hsl(var(--aepw-blue)/0.04)]'
+                      : 'border-border hover:border-[hsl(var(--aepw-blue)/0.4)] hover:bg-muted/30'"
+                  (dragover)="onDragOver($event)"
+                  (dragleave)="onDragLeave()"
+                  (drop)="onDrop($event)"
+                  (click)="pickFile()">
+            @if (selectedFiles().length) {
+              <lucide-icon name="file-text" [size]="24" class="text-[hsl(var(--aepw-blue))]" />
+              <p class="text-xs font-medium text-[hsl(var(--aepw-blue))]">{{ fileLabel }}</p>
+              <p class="text-[10px] text-muted-foreground">Click to add more files</p>
+            } @else {
+              <lucide-icon name="upload" [size]="24" class="text-muted-foreground" />
+              <p class="text-xs font-medium text-foreground">Click to browse files</p>
+              <p class="text-[10px] text-muted-foreground">Any file type supported</p>
+            }
+          </button>
+
+          <div class="flex border-t mt-4 py-2 items-center justify-between">
+            <label class="text-xs "> Evidence Type</label>
+            <select class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+              [(ngModel)]="selectedType"
+            >
+
+              <option [value]="''" disabled> Select evidence type </option>
+              @for (evidenceType of evidenceTypeList(); track evidenceType.evidenceTypeId) {
+                <option [value]="evidenceType.evidenceTypeId">
+                  {{evidenceType.description}}
+                </option>
+
+              }
+              
+            </select>
+            
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Footer -->
+      <div class="flex justify-end gap-2 border-t px-5 py-3">
+        <button type="button"
+                class="rounded-md border border-input px-4 py-1.5 text-sm text-muted-foreground hover:bg-muted"
+                (click)="closeModal()">
+          Cancel
+        </button>
+        <button type="button"
+                class="rounded-md bg-[hsl(var(--aepw-blue))] px-4 py-1.5 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-40 hover:opacity-90"
+                [disabled]="!selectedFiles().length || !selectedType"
+                (click)="onUpload()">
+          Upload
+        </button>
+      </div>
+
+    </div>
+  </div>
+}

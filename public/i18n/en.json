@@ -1,0 +1,192 @@
+{
+    "COMMON": {
+        "ADD": "Add",
+        "UPDATE": "Update",
+        "EDIT": "Edit",
+        "CANCEL": "Cancel",
+        "SAVE": "Save",
+        "SEARCH": "Search",
+        "APPLY": "Apply Filter",
+        "CLEAR": "Clear Filter",
+        "ACTIVE": "Active",
+        "INACTIVE": "Inactive",
+        "CLEAR_FILTERS": "Clear Filters",
+        "APPLY_FILTERS": "Apply Filters"
+    },
+    "BUSINESS_ROLE": {
+        "TITLE": "Business Role Management",
+        "DESCRIPTION": "Map business roles to users, programs, and metric classifications",
+        "ADD_ROLE": "Add Role",
+        "EDIT_ROLE": "Edit Role",
+        "BUSINESS_ROLE_LABEL": "Business Role",
+        "USER_LABEL": "User",
+        "REGION_LABEL": "Region",
+        "METRIC_CLASSIFICATION_LABEL": "Metric Classification",
+        "REVIEW_STAGE_LABEL": "Review Stage",
+        "SELECT_BUSINESS_ROLE": "Select Business Role",
+        "SELECT_USER": "Select User",
+        "SELECT_REGION": "Select Region",
+        "SELECT_METRIC_CLASSIFICATION": "Select Metric Classification",
+        "SELECT_REVIEW_STAGE": "Select Review Stage",
+        "TABLE": {
+            "BUSINESS_ROLE": "Business Role",
+            "USER": "User",
+            "REGION": "Region",
+            "METRIC_CLASSIFICATION": "Metric Classification",
+            "ACTIONS": "Actions"
+        },
+        "MESSAGES": {
+            "MAPPING_CREATED": "Business role mapping created successfully.",
+            "MAPPING_UPDATED": "Business role mapping updated successfully.",
+            "MAPPING_SAVE_FAILED": "Failed to save business role mapping."
+        }
+    },
+    "USERS": {
+        "TITLE": "User Management",
+        "DESCRIPTION": "Manage user accounts, roles, and permissions",
+        "ADD_USER": "Add User",
+        "EDIT_USER": "Edit User",
+        "USER_LABEL": "User",
+        "ROLE_LABEL": "Role",
+        "TIMEZONE_LABEL": "TimeZone",
+        "STATUS_LABEL": "Status",
+        "SEARCH_USER_PLACEHOLDER": "Search user...",
+        "ALL_ROLES": "All Roles",
+        "SELECT_ROLE": "Select Role",
+        "SELECT_STATUS": "Select Status",
+        "SEARCH_TIMEZONE_PLACEHOLDER": "Search Time Zone",
+        "TYPE_TO_SEARCH_USER": "Type at least 3 characters to search user",
+        "TABLE": {
+            "USER": "User",
+            "ROLE": "Role",
+            "ACTIONS": "Actions",
+            "STATUS": "Status",
+            "LAST_LOGIN": "Last Login"
+        },
+        "DELETE_USER": "Delete User",
+        "DELETE": "Delete",
+        "DELETE_CONFIRMATION": "Are you sure you want to delete this user?",
+        "VALIDATION": {
+            "USER_REQUIRED": "User is required",
+            "ROLE_REQUIRED": "Role is required",
+            "TIMEZONE_REQUIRED": "Time Zone is required",
+            "STATUS_REQUIRED": "Status is required",
+            "FILL_REQUIRED_FIELDS": "Please fill all required fields",
+            "SELECT_ROLE_TIMEZONE": "Please select Role and Time Zone."
+        },
+        "MESSAGES": {
+            "USER_CREATED": "User created successfully.",
+            "USER_CREATE_FAILED": "Unable to create user.",
+            "USER_UPDATED": "User updated successfully.",
+            "USER_UPDATE_FAILED": "Failed to update user.",
+            "USER_DELETED": "User deleted successfully",
+            "USER_DELETE_FAILED": "Failed to delete user"
+        }
+    },
+    "PROJECTS": {
+        "DESCRIPTION": "Configure projects, funding recipients, and metric assignments for bulk review launches.",
+        "ADD_PROJECT": "Add Project",
+        "ADD_NEW_PROJECT": "Add New Project",
+        "PROJECT_ID_LABEL": "Project ID",
+        "PROJECT_NAME_LABEL": "Project Name",
+        "FUNDING_RECIPIENT_LABEL": "Funding Recipient",
+        "PROGRAM_LABEL": "Program",
+        "PM_LABEL": "PM",
+        "METRICS_LABEL": "Metrics",
+        "STATUS_LABEL": "Status",
+        "CONFIG_LABEL": "Config",
+        "COUNTRY_LABEL": "Country",
+        "REGION_LABEL": "Region",
+        "PROJECT_MANAGER_LABEL": "Project Manager",
+        "START_DATE_LABEL": "Start Date",
+        "END_DATE_LABEL": "End Date",
+        "TOTAL_FUNDING_LABEL": "Total Funding",
+        "REPORTING_FREQUENCY_LABEL": "Reporting Frequency",
+        "PROJECT_ID_NAME_PLACEHOLDER": "Project id-Project Name",
+        "FUNDING_RECIPIENT_PLACEHOLDER": "Funding Recipient",
+        "PROJECT_MANAGER_PLACEHOLDER": "Project Manager",
+        "PROGRAM_PLACEHOLDER": "Program",
+        "STATUS_PLACEHOLDER": "Status",
+        "METRIC_CATEGORIES_PLACEHOLDER": "Metric Categories",
+        "ENTER_PROJECT_NAME": "Enter project name",
+        "SELECT_PROGRAM": "Select Program",
+        "SELECT_COUNTRY": "Select Country",
+        "SELECT_PROJECT_MANAGER": "Select Project Manager",
+        "SELECT_FUNDING_RECIPIENT": "Select Funding Recipient",
+        "SELECT_FREQUENCY": "Select Frequency",
+        "PROJECTS_COUNT": "projects",
+        "CREATE_PROJECT": "Create Project",
+        "SAVING": "Saving...",
+        "REPORTING_FREQUENCY": {
+            "QUARTERLY": "Quarterly",
+            "ANNUALLY": "Annually"
+        },
+        "VALIDATION": {
+            "START_DATE_REQUIRED": "Start date is required.",
+            "END_DATE_AFTER_START": "End date must be on or after start date.",
+            "TOTAL_FUNDING_NON_NEGATIVE": "Total funding must be non-negative."
+        },
+        "MESSAGES": {
+            "PROJECT_CREATED": "Project created successfully",
+            "PROJECT_CREATE_FAILED": "Failed to create project"
+        }
+    },
+    "DASHBOARD": {
+        "TITLE": "Dashboard",
+        "TABLE": {
+            "ID": "ID",
+            "PROJECT": "PROJECT",
+            "PM": "PM",
+            "RECIPIENT_POC": "RECIPIENT POC",
+            "STAGE": "STAGE",
+            "PROGRESS": "PROGRESS",
+            "UPDATED": "UPDATED"
+        }
+    },
+    "CREATE_REVIEW": {
+        "PROJECT": {
+            "PROJECT_SELECTION_TEXT": "Select Project & Period",
+            "PROJECT_SELECTION_DESCRIPTION": "Choose the project and reporting period for this review cycle.",
+            "PROJECT_DROPDOWN_LABEL": "Project",
+            "PROJECT_DROPDOWN_PLACEHOLDER": "Select a project",
+            "PERIOD_DROPDOWN_LABEL": "Period",
+            "PERIOD_DROPDOWN_LABEL_LOADING": "Loading Periods...",
+            "PERIOD_DROPDOWN_PLACEHOLDER": "Select Period"
+        },
+        "METRICS": {
+            "SELECTION_TEXT": "Select Applicable Metrics",
+            "SELECTION_DESCRIPTION": "Choose the metrics applicable to this project across all {{categorycount}} categories.",
+            "METRICS_MANDATORY_INSTRUCTION": "Note: Check a metric to mark it as Mandatory. Unchecked metrics are considered Optional by default.",
+            "NUMBER_OF_MANDATORY_METRICS": "{{metricscount}} mandatory"
+        },
+        "RISK_ADJUSTMENT": {
+            "SELECTION_TEXT": "Risk Adjustment Table",
+            "SELECTION_DESCRIPTION": "Review and adjust risk percentages for each selected metric. Provide a reason for any changes.",
+            "SAVE_AS_DRAFT_BTN_TEXT": "Save As Draft"
+        },
+        "LAUNCH_STEP": {
+            "HEADING": "Launch Review",
+            "GENERATE_EXCEL_TEMPLATE": "Generate Excel Template",
+            "GENERATE_EXCEL_TEMPLATE_DESCRIPTION": "Generate a customized Excel template with {{metricscount}} included metrics and configured risk adjustments.",
+            "EXCEL_TEMPLATE_READY": "Excel Template Ready",
+            "DESCRIPTION": "Send the Excel template to the funding recipient and start the 60-day evidence window.",
+            "EXCEL_TEMPLATE_READY_DESCRIPTION": "{{metricscount}} metrics across {{categorycount}} categories",
+            "DOWNLOAD_TEMPLATE_BTN_TEXT": "Download Template",
+            "LAUNCH_REVIEW_BTN_TEXT": "Launch Review",
+            "LAUNCH_IN_PROGRESS_BTN_TEXT": "Launching...",
+            "BACK_BTN_TEXT": "Back"
+        },
+        "TABS": {
+            "PROJECT": "Select Project",
+            "METRICS": "Select Metrics",
+            "RISK_ADJUSTMENT": "Risk Adjustment",
+            "LAUNCH": "Launch Review"
+        }
+    },
+    "RISK_ADJUSTMENT_STEP": {
+        "NAME_FILTER_PLACEHOLDER": "Search by name or code...",
+        "OPTIONAL_PLACEHOLDER": "Optional",
+        "MANDATORY_PLACEHOLDER": "Mandatory",
+        "ALL_TYPES_PLACEHOLDER": "All types"
+    }
+}

@@ -1,0 +1,32 @@
+<router-outlet />
+<!-- <p-toast position="bottom-right" /> -->
+<app-toast />
+<router-outlet />
+
+<ui-dialog
+  [(visible)]="unsavedChangesService.visible"
+  header="Unsaved Changes"
+  (closed)="onUnsavedChangesDialogClosed()"
+>
+  <div class="space-y-4">
+    <p class="text-sm text-muted-foreground">
+      You have unsaved changes. Are you sure you want to leave this page?
+    </p>
+  </div>
+
+  <div slot="footer" class="flex justify-end gap-2">
+    <ui-button
+      variant="outline"
+      (clicked)="unsavedChangesService.stay()"
+    >
+      Stay
+    </ui-button>
+
+    <ui-button
+      variant="destructive"
+      (clicked)="unsavedChangesService.leave()"
+    >
+      Leave
+    </ui-button>
+  </div>
+</ui-dialog>

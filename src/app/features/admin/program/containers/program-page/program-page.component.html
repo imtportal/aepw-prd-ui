@@ -1,0 +1,118 @@
+<div class="flex h-full min-h-0 flex-col px-2">
+  <!-- ====================================================== -->
+  <!-- HEADER                                                 -->
+  <!-- ====================================================== -->
+
+  <div class="shrink-0 flex flex-wrap items-center justify-between gap-4 mb-2">
+    <div>
+      <p class="text-sm text-muted-foreground">View and manage programs.</p>
+    </div>
+    @if (canAddProgram()) {
+      <ui-button
+        (clicked)="onAddProgram()"
+        styleClass="flex items-center gap-2 rounded-md bg-[hsl(var(--aepw-green))] px-4 py-2 text-sm font-medium text-[hsl(var(--accent-foreground))] hover:bg-[hsl(var(--aepw-green)/0.9)]"
+      >
+        <lucide-icon name="plus" class="h-4 w-4" />
+        Add Program
+      </ui-button>
+    }
+  </div>
+
+  <!-- ====================================================== -->
+  <!-- FILTERS                                                -->
+  <!-- ====================================================== -->
+
+  <div class="shrink-0">
+    <div class="flex flex-wrap items-center gap-3">
+      <!-- Program Search -->
+      <div class="w-80">
+        <ng-select
+          [items]="programLookups()"
+          bindLabel="name"
+          bindValue="programId"
+          [typeahead]="programSearch$"
+          [minTermLength]="3"
+          [clearable]="true"
+          placeholder="Code - Program Name"
+          [ngModel]="selectedProgramId()"
+          (ngModelChange)="onProgramFilterChange($event)"
+        >
+          <ng-template ng-option-tmp let-item="item">
+            {{ item.code }} - {{ item.name }}
+          </ng-template>
+
+          <ng-template ng-label-tmp let-item="item">
+            {{ item.code }} - {{ item.name }}
+          </ng-template>
+        </ng-select>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="ml-auto flex gap-2">
+        <button
+          type="button"
+          class="h-9 rounded-md border px-3 text-sm hover:bg-muted"
+          (click)="clearFilters()"
+        >
+          Clear Filters
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====================================================== -->
+  <!-- TABLE                                                  -->
+  <!-- ====================================================== -->
+
+  <div class="min-h-0 pt-2">
+    <ui-card class="h-full">
+      <ui-card-content styleClass="h-full min-h-0 p-0">
+        <ui-data-table
+          [columns]="tableColumns"
+          [data]="pageData()"
+          [total]="pageTotal()"
+          [loading]="loading()"
+          [rowTemplate]="programRow"
+          [maxBodyHeight]="'calc(100vh - 140px)'"
+          (pageChange)="onPageChange($event)"
+        />
+      </ui-card-content>
+    </ui-card>
+  </div>
+
+  <!-- ====================================================== -->
+  <!-- ROW TEMPLATE                                           -->
+  <!-- ====================================================== -->
+
+  <ng-template #programRow let-item>
+    <tr
+      class="cursor-pointer border-b last:border-0 hover:bg-muted/20"
+      (click)="onEditProgram(item.programId)"
+    >
+      <td class="px-3 py-3 font-medium">
+        {{ item.code }}
+      </td>
+
+      <td class="px-3 py-3">
+        {{ item.name }}
+      </td>
+
+      <td class="w-[35%] px-3 py-3">
+        <span [title]="item.description || '-'">
+          {{ item.description || '-' }}
+        </span>
+      </td>
+
+      <td class="px-3 py-3 text-center">
+        <span
+          [class]="
+            'inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ' +
+            statusColors[item.isActive ? 'Active' : 'Inactive']
+          "
+        >
+          {{ item.isActive ? 'Active' : 'Inactive' }}
+        </span>
+      </td>
+    </tr>
+  </ng-template>
+</div>

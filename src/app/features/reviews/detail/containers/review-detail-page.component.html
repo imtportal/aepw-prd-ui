@@ -1,0 +1,306 @@
+@let dataCollectionFileUploading = uploadingDataCollectionFile();
+@let uploadFileDialogOpen = isUploadFileDialogOpen();
+@let reviewDetailPerm = reviewDetailPermissions();
+
+<!-- <div class="flex-1 p-6">
+  <div class="w-full flex flex-col gap-6">
+    <ui-breadcrumb>
+     @for (crumb of breadcrumbTrail(); track crumb.label; let first = $first) {
+       <ui-breadcrumb-item [label]="crumb.label" [href]="crumb.href ?? '/'" [current]="!!crumb.current" [separator]="!first" />
+     }
+   </ui-breadcrumb>
+  </div>
+</div> -->
+
+@if (loading()) {
+<div data-loading class="mb-4 rounded-md bg-muted px-4 py-2 text-sm text-muted-foreground">
+  Loading…
+</div>
+} @else if (error()) {
+<div class="mb-4 rounded-md bg-destructive/10 px-4 py-2 text-sm text-destructive">
+  {{ error() }}
+</div>
+} @else if (reviewDetail(); as detail) {
+
+@let roleAboveAdmin = role() === reviewPageRole.Admin || role() === reviewPageRole.SeniorLeadership;
+@if (!roleAboveAdmin) {
+<app-review-header [review]="reviewDetail()"
+  [showUploadDataButton]="reviewDetailPerm[reviewDetailPageActionKey.UPLOADDATACOLLECTIONEXCEL]"
+  [showAddCommentButton]="reviewDetailPerm[ reviewDetailPageActionKey.ADDCOMMENT]"
+  [showEditMetricsButton]="reviewDetailPerm[ reviewDetailPageActionKey.EDITMETRICS]"
+  [showRestatementButton]="showRestatementButton() && reviewDetailPerm[reviewDetailPageActionKey.ISSUERESTATEMENT]"
+  [restatementModeActive]="restatementModeActive()" [reviewDetail]="detail" [issuingRestatement]="issuingRestatement()"
+  (action)="onHeaderAction($event)" />
+}
+
+
+@if (!roleAboveAdmin) {
+<div class="p-6 pt-0">
+  <!-- <app-review-metrics-by-id [reviewId]="id()"></app-review-metrics-by-id> -->
+  @if (numericId() != undefined ) {
+  <app-review-metrics-by-id [reviewId]="numericId()" [stageId]="stageId()" [reviewDetail]="reviewDetail()"
+    [refreshReviewMetricsData]="refreshReviewMetricsData()" [detailsExpanded]="reviewDetailsExpanded()"
+    [showRecallButton]="reviewDetailPerm[reviewDetailPageActionKey.ISSUERECALL] && allowActions()"
+    [showViewProgressButton]="reviewDetailPerm[reviewDetailPageActionKey.VIEWPROGRESS]"
+    
+    [showApproveTopLevelMetricbutton]="((stageNameLowerCased() != 'admin') && stageNameLowerCased() != 'l4') && allowActions() && reviewDetailPerm[reviewDetailPageActionKey.APPROVEMETRIC]"
+    [showRejectTopLevelMetricbutton]="((stageNameLowerCased() != 'admin') && stageNameLowerCased() != 'l4') && allowActions() && reviewDetailPerm[reviewDetailPageActionKey.REJECTMETRIC]"
+    
+    [allowEditBaseline]="reviewDetailPerm[reviewDetailPageActionKey.EDITBASELINE] && (restatementModeActive() || allowActions())"
+    [allowEditRawValue]="reviewDetailPerm[reviewDetailPageActionKey.EDITREPORTEDVALUE] && (restatementModeActive() || allowActions())"
+    [allowEditRiskPercent]="reviewDetailPerm[reviewDetailPageActionKey.EDITRISKPERCENT] && (restatementModeActive() || allowActions())"
+    [allowAddingEvidences]="reviewDetailPerm[reviewDetailPageActionKey.ADDEVIDENCE] && allowActions()"
+    [allowViewEvidence]="reviewDetailPerm[reviewDetailPageActionKey.VIEWEVIDENCEEXTRACTION]"
+    [allowDeleteEvidence]="reviewDetailPerm[reviewDetailPageActionKey.DELETEEVIDENCE]"
+    [restatementModeActive]="restatementModeActive()"
+    (baselineRawValueForMetricIds_RSUpdated)="baselineRawValueForMetricIds_RSUpdated($event)"
+    (detailsExpansionChange)="reviewDetailsExpanded.set(!$event.expanded)"
+    (action)="reviewMetricByIdAction($event)"></app-review-metrics-by-id>
+  }
+
+</div>
+
+}
+
+<div class="flex-1 p-6 hidden">
+  <div class="w-full">
+
+    <!-- Tab list — matches Next.js TabsList exactly -->
+    <div class="flex h-auto w-full justify-start gap-1 rounded-none border-b bg-transparent p-0">
+
+      @for (tab of tabData(); track tab.id) {
+      <button type="button" [class]="activeTab() === tab.id ? tabActive : tabInactive" (click)="setActiveTab(tab.id)">
+
+        @if (tab.id !== 'approval') {
+        <ui-badge [styleClass]="'text-[9px] font-bold px-1.5 py-0 ' + tab.badgeClass">
+          {{ tab.code }}
+        </ui-badge>
+        <span class="hidden sm:inline text-xs">{{ tab.label }}</span>
+        <span [class]="tab.evUploaded >= tab.evRequired
+                ? 'font-mono text-[10px] text-[hsl(var(--aepw-green))]'
+                : 'font-mono text-[10px] text-muted-foreground'">
+          {{ tab.evUploaded }}/{{ tab.evRequired }}
+        </span>
+        @if (tab.hasPending) {
+        <span class="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-[hsl(var(--aepw-orange))]"></span>
+        }
+        } @else {
+        <lucide-icon name="shield-check" [size]="14" />
+        <span class="text-xs">Approval &amp; Comments</span>
+        @if (pendingApprovalCount() > 0) {
+        <ui-badge variant="secondary"
+          styleClass="h-4 min-w-4 justify-center rounded-full px-1 py-0 text-[9px] font-bold bg-[hsl(var(--aepw-blue)/0.15)] text-[hsl(var(--aepw-blue))]">
+          {{ pendingApprovalCount() }}
+        </ui-badge>
+        }
+        }
+
+      </button>
+      }
+
+    </div><!-- end tab list -->
+
+    <!-- Tab panels -->
+    @for (tab of tabData(); track tab.id) {
+    @if (activeTab() === tab.id) {
+
+    @if (tab.id !== 'approval') {
+    <div class="mt-0 pt-4">
+      <div class="mb-3 flex items-center justify-between">
+        <app-category-summary-bar [metrics]="metricsForCategory(tab.code)" />
+        <button type="button"
+          class="ml-3 flex shrink-0 items-center gap-1.5 rounded-md px-2 py-1.5 text-xs text-muted-foreground hover:bg-muted/40 hover:text-foreground"
+          (click)="expandAllInCategory(tab.code)">
+          <lucide-icon name="chevrons-up-down" [size]="14" />
+          {{ allExpandedForCategory(tab.code) ? 'Collapse All' : 'Expand All' }}
+        </button>
+      </div>
+      <div class="flex flex-col gap-1">
+        @for (metric of metricsForCategory(tab.code); track metric.metricCode) {
+        <app-metric-row [metric]="metric" [isExpanded]="expandedMetrics().has(metric.metricCode)"
+          [aiLoading]="aiProcessingCodes().has(metric.metricCode)" (toggle)="toggleExpand(metric.metricCode)"
+          (reportedValueChange)="onReportedValueChange(metric.metricCode, $event)"
+          (aiProcess)="onAiProcess(metric.metricCode)" />
+        }
+      </div>
+    </div>
+    } @else {
+    <div class="mt-0 pt-4">
+      <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <ui-card styleClass="border shadow-none">
+          <ui-card-content styleClass="p-5">
+            <h2 class="font-heading mb-5 text-sm font-bold tracking-wide text-foreground">
+              Approval Workflow
+            </h2>
+            <app-approval-section [reviewItem]="reviewItem()" (approve)="onApprove($event)" (reject)="onReject($event)"
+              (recycle)="onRecycle($event)" />
+          </ui-card-content>
+        </ui-card>
+        <ui-card styleClass="border shadow-none">
+          <ui-card-content styleClass="p-5">
+            <div class="mb-4 flex items-center gap-2">
+              <lucide-icon name="message-square" [size]="16" class="text-muted-foreground" />
+              <h2 class="font-heading text-sm font-bold tracking-wide text-foreground">
+                Comments ({{ comments()?.length || 0 }})
+              </h2>
+            </div>
+            @if (comments()) {
+            <app-comment-thread [showHeader]="false" [allowMentioningUsers]="reviewDetailPerm[reviewDetailPageActionKey.TAGUSERINCOMMENT]" [addingComments]="addingComments()" [comments]="comments()"
+              (addComment)="onAddComment($event)" />
+            }
+          </ui-card-content>
+        </ui-card>
+      </div>
+    </div>
+    }
+
+    }
+    }<!-- end tab panels -->
+
+  </div>
+</div>
+}
+
+
+@if (uploadFileDialogOpen) {
+<ui-modal heading="Upload Data (Excel)" maxWidth="max-w-5xl"
+  (close)="dataCollectionFile = null; isUploadFileDialogOpen.set(false)">
+  <!-- Subheading -->
+  <div modal-subheading class="mt-1 flex items-center gap-3 text-sm text-muted-foreground">
+    @if (reviewDetail()?.dataCollectionFolderUrl) {
+    <lucide-icon name="folder-up" [size]="16" />
+    <span class="font-medium text-foreground"> Folder Link: <a
+        class='text-primary hover:underline hover:text-[hsl(var(--aepw-orange))]'
+        href="{{ reviewDetail()?.dataCollectionFolderUrl }}" target="_blank">{{ reviewDetail()?.dataCollectionFolderUrl
+        }}</a></span>
+    }
+  </div>
+  <!-- Previous approval cycles (history) -->
+  <div class="px-6 py-2 mb-4 flex flex-col gap-3">
+    <div class="text-[11px] text-black">
+      File <span class="text-red-500">*</span>
+    </div>
+    <div class="px-4 py-2 hover:border-[hsl(var(--aepw-blue)/0.3)] transition-colors"
+      [class.!border-green-500]="dataCollectionFileInput.files?.length"
+      [class.bg-green-50]="dataCollectionFileInput.files?.length">
+      <div class="width-100 relative flex h-[100px] items-center justify-center">
+        <input type="file" style="width: 100%; height: 100px;" (dragover)="onDrag($event)"
+          [(ngModel)]="dataCollectionFile" #dataCollectionFileInput
+          class="absolute inset-0 z-10 cursor-pointer opacity-0" />
+        <!-- pointer-events-none so clicks and drag-drop still reach the input -->
+        <div class="pointer-events-none flex flex-col items-center gap-1.5 px-4 text-center">
+          @if (!dataCollectionFileInput.files?.length) {
+          <svg class="h-8 w-8 text-[hsl(var(--aepw-blue))]" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+            stroke-width="1.5">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+          </svg>
+          <p class="text-sm text-gray-700">
+            <span class="font-semibold text-[hsl(var(--aepw-blue))]">Click to select</span>
+            or drag and drop a file here
+          </p>
+          }
+          @else {
+          <div class="flex h-10 w-10 items-center justify-center rounded-full bg-green-500 text-white shadow-sm">
+            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <p class="text-sm font-semibold text-green-700">File ready to upload</p>
+          <p class="max-w-full truncate text-xs text-gray-600">{{ dataCollectionFileInput.files?.[0]?.name }}</p>
+          }
+        </div>
+      </div>
+    </div>
+    <div class="flex justify-end gap-2">
+      @if ((dataCollectionFile && dataCollectionFileInput.value) && !dataCollectionFileUploading) {
+      <button
+        class="bg-[hsl(var(--aepw-dark-grey)/0.12)] disabled:opacity-50 flex font-medium gap-1.5 hover:bg-muted items-center px-3 py-1.5 rounded-md text-black text-xs"
+        type="button" (click)="dataCollectionFile = null">
+        <lucide-icon size="16" name="x"></lucide-icon>
+        Remove File
+      </button>
+      }
+      <button type="button"
+        class="flex items-center gap-1.5 rounded-md bg-[hsl(var(--aepw-blue))] px-3 py-1.5 text-xs font-medium text-white hover:bg-[hsl(var(--aepw-blue)/0.9)] disabled:opacity-50"
+        [disabled]="dataCollectionFileUploading || !dataCollectionFile"
+        (click)="uploadDataCollectionFile(dataCollectionFileInput.files?.[0])">
+        @if (dataCollectionFileUploading) {
+        <lucide-icon name="loader-circle" [size]="16" class="animate-spin" />
+        }
+        @else {
+        <lucide-icon name="upload" [size]="16" />
+        }
+        Upload
+      </button>
+    </div>
+  </div>
+</ui-modal>
+}
+
+
+@if (catCode() && periodCode()) {
+<div class="p-6">
+  <app-category-approval-page></app-category-approval-page>
+
+
+</div>
+}
+<!-- Category Approval -->
+
+@let isConfirmationModalOpen = confirmationModalOpen();
+<!-- Common confirmation modal -->
+@if (isConfirmationModalOpen) {
+<ui-modal [heading]="confirmationModalHeaderText()" maxWidth="max-w-2xl" (close)="confirmationModalShowCancelButton() && closeConfirmationModal()">
+  <!-- Subheading -->
+
+  <div class="px-6 py-2 mb-4 flex flex-col gap-3">
+    <div class="width-100">
+      <p>
+        {{confirmationModalText()}}
+      </p>
+    </div>
+
+    @if (showConfirmationModalComment()) {
+    <div class="width-100">
+      <textarea rows="3" [placeholder]="confirmationModalCommentPlaceholder()"
+        class="w-full resize-none font-normal rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+        [(ngModel)]="confirmationModalComment"></textarea>
+    </div>
+    }
+  </div>
+
+  <div class="flex items-center justify-end gap-2 px-4 py-2 ">
+    @if (confirmationModalShowCancelButton()) {
+      <button type="button"
+        class="flex items-center gap-1.5 rounded-md bg-[hsl(var(--aepw-orange))] px-3 py-1.5 font-medium text-white hover:bg-[hsl(var(--aepw-blue)/0.9)] disabled:opacity-50"
+        (click)="closeConfirmationModal()">
+        <lucide-icon name="x" [size]="16" />
+        Close
+      </button>
+
+    }
+
+    <button type="button"
+      class="flex items-center gap-1.5 rounded-md bg-[hsl(var(--aepw-blue))] px-3 py-1.5 font-medium text-white hover:bg-[hsl(var(--aepw-blue)/0.9)] disabled:opacity-50"
+      [disabled]="confirmLoader()" (click)="confirmActionFromModal()">
+      @if (confirmLoader()) {
+      <lucide-icon name="loader-circle" [size]="16" class="animate-spin" />
+      }
+      @else {
+      <lucide-icon name="check" [size]="16" />
+      }
+
+      {{ confirmationModalActionText() }}
+    </button>
+
+  </div>
+</ui-modal>
+}
+
+
+<app-comment-panel [comments]="comments() ?? []" [period]="review()?.reviewPeriodCode || ''"
+  [isCommentsPanelOpen]="isCommentsPanelOpen()" [addingComments]="addingComments()" (addComment)="onAddComment($event)"
+  [allowMentioningUsers]="reviewDetailPerm[reviewDetailPageActionKey.TAGUSERINCOMMENT]"
+  (closeCommentPanel)="isCommentsPanelOpen.set(false)">
+</app-comment-panel>

@@ -1,0 +1,104 @@
+@if (result().loading) {
+  <section class="rounded-xl border border-border bg-card px-4 py-8 text-center text-sm text-muted-foreground">Loading impact metrics...</section>
+} @else if (result().error) {
+  <section class="rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-8 text-center text-sm text-destructive">Unable to load aggregated impact metrics.</section>
+} @else {
+  <section class="rounded-xl border border-border bg-card p-4 shadow-sm sm:p-6">
+    <button type="button" class="mb-4 w-full rounded-lg border border-border bg-background p-3 text-left hover:bg-muted/30 sm:p-4"
+      [attr.aria-expanded]="expanded()" (click)="expanded.set(!expanded())">
+      <span class="flex items-center gap-1 text-xs font-semibold text-foreground sm:text-sm">
+        <lucide-icon [name]="expanded() ? 'chevron-down' : 'chevron-right'" [size]="16" color="gray" />
+        Aggregated Impact Metrics
+      </span>
+    </button>
+    <div [class.hidden]="!expanded()">
+      <div class="mb-4 border-b border-border" role="tablist" aria-label="Impact categories">
+        <div class="flex flex-wrap items-end gap-1">
+          @for (category of categories(); track category.code) {
+            <button type="button" role="tab" class="relative flex items-center gap-2 rounded-t-md border border-b-0 px-3 py-2 text-xs sm:text-sm"
+              [class]="activeCategory() === category.code ? 'z-10 border-border bg-card text-foreground' : 'border-transparent bg-transparent text-muted-foreground hover:text-foreground'"
+              [attr.aria-selected]="activeCategory() === category.code"
+              (click)="selectedCategory.set(category.code)">
+              <span class="rounded-full px-2 py-0.5 text-[10px] font-bold text-white" [style.background-color]="category.color">{{ category.code }}</span>
+              <span class="font-semibold">{{ category.name }}</span>
+            </button>
+          }
+        </div>
+      </div>
+      <div class="mb-2 flex items-center justify-between rounded px-4 py-2">
+        <h2 class="text-sm font-semibold text-foreground">L1 Metrics: {{ visibleL1MetricCount() }}</h2>
+        @if (visibleTopMetrics().length) {
+          <button type="button" class="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground" (click)="toggleExpandAll()">
+            <lucide-icon [name]="allExpanded() ? 'chevrons-down-up' : 'chevrons-up-down'" [size]="14" />
+            {{ allExpanded() ? 'Collapse All' : 'Expand All' }}
+          </button>
+        }
+      </div>
+      <div class="space-y-2" role="tabpanel">
+        @for (metric of visibleTopMetrics(); track metric.metricId) {
+          <article>
+            <button type="button" class="flex w-full flex-wrap items-center justify-between gap-2 rounded border border-[hsl(var(--aepw-blue)/0.2)] bg-background px-3 py-1.5 text-left hover:bg-muted/30"
+              [attr.aria-expanded]="isMetricExpanded(metric.metricId)" (click)="toggleMetric(metric.metricId)">
+              <span class="flex flex-wrap items-center gap-3">
+                <span class="flex w-5 shrink-0 items-center justify-center text-xs text-muted-foreground">
+                  <lucide-icon [name]="isMetricExpanded(metric.metricId) ? 'chevron-down' : 'chevron-right'" [size]="16"
+                    [class]="isMetricExpanded(metric.metricId) ? 'shrink-0 text-[hsl(var(--aepw-blue))]' : 'shrink-0 text-muted-foreground'" />
+                </span>
+                <span class="text-sm font-semibold text-[hsl(var(--aepw-blue))]">{{ metric.code }}</span>
+                <span class="max-w-[18rem] text-sm font-semibold text-foreground">{{ metric.name }}</span>
+                <lucide-icon name="info" [size]="13" color="gray" [attr.title]="metric.description || metric.name" />
+              </span>
+              <span class="flex flex-wrap items-center justify-start gap-3 text-sm font-bold sm:justify-start lg:justify-end max-[1000px]:w-full max-[1000px]:justify-between max-[400px]:justify-end">
+                <ng-container [ngTemplateOutlet]="values" [ngTemplateOutletContext]="{ metric: metric, child: false }" />
+              </span>
+            </button>
+            @if (isMetricExpanded(metric.metricId)) {
+              @for (child of childrenFor(metric.metricId); track child.metricId) {
+                <div class="my-2 rounded border" [class]="isChildExpanded(child.metricId) ? 'border-border' : 'border-border/40'">
+                  <button type="button" class="grid w-full grid-cols-1 gap-2 px-3 py-1.5 text-left hover:bg-muted/30 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:px-4">
+                    <span class="flex min-w-0 items-center gap-3 px-4">
+                      <span class="px-3"></span>
+                      <span class="text-sm font-semibold text-[hsl(var(--aepw-blue))]">{{ child.code }}</span>
+                      <span class="text-sm text-foreground">{{ child.name }}</span>
+                    </span>
+                    <ng-container [ngTemplateOutlet]="values" [ngTemplateOutletContext]="{ metric: child, child: true }" />
+                  </button>
+                  <!-- @if (isChildExpanded(child.metricId)) {
+                    <div class="bg-muted/20 px-4 py-3 sm:px-6">
+                      @for (contribution of child.contributions; track contribution.reviewId) {
+                        <div class="flex flex-wrap items-center justify-between gap-2 border-b border-border/40 py-2 text-xs last:border-0">
+                          <span class="font-semibold text-foreground">{{ contribution.period }}</span>
+                          <span class="flex flex-wrap gap-x-3 gap-y-1 text-muted-foreground">
+                            <span>Reported <strong class="text-foreground">{{ contribution.reported | number }}</strong></span>
+                            <span>Captured <strong class="text-foreground">{{ contribution.captured | number }}</strong></span>
+                            <span>Risk Adj <strong class="text-[hsl(var(--aepw-blue))]">{{ contribution.adjusted | number }}</strong></span>
+                          </span>
+                        </div>
+                      }
+                    </div>
+                  } -->
+                </div>
+              }
+            }
+          </article>
+        } @empty {
+          <p class="p-4 text-sm text-muted-foreground">No impact metrics available.</p>
+        }
+      </div>
+    </div>
+  </section>
+}
+<ng-template #values let-metric="metric" let-child="child">
+  <span class="flex flex-wrap items-center gap-1.5 font-bold text-foreground sm:justify-end" [class]="child ? 'text-xs' : 'text-sm'">
+    <span>Reported <strong>{{ metric.reported | number:'1.3-3' }}</strong></span>
+    <span class="text-muted-foreground/50">|</span>
+    <span>Baseline <strong>{{ metric.baseline | number:'1.3-3' }}</strong></span>
+    <span class="text-muted-foreground/50">|</span>
+    <span>Evidenced <strong>{{ metric.captured | number:'1.3-3' }}</strong></span>
+    <span class="text-muted-foreground/50">|</span>
+    <span>Risk % <strong>{{ metric.riskPercent | number:'1.3-3' }}%</strong></span>
+    <span class="text-muted-foreground/50">|</span>
+    <span>Risk Adj <strong class="text-[hsl(var(--aepw-blue))]">{{ metric.adjusted | number:'1.3-3' }}</strong></span>
+    <span class="font-normal text-muted-foreground">{{ metric.unit }}</span>
+  </span>
+</ng-template>

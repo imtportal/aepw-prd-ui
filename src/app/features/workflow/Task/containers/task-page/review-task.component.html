@@ -1,0 +1,209 @@
+<div class="flex flex-col gap-6">
+  <!-- Header -->
+  <div class="flex flex-wrap items-center justify-between gap-4">
+    <div>
+      <p class="text-sm text-muted-foreground">Review Tasks</p>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="flex flex-col gap-3">
+    <div class="flex flex-wrap items-center gap-3">
+      <div class="w-96">
+        <!-- <ui-select
+          [ngModel]="selectedStageCode()"
+          [options]="reviewStages()"
+          (ngModelChange)="onStageChange($event)"
+          optionLabel="name"
+          optionValue="code"
+
+        /> -->
+
+        <select class="w-full h-9 appearance-none rounded-md border border-input bg-card pl-3 pr-8 text-sm text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+          [(ngModel)]="selectedStageCode"
+          (ngModelChange)="onStageChange($event)"
+          >
+          <!-- <option [ngValue]="null">
+            All
+          </option> -->
+          @for (stage of reviewStages(); track stage.code) {
+            <option [value]="stage.code">
+              {{ stage.name }}
+            </option>
+          }
+        </select>
+
+        
+      </div>
+      <div class="w-96">
+        <select class="w-full h-9 appearance-none rounded-md border border-input bg-card pl-3 pr-8 text-sm text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+          [(ngModel)]="selectedPeriodCode"
+          (ngModelChange)="onQuarterChange($event)"
+          >
+          <option value="all">
+            All
+          </option>
+          @for (period of reviewPeriodCodes(); track period.label) {
+            <option [style.backgroundColor]=" period.isCurrent ? '#a4c4ff' : '#fff9f9'" [value]="period.label">
+              {{ period.label }}
+            </option>
+          }
+        </select> 
+
+        
+      </div>
+      <div>
+        <lucide-icon (click)="refreshImpactMasters()" name="rotate-cw" [size]="16" class="text-muted-foreground hover:opacity-80 cursor-pointer" />
+      </div>
+
+    </div>
+    <!-- Project Table -->
+    @if (loadingLookups()) {
+      <div class="bg-[hsl(var(--aepw-blue)/0.08)] border flex gap-4 items-center justify-center p-4 rounded-lg">  <lucide-icon name="loader-circle" [size]="16" class="animate-spin" />
+        Loading... please wait </div>
+    }
+    @else if (reviewStages()) {
+      @if (reviewStages().length > 0) {
+        @if (isSeniorLeadershipOrAdmin()) {
+ 
+          <!-- Senior Leadership / Admin Table -->
+          <ui-card>
+            <ui-card-content styleClass="p-0">
+              <ui-data-table
+                [noRecordsFoundText]="!periodCodesHavingData() ? 'No Pending tasks' : (pendingTasksForQuartersTextPrefix() + periodCodesHavingData())"
+                [columns]="seniorLeadershipTableColumns"
+                [data]="seniorLeadershipTasks()"
+                [total]="seniorLeadershipTasks().length"
+                [loading]="loading()"
+                [rowTemplate]="seniorLeadershipRow"
+              />
+            </ui-card-content>
+          </ui-card>
+    
+          <ng-template #seniorLeadershipRow let-task>
+            <tr class="border-b last:border-0 hover:bg-black/10 cursor-pointer" (click)="goToReview(task)">
+              <td class="px-3 py-3 text-sm text-foreground">
+                {{ task.periodCode }}
+              </td>
+    
+              <td class="px-3 py-3 text-sm">
+                <span class="font-medium">
+                  {{ task.metricCategories }}
+                </span>
+                <span class="text-muted-foreground ml-1">
+                  {{ task.recordTypeName }}
+                </span>
+              </td>
+    
+              <td class="px-3 py-3">
+                <ui-button
+                  
+                  type="button"
+                  class="rounded   text-xs font-medium text-[hsl(var(--aepw-blue))] bg-[hsl(var(--aepw-blue)/0.08)] hover:bg-[hsl(var(--aepw-blue)/0.15)] transition-colors"
+                >
+                  Review
+                </ui-button>
+              </td>
+            </tr>
+          </ng-template>
+        } @else {
+          <ui-card>
+            <ui-card-content styleClass="p-0">
+              <ui-data-table
+                [noRecordsFoundText]="!periodCodesHavingData() ? 'No Pending tasks' : (pendingTasksForQuartersTextPrefix() + periodCodesHavingData())"
+                [columns]="tableColumns"
+                [data]="pageData()"
+                [total]="pageTotal()"
+                [loading]="loading()"
+                [rowTemplate]="reviewTaskRow"
+                (pageChange)="onPageChange($event)"
+              />
+            </ui-card-content>
+          </ui-card>
+        }
+      }
+
+    }
+    @else {
+      
+    }
+    <!-------------------------------------- Row template ------------------------------------>
+    <ng-template #reviewTaskRow let-reviewTask>
+      <tr
+        [attr.data-impact-master-row]="reviewTask.impactMasterId"
+        class="border-b last:border-0 hover:bg-muted/20 cursor-pointer"
+        (click)="goToReview(reviewTask)"
+      >
+        <td class="px-4 py-3 text-[hsl(var(--aepw-blue))]">
+          IM-{{ reviewTask.impactMasterId }}
+        </td>
+
+        <td [title]="reviewTask.pin" class="word-break-word px-4 py-3 text-[hsl(var(--aepw-blue))]">
+          {{ reviewTask.pin || '-' }} 
+        </td>
+        <td class="px-3 py-3">
+          <span
+            [class]="
+              'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ' +
+              recordTypeColors[reviewTask.recordTypeName]
+            "
+          >
+            {{ reviewTask.recordTypeName }}
+          </span>
+        </td>
+        <td class="px-3 py-3">
+          <div
+            class="line-clamp-2 break-words text-foreground content-position-relative"
+            style="overflow:hidden; white-space: nowrap; text-overflow: ellipsis;"
+            (mouseenter)="showHideProjectTitleTooltip(reviewTask.impactMasterId)"
+            (mouseleave)="showHideProjectTitleTooltip(null)"
+            [title]="reviewTask.title"
+          >
+            {{ reviewTask.title }}
+
+             <div class="floating-tooltip" >
+              <!-- [class.hidden]="showProjectTitleTooltip() != reviewTask.impactMasterId" -->
+              {{ reviewTask.title }}
+            </div>
+          </div>
+        </td>
+
+        <td class="px-3 py-3 text-foreground">
+          {{ reviewTask.periodCode || '-' }}
+        </td>
+
+        <td class="px-3 py-3">
+          <span
+            class="inline-flex items-center text-center rounded-full px-2 py-0.5 text-xs font-medium bg-[hsl(var(--aepw-blue)/0.12)] text-[hsl(var(--aepw-blue))]"
+          >
+            {{ reviewTask.stageDisplayValue }}
+          </span>
+        </td>
+
+        <td class="px-3 py-3">
+          <div
+            class="line-clamp-2 break-words text-foreground"
+            [title]="reviewTask.metricCategories || '-'"
+          >
+            {{ reviewTask.metricCategories || '-' }}
+          </div>
+        </td>
+
+        <td class="px-3 py-3 text-foreground">
+          {{ reviewTask.updatedOnUTC || reviewTask.createdOnUTC | date: 'dd MMM yyyy' }}
+        </td>
+
+        <td class="px-3 py-1 text-right">
+          <ui-button
+            (click)="goToReview(reviewTask)"
+            [size]="'sm'"
+            type="button"
+            class=" "
+          >
+            Review
+          </ui-button>
+        </td> 
+      </tr>
+    </ng-template>
+  </div>
+</div>

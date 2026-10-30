@@ -1,0 +1,91 @@
+trigger:
+  batch: true
+  branches:
+    include:
+    - main
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+- task: NodeTool@0
+  inputs:
+    versionSpec: '24.x'
+  displayName: 'Install Node.js'
+
+- script: npm ci --legacy-peer-deps
+  displayName: 'Install dependencies'
+
+- script: |
+    sed -i "s/YOUR_CLIENT_ID/$(AZURE_AD_CLIENT_ID)/g" src/environments/environment.prod.ts
+    sed -i "s/YOUR_TENANT_ID/$(AZURE_AD_TENANT_ID)/g" src/environments/environment.prod.ts
+  displayName: 'Inject Azure AD credentials'
+
+- script: npx ng build --configuration production
+  displayName: 'Build for production'
+
+- script: |
+    cat > dist/aepw-angular/browser/server.js << 'EOF'
+    const http = require('http');
+    const fs = require('fs');
+    const path = require('path');
+    const PORT = process.env.PORT || 8080;
+    const ROOT = __dirname;
+    const MIME = {
+      '.html': 'text/html', '.js': 'application/javascript',
+      '.css': 'text/css', '.json': 'application/json',
+      '.png': 'image/png', '.jpg': 'image/jpeg',
+      '.svg': 'image/svg+xml', '.ico': 'image/x-icon',
+      '.woff': 'font/woff', '.woff2': 'font/woff2'
+    };
+    http.createServer((req, res) => {
+      const urlPath = req.url.split('?')[0];
+      let filePath = path.join(ROOT, urlPath === '/' ? 'index.html' : urlPath);
+      fs.access(filePath, fs.constants.F_OK, (err) => {
+        if (err && (path.extname(urlPath) || urlPath.startsWith('/assets/'))) {
+          res.writeHead(404, {
+            'Content-Type': 'text/plain',
+            'Cache-Control': 'no-store',
+          });
+          res.end('Not Found');
+          return;
+        }
+        if (err) filePath = path.join(ROOT, 'index.html');
+        fs.readFile(filePath, (readErr, data) => {
+          if (readErr) { res.writeHead(500); res.end('Error'); return; }
+          const isIndex = path.basename(filePath) === 'index.html';
+          res.writeHead(200, {
+            'Content-Type': MIME[path.extname(filePath)] || 'text/plain',
+            'Cache-Control': isIndex ? 'no-store' : 'no-cache',
+          });
+          res.end(data);
+        });
+      });
+    }).listen(PORT, () => console.log('Server running on port ' + PORT));
+    EOF
+  displayName: 'Add Node server for SPA routing'
+
+- task: ArchiveFiles@2
+  inputs:
+    rootFolderOrFile: 'dist/aepw-angular/browser'
+    includeRootFolder: false
+    archiveType: 'zip'
+    archiveFile: '$(Build.ArtifactStagingDirectory)/app.zip'
+  displayName: 'Package build output'
+
+- task: PublishBuildArtifacts@1
+  inputs:
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)/app.zip'
+    ArtifactName: 'angular-dist'
+  displayName: 'Publish artifact'
+
+- task: AzureWebApp@1
+  retryCountOnTaskFailure: 3
+  inputs:
+    azureSubscription: '$(AZURE_SERVICE_CONNECTION)'
+    appType: 'webAppLinux'
+    appName: 'aepw-imt-portal'
+    package: '$(Build.ArtifactStagingDirectory)/app.zip'
+    runtimeStack: 'NODE|24-lts'
+    startUpCommand: 'node server.js'
+  displayName: 'Deploy to Azure App Service'

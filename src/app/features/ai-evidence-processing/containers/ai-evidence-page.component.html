@@ -1,0 +1,161 @@
+<div class="flex flex-col gap-3 p-6">
+
+  <!-- Info Banner (from AI Processing) -->
+  <div class="flex items-start gap-2 rounded-md border border-dashed border-[hsl(var(--aepw-blue)/0.3)] bg-[hsl(var(--aepw-blue)/0.04)] px-3 py-2 text-xs text-[hsl(var(--aepw-blue))]">
+    <lucide-icon name="info" class="h-4 w-4 shrink-0 mt-0.5" />
+    <span>
+      <span class="font-medium">Background Queue:</span>
+      Files uploaded via Evidence Tracker are processed here. Low-confidence extractions (&lt;85%) are flagged for review.
+    </span>
+  </div>
+
+  <!-- Stats Row (from AI Processing) -->
+  <app-ai-stats-row
+    [total]="totalCount()"
+    [queued]="queuedCount()"
+    [processing]="processingCount()"
+    [completed]="completedCount()"
+    [needsReview]="needsReviewCount()"
+    [errorCount]="errorCount()" />
+
+  <!-- Header: stat pills + actions (from Evidence) -->
+  <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div class="grid grid-cols-4 gap-2 sm:flex sm:flex-wrap sm:items-center sm:gap-2">
+      <div class="flex items-center gap-1 px-2 py-1 rounded bg-muted text-xs">
+        <lucide-icon name="paperclip" class="h-3 w-3 text-muted-foreground" />
+        <span class="font-semibold">{{ pageTotal() }}</span>
+        <span class="text-muted-foreground">Total</span>
+      </div>
+      <div class="flex items-center gap-1 px-2 py-1 rounded bg-[hsl(var(--aepw-orange)/0.1)] text-xs">
+        <lucide-icon name="triangle-alert" class="h-3 w-3 text-[hsl(var(--aepw-orange))]" />
+        <span class="font-semibold text-[hsl(var(--aepw-orange))]">{{ needsReviewCount() }}</span>
+        <span class="text-muted-foreground">Review</span>
+      </div>
+      <div class="flex items-center gap-1 px-2 py-1 rounded bg-muted text-xs">
+        <lucide-icon name="clock" class="h-3 w-3 text-muted-foreground" />
+        <span class="font-semibold">{{ pendingCount() }}</span>
+        <span class="text-muted-foreground">Pending</span>
+      </div>
+      <div class="flex items-center gap-1 px-2 py-1 rounded bg-[hsl(var(--aepw-green)/0.1)] text-xs">
+        <lucide-icon name="circle-check" class="h-3 w-3 text-[hsl(var(--aepw-green))]" />
+        <span class="font-semibold text-[hsl(var(--aepw-green))]">{{ validatedCount() }}</span>
+        <span class="text-muted-foreground">Valid</span>
+      </div>
+    </div>
+    <div class="grid grid-cols-2 gap-2 sm:flex sm:items-center sm:gap-2">
+      <button type="button" class="inline-flex items-center justify-center gap-1.5 h-9 px-3 rounded-md border text-sm hover:bg-muted">
+        <lucide-icon name="download" class="h-4 w-4" />Export
+      </button>
+      <button type="button"
+        class="inline-flex items-center justify-center gap-1.5 h-9 px-4 rounded-md bg-[hsl(var(--aepw-blue))] text-white text-sm font-medium hover:bg-[hsl(var(--aepw-blue)/0.9)]"
+        (click)="showUploadDialog.set(true)">
+        <lucide-icon name="upload" class="h-4 w-4" />Upload Evidence
+      </button>
+    </div>
+  </div>
+
+  <!-- Filters (from Evidence) -->
+  <div class="flex flex-col gap-2 rounded-lg border bg-card p-2 sm:flex-row sm:flex-wrap sm:items-center">
+    <ui-search-input
+      styleClass="w-full sm:w-auto sm:min-w-[160px] sm:flex-1"
+      placeholder="Search..."
+      [value]="searchQuery()"
+      (valueChange)="onSearchChange($event)" />
+    <div class="grid grid-cols-2 gap-2 sm:contents">
+      <ui-select [options]="projectOptions()"  [ngModel]="projectFilter()"    (ngModelChange)="onProjectFilterChange($event)"    styleClass="h-9 w-full sm:w-auto sm:min-w-[150px]" />
+      <ui-select [options]="periodOptions()"   [ngModel]="periodFilter()"     (ngModelChange)="onPeriodFilterChange($event)"     styleClass="h-9 w-full sm:w-auto sm:min-w-[130px]" />
+      <ui-select [options]="statusOptions"     [ngModel]="statusFilter()"     (ngModelChange)="onStatusFilterChange($event)"     styleClass="h-9 w-full sm:w-auto sm:min-w-[130px]" />
+      <ui-select [options]="confidenceOptions" [ngModel]="confidenceFilter()" (ngModelChange)="onConfidenceFilterChange($event)" styleClass="h-9 w-full sm:w-auto sm:min-w-[140px]" />
+    </div>
+  </div>
+
+  <!-- Bulk actions (from Evidence) -->
+  @if (selectedIds().size > 0) {
+    <div class="flex items-center gap-3 rounded-lg border border-[hsl(var(--aepw-blue)/0.3)] bg-[hsl(var(--aepw-blue)/0.05)] px-3 py-1.5">
+      <span class="text-xs font-medium">{{ selectedIds().size }} selected</span>
+      <button type="button"
+        class="flex items-center gap-1 h-6 px-2 rounded-md bg-[hsl(var(--aepw-green))] text-white text-xs hover:bg-[hsl(var(--aepw-green)/0.9)]"
+        (click)="onApproveSelected()">
+        <lucide-icon name="thumbs-up" class="h-3 w-3" />Approve
+      </button>
+      <button type="button"
+        class="flex items-center gap-1 h-6 px-2 rounded-md border text-xs hover:bg-muted"
+        (click)="onClearSelection()">
+        Clear
+      </button>
+    </div>
+  }
+
+  <!-- Table Card -->
+  <ui-card>
+    <ui-card-header styleClass="py-3">
+      <ui-card-title styleClass="font-heading text-sm font-bold tracking-wide">AI Evidence Processing</ui-card-title>
+      <p class="text-xs text-muted-foreground">Unified AI extraction and evidence validation queue</p>
+    </ui-card-header>
+    <ui-card-content styleClass="p-0">
+      <ui-data-table
+        [columns]="tableColumns"
+        [data]="pageData()"
+        [total]="pageTotal()"
+        [loading]="loading()"
+        [rowTemplate]="aiEvidenceRow"
+        [headerTemplate]="aiEvidenceHeader"
+        (pageChange)="onPageChange($event)" />
+    </ui-card-content>
+  </ui-card>
+
+  <!-- AI Detail Sheet -->
+  <app-ai-detail-sheet
+    [item]="aiDetailItem()"
+    (close)="onCloseAiDetail()"
+    (reprocess)="onReprocess($event)"
+    (approve)="onApprove($event)"
+    (reject)="onReject($event)" />
+
+  <!-- Evidence Detail Sheet -->
+  <app-evidence-detail-sheet
+    [file]="evidDetailFile()"
+    (close)="onCloseEvidDetail()"
+    (approve)="onApprove($event)" />
+
+  <!-- Upload Dialog -->
+  <app-evidence-upload-dialog
+    [visible]="showUploadDialog()"
+    [projects]="uploadProjectOptions()"
+    (close)="showUploadDialog.set(false)"
+    (upload)="onUpload()" />
+</div>
+
+<!-- Custom header with checkbox -->
+<ng-template #aiEvidenceHeader>
+  <tr class="border-b bg-card hover:bg-transparent sticky top-0 z-10">
+    <th class="w-8 px-2 py-2">
+      <input type="checkbox"
+        [checked]="selectAllState() === 'all'"
+        [indeterminate]="selectAllState() === 'some'"
+        (change)="onSelectAll()"
+        class="rounded border-input" />
+    </th>
+    <th class="px-3 py-2 text-left text-xs font-semibold text-muted-foreground w-[200px]">Project</th>
+    <th class="px-3 py-2 text-left text-xs font-semibold text-muted-foreground w-[70px]">Period</th>
+    <th class="px-3 py-2 text-left text-xs font-semibold text-muted-foreground">File Name</th>
+    <th class="px-3 py-2 text-left text-xs font-semibold text-muted-foreground w-[110px]">Metric</th>
+    <th class="px-3 py-2 text-left text-xs font-semibold text-muted-foreground w-[80px]">Uploaded</th>
+    <th class="px-3 py-2 text-center text-xs font-semibold text-muted-foreground w-[50px]">AI %</th>
+    <th class="px-3 py-2 text-left text-xs font-semibold text-muted-foreground w-[90px]">Status</th>
+    <th class="px-3 py-2 text-left text-xs font-semibold text-muted-foreground w-[140px]">Notes</th>
+    <th class="px-3 py-2 w-[80px]">Actions</th>
+  </tr>
+</ng-template>
+
+<!-- Row template -->
+<ng-template #aiEvidenceRow let-file>
+  <tr app-ai-evidence-row
+    [file]="file"
+    [selected]="selectedIds().has(file.id)"
+    (selectToggle)="onToggleSelect($event)"
+    (openAiDetail)="onOpenAiDetail($event)"
+    (openEvidDetail)="onOpenEvidDetail($event)"
+    class="border-b last:border-0 hover:bg-muted/30">
+  </tr>
+</ng-template>

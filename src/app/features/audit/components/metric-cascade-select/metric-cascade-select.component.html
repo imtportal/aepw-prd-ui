@@ -1,0 +1,239 @@
+<div class="relative w-72 min-w-[220px] select-none text-xs font-sans">
+  <!-- Trigger Control (styled like standard input/select) -->
+  <div
+    role="button"
+    tabindex="0"
+    (click)="toggleOpen($event)"
+    [class.border-ring]="isOpen()"
+    [class.ring-1]="isOpen()"
+    [class.ring-ring]="isOpen()"
+    [class.opacity-60]="loading()"
+    class="flex h-9 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-1.5 text-xs text-foreground shadow-xs transition-colors hover:border-ring cursor-pointer focus:outline-none"
+  >
+    <div class="flex items-center gap-1.5 min-w-0 flex-1 overflow-hidden">
+      @if (loading()) {
+        <span class="text-muted-foreground flex items-center gap-1.5">
+          <span class="inline-block h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent"></span>
+          <span>Loading Metrics...</span>
+        </span>
+      } @else if (selectedInfo(); as info) {
+        <span
+          class="shrink-0 whitespace-nowrap inline-flex items-center gap-1 rounded bg-[hsl(var(--aepw-blue)/0.12)] px-2 py-0.5 font-bold font-mono text-[hsl(var(--aepw-blue))] text-[11px]"
+          [title]="info.label"
+        >
+          <lucide-icon name="layers" [size]="11" class="shrink-0" />
+          <span>{{ info.badgeText }}</span>
+        </span>
+        <span class="truncate text-[11px] text-muted-foreground flex-1 min-w-0" [title]="info.name">
+          {{ info.name }}
+        </span>
+      } @else {
+        <span class="text-muted-foreground truncate">{{ placeholder() }}</span>
+      }
+    </div>
+
+    <!-- Right Controls: Clear and Chevron -->
+    <div class="flex items-center gap-1 shrink-0 ml-1">
+      @if (selectedMetricCode() && !loading()) {
+        <button
+          type="button"
+          (click)="clearSelection($event)"
+          class="rounded p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+          title="Clear Metric filter"
+        >
+          <lucide-icon name="x" [size]="12" />
+        </button>
+      }
+      <lucide-icon
+        name="chevron-down"
+        [size]="14"
+        class="text-muted-foreground transition-transform duration-200"
+        [class.rotate-180]="isOpen()"
+      />
+    </div>
+  </div>
+
+  <!-- Cascaded Dropdown Popover -->
+  @if (isOpen()) {
+    <div
+      (click)="$event.stopPropagation()"
+      class="absolute left-0 top-full mt-1.5 w-80 sm:w-96 rounded-lg border border-border bg-popover text-popover-foreground shadow-2xl z-50 overflow-hidden animate-in fade-in-50 zoom-in-95 duration-150"
+    >
+
+      <!-- Quick Actions Header (All Metrics + Expand/Collapse) -->
+      <div class="flex items-center justify-between px-3 py-1.5 border-b border-border/60 bg-muted/10 text-[11px] text-muted-foreground">
+        <!-- "All Metrics" Option -->
+        <button
+          type="button"
+          (click)="selectAllOption($event)"
+          class="flex items-center gap-1.5 font-medium hover:text-foreground cursor-pointer transition-colors"
+        >
+          <span
+            class="flex h-3.5 w-3.5 items-center justify-center rounded border border-input transition-colors"
+            [class.bg-[hsl(var(--aepw-blue))]]="!selectedMetricCode()"
+            [class.border-[hsl(var(--aepw-blue))]]="!selectedMetricCode()"
+            [class.text-white]="!selectedMetricCode()"
+          >
+            @if (!selectedMetricCode()) {
+              <lucide-icon name="check" [size]="10" />
+            }
+          </span>
+          <span [class.font-semibold]="!selectedMetricCode()" [class.text-foreground]="!selectedMetricCode()">
+            All Metrics (No filter)
+          </span>
+        </button>
+
+        <!-- Expand / Collapse All (Only when hierarchy exists) -->
+        @if (hasAnyChildren()) {
+          <div class="flex items-center gap-2 text-[10px]">
+            <button type="button" (click)="expandAll($event)" class="hover:text-foreground hover:underline">
+              Expand All
+            </button>
+            <span>•</span>
+            <button type="button" (click)="collapseAll($event)" class="hover:text-foreground hover:underline">
+              Collapse All
+            </button>
+          </div>
+        }
+      </div>
+
+      <!-- Hierarchical Tree List -->
+      <div class="max-h-72 overflow-y-auto divide-y divide-border/40 p-1">
+        @if (filteredTree().length === 0) {
+          <div class="py-6 text-center text-xs text-muted-foreground">
+            No metrics match your search.
+          </div>
+        } @else {
+          @for (parent of filteredTree(); track parent.code) {
+            <div class="py-1">
+              <!-- PARENT ROW -->
+              <div
+                (click)="selectParent(parent, $event)"
+                class="group flex items-center justify-between rounded-md px-2 py-1.5 hover:bg-muted/70 cursor-pointer transition-colors"
+                [class.bg-[hsl(var(--aepw-blue)/0.08)]]="isParentChecked(parent)"
+              >
+                <div class="flex items-center gap-2 truncate min-w-0 flex-1">
+                  <!-- Expand/Collapse Chevron (only when hierarchy exists) -->
+                  @if (hasAnyChildren()) {
+                    @if (parent.children.length > 0) {
+                      <button
+                        type="button"
+                        (click)="toggleExpandParent(parent.code, $event)"
+                        class="flex h-5 w-5 shrink-0 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                        [title]="isParentExpanded(parent.code) ? 'Collapse' : 'Expand'"
+                      >
+                        <lucide-icon
+                          name="chevron-right"
+                          [size]="13"
+                          class="transition-transform duration-150"
+                          [class.rotate-90]="isParentExpanded(parent.code)"
+                        />
+                      </button>
+                    } @else {
+                      <span class="w-5 shrink-0"></span>
+                    }
+                  }
+
+                  <!-- Parent Checkbox -->
+                  <span
+                    class="flex h-4 w-4 shrink-0 items-center justify-center rounded border transition-colors cursor-pointer"
+                    [class.bg-[hsl(var(--aepw-blue))]]="isParentChecked(parent)"
+                    [class.border-[hsl(var(--aepw-blue))]]="isParentChecked(parent) || isParentIndeterminate(parent)"
+                    [class.bg-[hsl(var(--aepw-blue)/0.15)]]="isParentIndeterminate(parent)"
+                    [class.border-input]="!isParentChecked(parent) && !isParentIndeterminate(parent)"
+                  >
+                    @if (isParentChecked(parent)) {
+                      <lucide-icon name="check" [size]="11" class="text-white" />
+                    } @else if (isParentIndeterminate(parent)) {
+                      <lucide-icon name="minus" [size]="11" class="text-[hsl(var(--aepw-blue))]" />
+                    }
+                  </span>
+
+                  <!-- Parent Code & Name -->
+                  <div class="flex items-baseline gap-1.5 truncate min-w-0">
+                    <span
+                      class="font-semibold text-xs tracking-tight shrink-0 font-mono"
+                      [class.text-[hsl(var(--aepw-blue))]]="isParentChecked(parent) || isParentIndeterminate(parent)"
+                    >
+                      {{ parent.code }}
+                    </span>
+                    <span class="truncate text-xs font-medium text-foreground" [title]="parent.name">
+                      {{ parent.name }}
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Sub-metrics Badge Pill -->
+                @if (parent.children.length > 0) {
+                  <span
+                    (click)="toggleExpandParent(parent.code, $event)"
+                    class="ml-2 shrink-0 rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground group-hover:bg-muted-foreground/20 cursor-pointer"
+                    [title]="parent.children.length + ' sub-metrics under ' + parent.code"
+                  >
+                    {{ parent.children.length }} sub-metrics
+                  </span>
+                }
+              </div>
+
+              <!-- NESTED CHILDREN (CASCADED) -->
+              @if (parent.children.length > 0 && isParentExpanded(parent.code)) {
+                <div class="ml-6 pl-2.5 my-1 space-y-0.5 border-l-2 border-border/80">
+                  @for (child of parent.children; track child.code) {
+                    <div
+                      (click)="selectChild(child, parent, $event)"
+                      class="flex items-center gap-2 rounded px-2 py-1 hover:bg-muted/70 cursor-pointer transition-colors"
+                      [class.bg-[hsl(var(--aepw-blue)/0.12)]]="isChildChecked(child, parent)"
+                    >
+                      <!-- Child Checkbox -->
+                      <span
+                        class="flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded border transition-colors cursor-pointer"
+                        [class.bg-[hsl(var(--aepw-blue))]]="isChildChecked(child, parent)"
+                        [class.border-[hsl(var(--aepw-blue))]]="isChildChecked(child, parent)"
+                        [class.text-white]="isChildChecked(child, parent)"
+                        [class.border-input]="!isChildChecked(child, parent)"
+                      >
+                        @if (isChildChecked(child, parent)) {
+                          <lucide-icon name="check" [size]="10" />
+                        }
+                      </span>
+
+                      <!-- Child Code & Name -->
+                      <div class="flex items-baseline gap-1.5 truncate min-w-0">
+                        <span
+                          class="font-mono text-[11px] font-medium shrink-0"
+                          [class.text-[hsl(var(--aepw-blue))]]="isChildChecked(child, parent)"
+                          [class.font-semibold]="isChildChecked(child, parent)"
+                        >
+                          {{ child.code }}
+                        </span>
+                        <span class="truncate text-[11px] text-muted-foreground" [title]="child.name">
+                          {{ child.name }}
+                        </span>
+                      </div>
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          }
+        }
+      </div>
+
+      <!-- Footer Help Tip -->
+      <div class="border-t border-border/60 bg-muted/30 px-3 py-1.5 text-[10px] text-muted-foreground flex items-center justify-between">
+        @if (hasAnyChildren()) {
+          <span>Tip: Check parent to include all its sub-metrics.</span>
+        } @else {
+          <span>Showing all approval metrics.</span>
+        }
+        <button
+          type="button"
+          (click)="isOpen.set(false)"
+          class="font-semibold text-[hsl(var(--aepw-blue))] hover:underline cursor-pointer"
+        >
+          Done
+        </button>
+      </div>
+    </div>
+  }
+</div>

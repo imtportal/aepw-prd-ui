@@ -1,0 +1,68 @@
+<div class="grid grid-cols-2 md:grid-cols-6 gap-3" data-stats-row>
+  <ui-card>
+    <ui-card-content styleClass="p-3 flex items-center gap-2.5">
+      <div class="rounded-lg bg-muted p-2">
+        <lucide-icon name="activity" class="h-4 w-4 text-muted-foreground" />
+      </div>
+      <div>
+        <p class="text-xl font-bold" data-stat-total>{{ total() }}</p>
+        <p class="text-[10px] text-muted-foreground">Total Today</p>
+      </div>
+    </ui-card-content>
+  </ui-card>
+  <ui-card>
+    <ui-card-content styleClass="p-3 flex items-center gap-2.5">
+      <div class="rounded-lg bg-[hsl(var(--aepw-blue)/0.1)] p-2">
+        <lucide-icon name="loader-2" class="h-4 w-4 text-[hsl(var(--aepw-blue))]" />
+      </div>
+      <div>
+        <p class="text-xl font-bold text-[hsl(var(--aepw-blue))]" data-stat-processing>{{ processing() }}</p>
+        <p class="text-[10px] text-muted-foreground">Processing</p>
+      </div>
+    </ui-card-content>
+  </ui-card>
+  <ui-card>
+    <ui-card-content styleClass="p-3 flex items-center gap-2.5">
+      <div class="rounded-lg bg-muted p-2">
+        <lucide-icon name="clock" class="h-4 w-4 text-muted-foreground" />
+      </div>
+      <div>
+        <p class="text-xl font-bold" data-stat-queued>{{ queued() }}</p>
+        <p class="text-[10px] text-muted-foreground">Queued</p>
+      </div>
+    </ui-card-content>
+  </ui-card>
+  <ui-card>
+    <ui-card-content styleClass="p-3 flex items-center gap-2.5">
+      <div class="rounded-lg bg-[hsl(var(--aepw-green)/0.1)] p-2">
+        <lucide-icon name="check-circle-2" class="h-4 w-4 text-[hsl(var(--aepw-green))]" />
+      </div>
+      <div>
+        <p class="text-xl font-bold text-[hsl(var(--aepw-green))]" data-stat-completed>{{ completed() }}</p>
+        <p class="text-[10px] text-muted-foreground">Completed</p>
+      </div>
+    </ui-card-content>
+  </ui-card>
+  <ui-card>
+    <ui-card-content styleClass="p-3 flex items-center gap-2.5">
+      <div class="rounded-lg bg-[hsl(var(--aepw-orange)/0.1)] p-2">
+        <lucide-icon name="alert-triangle" class="h-4 w-4 text-[hsl(var(--aepw-orange))]" />
+      </div>
+      <div>
+        <p class="text-xl font-bold text-[hsl(var(--aepw-orange))]" data-stat-needs-review>{{ needsReview() }}</p>
+        <p class="text-[10px] text-muted-foreground">Needs Review</p>
+      </div>
+    </ui-card-content>
+  </ui-card>
+  <ui-card>
+    <ui-card-content styleClass="p-3 flex items-center gap-2.5">
+      <div class="rounded-lg bg-[hsl(var(--destructive)/0.1)] p-2">
+        <lucide-icon name="x-circle" class="h-4 w-4 text-[hsl(var(--destructive))]" />
+      </div>
+      <div>
+        <p class="text-xl font-bold text-[hsl(var(--destructive))]" data-stat-error>{{ errorCount() }}</p>
+        <p class="text-[10px] text-muted-foreground">Error</p>
+      </div>
+    </ui-card-content>
+  </ui-card>
+</div>

@@ -1,0 +1,14 @@
+<li [class]="cn('inline-flex items-center gap-1.5', styleClass())">
+  @if (separator()) {
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+      stroke-linecap="round" stroke-linejoin="round"
+      class="h-3 w-3 shrink-0 text-muted-foreground/50">
+      <path d="m9 18 6-6-6-6" />
+    </svg>
+  }
+  @if (current()) {
+    <span class="rounded bg-[hsl(var(--aepw-blue)/0.1)] px-1.5 py-0.5 font-semibold text-[hsl(var(--aepw-blue))]">{{ label() }}</span>
+  } @else {
+    <a [routerLink]="href()" class="transition-colors hover:text-foreground hover:underline">{{ label() }}</a>
+  }
+</li>

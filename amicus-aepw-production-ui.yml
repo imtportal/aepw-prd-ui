@@ -1,0 +1,127 @@
+trigger:
+- aepw-prd-main
+
+pool:
+  vmImage: ubuntu-latest
+
+resources:
+  repositories:
+  - repository: githubRepo
+    type: github
+    endpoint: 'github.com_imtportal'
+    name: 'imtportal/aepw-prd-ui'
+
+steps:
+
+- checkout: self
+  clean: true
+
+- checkout: githubRepo
+  persistCredentials: true
+
+- script: |
+    set -e
+
+    AZURE_REPO="$(Pipeline.Workspace)/s/AEPW-UI"
+    GITHUB_REPO="$(Pipeline.Workspace)/s/aepw-prd-ui"
+    TEMP_DIR="$(Pipeline.Workspace)/azure-sync"
+
+    echo "===== Azure Repository ====="
+    echo "$AZURE_REPO"
+
+    echo "===== GitHub Repository ====="
+    echo "$GITHUB_REPO"
+
+    echo "===== Fetching latest GitHub main ====="
+
+    cd "$GITHUB_REPO"
+
+    git fetch origin main
+
+    echo "===== Resetting GitHub working tree to latest main ====="
+
+    git reset --hard origin/main
+
+    echo "===== Creating Azure source snapshot ====="
+
+    rm -rf "$TEMP_DIR"
+    mkdir -p "$TEMP_DIR"
+
+    cd "$AZURE_REPO"
+
+    git archive HEAD | tar -x -C "$TEMP_DIR"
+
+    echo "===== Applying GitHub sync exclusions ====="
+
+    if [ -f "$AZURE_REPO/.github-sync-ignore" ]; then
+
+      while IFS= read -r file || [ -n "$file" ]; do
+
+        # Remove Windows carriage return if present
+        file="${file//$'\r'/}"
+
+        # Skip empty lines and comments
+        [[ -z "$file" || "$file" =~ ^# ]] && continue
+
+        echo "Excluding: $file"
+
+        rm -rf "$TEMP_DIR/$file"
+
+      done < "$AZURE_REPO/.github-sync-ignore"
+
+    else
+
+      echo "WARNING: .github-sync-ignore not found"
+
+    fi
+
+    echo "===== Synchronizing Azure files into GitHub working tree ====="
+
+    cd "$GITHUB_REPO"
+
+    rsync -av --delete \
+      --exclude='.git/' \
+      --filter='P .github/' \
+      --filter='P .gitignore' \
+      --filter='P src/environments/environment.ts' \
+      --filter='P src/environments/environment.prod.ts' \
+      "$TEMP_DIR/" \
+      "$GITHUB_REPO/"
+
+    echo "===== GitHub repository status ====="
+
+    git status --short
+
+  displayName: 'Sync Azure files to GitHub'
+
+
+- script: |
+    set -e
+
+    GITHUB_REPO="$(Pipeline.Workspace)/s/aepw-prd-ui"
+
+    cd "$GITHUB_REPO"
+
+    echo "===== GitHub changes before commit ====="
+
+    git status --short
+
+    git config user.name "Azure DevOps"
+    git config user.email "azure-devops@local"
+
+    git add -A
+
+    if git diff --cached --quiet; then
+      echo "No changes to commit."
+      exit 0
+    fi
+
+    echo "===== Creating GitHub sync commit ====="
+
+    git commit -m "Sync from Azure Repo aepw-main"
+
+    echo "===== Pushing to GitHub main ====="
+
+    git push origin HEAD:main
+
+  displayName: 'Commit and push changes to GitHub'

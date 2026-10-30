@@ -1,0 +1,126 @@
+<div class="flex flex-col gap-3 p-6">
+  <!-- Header -->
+  <div class="flex items-center justify-between">
+    <div class="flex items-center gap-2">
+      <div class="flex items-center gap-1 px-2 py-1 rounded bg-muted text-xs">
+        <lucide-icon name="paperclip" class="h-3 w-3 text-muted-foreground" />
+        <span class="font-semibold">{{ pageTotal() }}</span>
+        <span class="text-muted-foreground">Total</span>
+      </div>
+      <div class="flex items-center gap-1 px-2 py-1 rounded bg-[hsl(var(--aepw-orange)/0.1)] text-xs">
+        <lucide-icon name="triangle-alert" class="h-3 w-3 text-[hsl(var(--aepw-orange))]" />
+        <span class="font-semibold text-[hsl(var(--aepw-orange))]">{{ needsReviewCount() }}</span>
+        <span class="text-muted-foreground">Review</span>
+      </div>
+      <div class="flex items-center gap-1 px-2 py-1 rounded bg-muted text-xs">
+        <lucide-icon name="clock" class="h-3 w-3 text-muted-foreground" />
+        <span class="font-semibold">{{ pendingCount() }}</span>
+        <span class="text-muted-foreground">Pending</span>
+      </div>
+      <div class="flex items-center gap-1 px-2 py-1 rounded bg-[hsl(var(--aepw-green)/0.1)] text-xs">
+        <lucide-icon name="circle-check" class="h-3 w-3 text-[hsl(var(--aepw-green))]" />
+        <span class="font-semibold text-[hsl(var(--aepw-green))]">{{ validatedCount() }}</span>
+        <span class="text-muted-foreground">Valid</span>
+      </div>
+    </div>
+    <div class="flex items-center gap-2">
+      <button type="button" class="flex items-center gap-1.5 h-9 px-3 rounded-md border text-sm hover:bg-muted">
+        <lucide-icon name="download" class="h-4 w-4" />Export
+      </button>
+      <button type="button"
+        class="flex items-center gap-1.5 h-9 px-4 rounded-md bg-[hsl(var(--aepw-blue))] text-white text-sm font-medium hover:bg-[hsl(var(--aepw-blue)/0.9)]"
+        (click)="showUploadDialog.set(true)">
+        <lucide-icon name="upload" class="h-4 w-4" />Upload Evidence
+      </button>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="flex flex-wrap items-center gap-2 p-2 rounded-lg border bg-card">
+    <ui-search-input
+      styleClass="flex-1 min-w-[160px] max-w-[220px]"
+      placeholder="Search..."
+      [value]="searchQuery()"
+      (valueChange)="onSearchChange($event)"
+    />
+    <ui-select [options]="projectOptions()" [ngModel]="projectFilter()" (ngModelChange)="onProjectFilterChange($event)" styleClass="w-[180px]" />
+    <ui-select [options]="periodOptions()" [ngModel]="periodFilter()" (ngModelChange)="onPeriodFilterChange($event)" styleClass="w-[130px]" />
+    <ui-select [options]="statusOptions" [ngModel]="statusFilter()" (ngModelChange)="onStatusFilterChange($event)" styleClass="w-[130px]" />
+    <ui-select [options]="confidenceOptions" [ngModel]="confidenceFilter()" (ngModelChange)="onConfidenceFilterChange($event)" styleClass="w-[150px]" />
+  </div>
+
+  <!-- Bulk actions -->
+  @if (selectedIds().size > 0) {
+    <div class="flex items-center gap-3 rounded-lg border border-[hsl(var(--aepw-blue)/0.3)] bg-[hsl(var(--aepw-blue)/0.05)] px-3 py-1.5">
+      <span class="text-xs font-medium">{{ selectedIds().size }} selected</span>
+      <button type="button"
+        class="flex items-center gap-1 h-6 px-2 rounded-md bg-[hsl(var(--aepw-green))] text-white text-xs hover:bg-[hsl(var(--aepw-green)/0.9)]"
+        (click)="onApproveSelected()">
+        <lucide-icon name="thumbs-up" class="h-3 w-3" />Approve
+      </button>
+      <button type="button"
+        class="flex items-center gap-1 h-6 px-2 rounded-md border text-xs hover:bg-muted"
+        (click)="onClearSelection()">
+        Clear
+      </button>
+    </div>
+  }
+
+  <!-- Table -->
+  <ui-card>
+    <ui-card-content styleClass="p-0">
+      <ui-data-table
+        [columns]="tableColumns"
+        [data]="pageData()"
+        [total]="pageTotal()"
+        [loading]="loading()"
+        [rowTemplate]="evidenceRow"
+        [headerTemplate]="evidenceHeader"
+        (pageChange)="onPageChange($event)" />
+    </ui-card-content>
+  </ui-card>
+
+  <app-evidence-detail-sheet
+    [file]="detailFile()"
+    (close)="onCloseDetail()"
+    (approve)="onApprove($event)" />
+
+  <app-evidence-upload-dialog
+    [visible]="showUploadDialog()"
+    [projects]="uploadProjectOptions()"
+    (close)="showUploadDialog.set(false)"
+    (upload)="onUpload()" />
+</div>
+
+<!-- Custom header template with checkbox -->
+<ng-template #evidenceHeader>
+  <tr class="border-b bg-card hover:bg-transparent sticky top-0 z-10">
+    <th class="w-8 px-2 py-2">
+      <input type="checkbox"
+        [checked]="selectAllState() === 'all'"
+        [indeterminate]="selectAllState() === 'some'"
+        (change)="onSelectAll()"
+        class="rounded border-input" />
+    </th>
+    <th class="px-3 py-2 text-left text-xs font-semibold text-muted-foreground w-[200px]">Project</th>
+    <th class="px-3 py-2 text-left text-xs font-semibold text-muted-foreground w-[70px]">Period</th>
+    <th class="px-3 py-2 text-left text-xs font-semibold text-muted-foreground">File Name</th>
+    <th class="px-3 py-2 text-left text-xs font-semibold text-muted-foreground w-[70px]">Metric</th>
+    <th class="px-3 py-2 text-left text-xs font-semibold text-muted-foreground w-[80px]">Uploaded</th>
+    <th class="px-3 py-2 text-center text-xs font-semibold text-muted-foreground w-[50px]">AI %</th>
+    <th class="px-3 py-2 text-left text-xs font-semibold text-muted-foreground w-[80px]">Status</th>
+    <th class="px-3 py-2 text-left text-xs font-semibold text-muted-foreground w-[140px]">Notes</th>
+    <th class="px-3 py-2 w-[50px]"></th>
+  </tr>
+</ng-template>
+
+<!-- Row template -->
+<ng-template #evidenceRow let-file>
+  <tr app-evidence-row
+    [file]="file"
+    [selected]="selectedIds().has(file.evidenceId.toString())"
+    (selectToggle)="onToggleSelect($event)"
+    (openDetail)="onOpenDetail($event)"
+    class="border-b last:border-0 hover:bg-muted/30">
+  </tr>
+</ng-template>

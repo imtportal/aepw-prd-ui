@@ -1,0 +1,12 @@
+<div [class]="cn('flex items-center gap-2', styleClass())">
+  <p-radiobutton
+    [value]="value()"
+    [inputId]="inputId()"
+    [ngModel]="group.groupValue()"
+    (ngModelChange)="group.selectValue($event)"
+    [disabled]="group.isDisabled()"
+  />
+  @if (label()) {
+    <label [attr.for]="inputId()" class="text-sm font-medium leading-none cursor-pointer">{{ label() }}</label>
+  }
+</div>

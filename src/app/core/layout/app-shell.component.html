@@ -1,0 +1,29 @@
+<div class="flex min-h-screen bg-background">
+  @if (uiStore.pageLoading()) {
+    <div class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/45 backdrop-blur-[2px]">
+      <div class="flex items-center gap-3 rounded-full border border-white/15 bg-slate-900/80 px-5 py-3 text-sm font-medium text-white shadow-2xl">
+        <div class="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white"></div>
+        <span>Loading...</span>
+      </div>
+    </div>
+  }
+
+  <!-- Mobile backdrop: only visible below md when sidebar is open -->
+  @if (uiStore.sidebarOpen()) {
+    <div class="fixed inset-0 z-40 bg-black/50 md:hidden"
+         (click)="uiStore.sidebarOpen.set(false)">
+    </div>
+  }
+
+  <app-sidebar [activeUrl]="activeUrl()" [isOpen]="uiStore.sidebarOpen()" />
+
+  <div class="flex flex-1 flex-col min-h-screen overflow-hidden">
+    @if (!isReviewDetail()) {
+      <app-header [pageTitle]="pageTitle()" />
+    }
+    <main class="flex-1 overflow-auto" [class]="mainPadding()">
+      <router-outlet />
+    </main>
+  </div>
+
+</div>

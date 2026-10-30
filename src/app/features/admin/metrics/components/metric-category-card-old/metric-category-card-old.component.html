@@ -1,0 +1,70 @@
+<ui-card data-category-card>
+  <ui-card-content styleClass="p-0">
+    <!-- Header -->
+    <div class="flex cursor-pointer items-center gap-3 p-4 hover:bg-muted/30"
+         [attr.data-category-header]="category().code"
+         (click)="toggleExpand.emit()">
+      <ui-badge [styleClass]="category().color">{{ category().code }}</ui-badge>
+      <span class="font-medium">{{ category().name }}</span>
+      <span class="ml-auto text-xs text-muted-foreground">{{ metricCount() }} metrics</span>
+      <lucide-icon [name]="expanded() ? 'chevron-down' : 'chevron-right'" class="h-4 w-4 text-muted-foreground" />
+    </div>
+
+    <!-- Body -->
+    @if (expanded()) {
+      <div class="border-t px-4 pb-4">
+        <table data-metrics-table class="w-full text-sm">
+          <thead>
+            <tr class="border-b text-xs text-muted-foreground">
+              <th class="py-2 text-left">Active</th>
+              <th class="py-2 text-left">Code</th>
+              <th class="py-2 text-left">Type</th>
+              <th class="py-2 text-left">Name</th>
+              <th class="py-2 text-left">Evidence req.</th>
+              <th class="py-2 text-left">Default risk %</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (m of metrics(); track m.code) {
+              <tr [attr.data-metric-row]="m.code"
+                  [class]="m.isTopLevel ? 'border-b bg-muted/20' : 'border-b'">
+                <td class="py-2">
+                  <input type="checkbox" [checked]="m.isActive" [disabled]="m.isTopLevel"
+                         (change)="metricChanged.emit({ code: m.code, changes: { isActive: $any($event.target).checked } })" />
+                </td>
+                <td class="py-2 font-mono text-xs text-[hsl(var(--aepw-blue))]">
+                  @if (m.isTopLevel) { <span class="pl-0">{{ m.code }}</span> }
+                  @else { <span class="pl-4">{{ m.code }}</span> }
+                </td>
+                <td class="py-2">
+                  @if (m.isTopLevel) {
+                    <ui-badge data-rollup-badge variant="secondary" styleClass="text-[10px]">Roll-up</ui-badge>
+                  } @else if (m.isCorporate) {
+                    <ui-badge data-corp-badge variant="outline" styleClass="text-[10px]">Corporate</ui-badge>
+                  } @else {
+                    <ui-badge variant="outline" styleClass="text-[10px]">Project</ui-badge>
+                  }
+                </td>
+                <td class="py-2">{{ m.name }}</td>
+                <td class="py-2">
+                  @if (!m.isTopLevel) {
+                    <input type="number" min="0" [value]="m.evidenceRequiredMin"
+                           class="w-16 rounded border px-2 py-0.5 text-xs"
+                           (input)="metricChanged.emit({ code: m.code, changes: { evidenceRequiredMin: +$any($event.target).value } })" />
+                  }
+                </td>
+                <td class="py-2">
+                  @if (!m.isTopLevel) {
+                    <input type="number" min="0" max="100" [value]="m.defaultRiskPct"
+                           class="w-16 rounded border px-2 py-0.5 text-xs"
+                           (input)="metricChanged.emit({ code: m.code, changes: { defaultRiskPct: +$any($event.target).value } })" />
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </ui-card-content>
+</ui-card>

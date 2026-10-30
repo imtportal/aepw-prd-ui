@@ -1,0 +1,24 @@
+<div class="flex items-center gap-5 rounded-md border border-border/40 bg-muted/20 px-4 py-2 mb-3">
+  <div class="flex items-center gap-2">
+    <span class="text-[11px] text-muted-foreground">Metrics</span>
+    <span class="text-[13px] font-semibold text-foreground">{{ metrics().length }}</span>
+  </div>
+  <div class="h-4 w-px bg-border"></div>
+  <div class="flex items-center gap-2">
+    <span class="text-[11px] text-muted-foreground">Evidence</span>
+    <span class="text-[13px] font-semibold text-foreground">{{ evUploaded() }}/{{ evRequired() }}</span>
+    @if (evRequired() > 0) {
+      <div class="h-1.5 w-16 overflow-hidden rounded-full bg-muted">
+        <div class="h-full rounded-full bg-[hsl(var(--aepw-green))] transition-all"
+             [style.width.%]="evPercent()"></div>
+      </div>
+    }
+  </div>
+  <div class="h-4 w-px bg-border"></div>
+  <div class="flex items-center gap-2">
+    <span class="text-[11px] text-muted-foreground">Complete</span>
+    <span class="text-[13px] font-semibold text-foreground">
+      {{ completeFiles() }}/{{ totalFiles() }}
+    </span>
+  </div>
+</div>

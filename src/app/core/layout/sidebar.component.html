@@ -1,0 +1,232 @@
+<aside
+  class=" inset-y-0 left-0 z-50 flex h-screen flex-col relative bg-sidebar border-r border-sidebar-border transition-[width,transform] duration-300 ease-in-out w-64 md:sticky md:top-0 md:z-auto md:translate-x-0 overflow-x-visible"
+  [class.-translate-x-full]="!isOpen()"
+  [class.translate-x-0]="isOpen()"
+  [class.md:w-16]="isCollapsed()"
+  [class.md:w-64]="!isCollapsed()"
+>
+  <div
+    class="px-4 py-5 border-b border-sidebar-border flex items-center justify-between"
+    [class.justify-center]="isCollapsed()"
+  >
+    <a routerLink="/" class="flex items-center gap-2" (click)="onMenuItemClick('/')">
+      <img
+        src="aepw-logo.png"
+        alt="Alliance to End Plastic Waste"
+        class="h-9 w-9 shrink-0 object-contain"
+      />
+
+      @if (!isCollapsed()) {
+        <span class="flex flex-col">
+          <span
+            class="font-heading text-sm font-bold leading-tight tracking-wide text-sidebar-foreground"
+            >ALLIANCE TO</span
+          >
+          <span
+            class="font-heading text-[10px] font-bold leading-tight tracking-widest text-sidebar-primary"
+            >END PLASTIC WASTE</span
+          >
+        </span>
+      }
+    </a>
+    <button
+      type="button"
+      (click)="closeSidebar()"
+      class="md:hidden flex h-7 w-7 items-center justify-center rounded-md text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground transition-colors"
+      aria-label="Close sidebar"
+    >
+      <lucide-icon name="x" [size]="16" />
+    </button>
+  </div>
+
+  <nav class="flex-1 overflow-y-auto py-4 space-y-4">
+    <div>
+      @if (mainNav().length && !isCollapsed()) {
+        <p
+          class="px-4 mb-1 text-sidebar-foreground/50 font-heading text-[11px] uppercase tracking-widest"
+        >
+          Workflow
+        </p>
+      }
+
+      @for (item of mainNav(); track item.href) {
+        <a
+          [routerLink]="item.href"
+          (click)="onMenuItemClick(item.href)"
+          class="flex items-center gap-3 px-4 py-2 mx-2 text-sm text-sidebar-foreground rounded-md transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+          [class.bg-sidebar-accent]="isActive(item.href)"
+          [class.text-sidebar-accent-foreground]="isActive(item.href)"
+          [class.justify-center]="isCollapsed()"
+          [attr.title]="isCollapsed() ? item.title : null"
+        >
+          <lucide-icon [name]="item.icon" [size]="16" class="shrink-0" />
+
+          @if (!isCollapsed()) {
+            <span>{{ item.title }}</span>
+          }
+        </a>
+      }
+    </div>
+    <div>
+      @if (reviewNav().length && !isCollapsed()) {
+        <p
+          class="px-4 mb-1 text-sidebar-foreground/50 font-heading text-[11px] uppercase tracking-widest"
+        >
+          Review &amp; Audit
+        </p>
+      }
+
+      @for (item of reviewNav(); track item.href) {
+        <a
+          [routerLink]="item.href"
+          (click)="onMenuItemClick(item.href)"
+          class="flex items-center gap-3 px-4 py-2 mx-2 text-sm text-sidebar-foreground rounded-md transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+          [class.bg-sidebar-accent]="isActive(item.href)"
+          [class.text-sidebar-accent-foreground]="isActive(item.href)"
+          [class.justify-center]="isCollapsed()"
+          [attr.title]="isCollapsed() ? item.title : null"
+        >
+          <lucide-icon [name]="item.icon" [size]="16" class="shrink-0" />
+
+          @if (!isCollapsed()) {
+            <span>{{ item.title }}</span>
+          }
+        </a>
+      }
+    </div>
+    <!-- Reporting -->
+     <div>
+      @if (mainNav().length && !isCollapsed()) {
+        <p
+          class="px-4 mb-1 text-sidebar-foreground/50 font-heading text-[11px] uppercase tracking-widest"
+        >
+          Reporting
+        </p>
+      }
+
+      @for (item of reportingNaV(); track item.href) {
+        <a
+          [routerLink]="item.href"
+          (click)="onMenuItemClick(item.href)"
+          class="flex items-center gap-3 px-4 py-2 mx-2 text-sm text-sidebar-foreground rounded-md transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+          [class.bg-sidebar-accent]="isActive(item.href)"
+          [class.text-sidebar-accent-foreground]="isActive(item.href)"
+          [class.justify-center]="isCollapsed()"
+          [attr.title]="isCollapsed() ? item.title : null"
+        >
+          <lucide-icon [name]="item.icon" [size]="16" class="shrink-0" />
+
+          @if (!isCollapsed()) {
+            <span>{{ item.title }}</span>
+          }
+        </a>
+      }
+    </div>
+
+    <div>
+      @if (adminNav().length && !isCollapsed()) {
+        <p
+          class="px-4 mb-1 text-sidebar-foreground/50 font-heading text-[11px] uppercase tracking-widest"
+        >
+          Administration
+        </p>
+      }
+
+      @for (item of adminNav(); track item.href) {
+        <a
+          [routerLink]="item.href"
+          (click)="onMenuItemClick(item.href)"
+          class="flex items-center gap-3 px-4 py-2 mx-2 text-sm text-sidebar-foreground rounded-md transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+          [class.bg-sidebar-accent]="isActive(item.href)"
+          [class.text-sidebar-accent-foreground]="isActive(item.href)"
+          [class.justify-center]="isCollapsed()"
+          [attr.title]="isCollapsed() ? item.title : null"
+        >
+          <lucide-icon [name]="item.icon" [size]="16" class="shrink-0" />
+
+          @if (!isCollapsed()) {
+            <span>{{ item.title }}</span>
+          }
+        </a>
+      }
+    </div>
+  </nav>
+
+  <div class="px-3 py-3 border-t border-sidebar-border space-y-2">
+    @if (!isCollapsed()) {
+      <div class="flex items-center gap-2.5">
+        <div
+          class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-sidebar-accent text-xs font-bold text-sidebar-accent-foreground"
+        >
+          @if (profilePictureBlob()) {
+            <img
+              [src]="profilePictureBlobUrl()"
+              alt="Profile Picture"
+              class="h-8 w-8 rounded-full object-cover"
+            />
+          } @else {
+            {{ auth.initials() }}
+          }
+        </div>
+
+        <div class="flex flex-col min-w-0">
+          <span class="text-xs font-medium text-sidebar-foreground truncate">
+            {{ authState.user()?.displayName }}
+          </span>
+
+          <span class="text-[10px] text-sidebar-foreground/60 truncate">
+            {{ authState.user()?.email }}
+          </span>
+        </div>
+      </div>
+
+      <button
+        type="button"
+        class="w-full flex items-center justify-center gap-2 px-3 py-1.5 rounded-md text-xs text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground transition-colors"
+        (click)="auth.logout()"
+      >
+        <lucide-icon name="log-out" [size]="13" />
+        <span>Sign out</span>
+      </button>
+    } @else {
+      <div class="flex justify-center">
+        <div
+          class="flex h-8 w-8 items-center justify-center rounded-full bg-sidebar-accent text-xs font-bold text-sidebar-accent-foreground"
+        >
+          @if (profilePictureBlob()) {
+            <img
+              [src]="profilePictureBlobUrl()"
+              alt="Profile Picture"
+              class="h-8 w-8 rounded-full object-cover"
+            />
+          } @else {
+            {{ auth.initials() }}
+          }
+        </div>
+      </div>
+
+      <button
+        type="button"
+        class="flex w-full items-center justify-center rounded-md py-2 text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground transition-colors"
+        (click)="auth.logout()"
+        title="Sign out"
+        aria-label="Sign out"
+      >
+        <lucide-icon name="log-out" [size]="16" />
+      </button>
+    }
+  </div>
+  <button
+    type="button"
+    (click)="toggleSidebar()"
+    class="absolute right-[-20px] bottom-28 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-[hsl(var(--aepw-green))] text-white shadow-md transition-colors"
+    [attr.aria-label]="isCollapsed() ? 'Expand sidebar' : 'Collapse sidebar'"
+    [attr.title]="isCollapsed() ? 'Expand sidebar' : 'Collapse sidebar'"
+  >
+    @if (isCollapsed()) {
+      <lucide-icon name="chevron-right" [size]="16" />
+    } @else {
+      <lucide-icon name="chevron-left" [size]="16" />
+    }
+  </button>
+</aside>

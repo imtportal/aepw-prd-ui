@@ -1,0 +1,49 @@
+<div class="flex flex-col gap-6 p-6 font-sans text-foreground">
+  <!-- Filter bar -->
+  <ui-card>
+    <ui-card-content styleClass="flex flex-wrap items-center gap-3 p-4">
+      <lucide-icon name="list-filter" class="h-4 w-4 text-muted-foreground" />
+      <span class="text-sm font-medium text-foreground">Filter by:</span>
+      <ui-select
+        data-type-filter
+        [(ngModel)]="typeFilterModel"
+        [options]="filterOptions"
+        styleClass="w-48" />
+      <ui-badge variant="secondary" styleClass="text-xs" data-event-count>
+        {{ eventCount() }} events
+      </ui-badge>
+    </ui-card-content>
+  </ui-card>
+
+  <!-- Timeline -->
+  <ui-card>
+    <ui-card-header styleClass="pb-3">
+      <ui-card-title styleClass="font-heading text-base font-bold">Audit Timeline</ui-card-title>
+      <ui-card-description>
+        Complete audit trail showing all changes, evidence updates, and review actions.
+      </ui-card-description>
+    </ui-card-header>
+    <ui-card-content>
+      <div class="flex flex-col gap-8">
+        @for (entry of (groupedByDate() | keyvalue: dateCompare); track entry.key) {
+          <div>
+            <!-- Date separator -->
+            <div data-date-separator class="mb-4 flex items-center gap-3">
+              <div class="h-px flex-1 bg-border"></div>
+              <span class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                {{ entry.key }}
+              </span>
+              <div class="h-px flex-1 bg-border"></div>
+            </div>
+            <!-- Events -->
+            <div class="flex flex-col gap-4">
+              @for (ev of entry.value; track ev.id) {
+                <app-audit-event-row [event]="ev" />
+              }
+            </div>
+          </div>
+        }
+      </div>
+    </ui-card-content>
+  </ui-card>
+</div>

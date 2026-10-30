@@ -1,0 +1,57 @@
+@if (loading()) {
+  <div data-loading class="mb-4 rounded-md bg-muted px-4 py-2 text-sm text-muted-foreground">
+    Loading…
+  </div>
+}
+@if (error()) {
+  <div data-error class="mb-4 rounded-md bg-destructive/10 px-4 py-2 text-sm text-destructive">
+    {{ error() }}
+  </div>
+}
+
+<div class="flex flex-col gap-6">
+  <div>
+    <h1 class="font-heading text-xl font-bold">Approval Queue</h1>
+    <p data-welcome class="text-sm text-muted-foreground">
+      Welcome, {{ currentUser().name }}
+    </p>
+  </div>
+
+  <app-kpi-bar
+    [pendingMetricsCount]="pendingMetricsCount()"
+    [materialFlagsCount]="materialFlagsCount()"
+    [rejectionsCount]="rejectionsCount()"
+  />
+
+  <ui-tabs [value]="selectedTab()" (valueChange)="setTab($event)">
+    <ui-tab-list>
+      @for (tab of queueTabs(); track tab.id) {
+        <ui-tab [value]="tab.id" [attr.data-tab]="tab.id">
+          {{ tab.label }} ({{ tab.count }})
+        </ui-tab>
+      }
+    </ui-tab-list>
+    <ui-tab-panels>
+      @for (tab of queueTabs(); track tab.id) {
+        <ui-tab-panel [value]="tab.id">
+          <ui-data-table
+            [columns]="tableColumns"
+            [data]="pageData()"
+            [total]="pageTotal()"
+            [loading]="tableLoading()"
+            [rowTemplate]="queueRow"
+            (pageChange)="onPageChange($event)" />
+        </ui-tab-panel>
+      }
+    </ui-tab-panels>
+  </ui-tabs>
+</div>
+
+<!-- Row template -->
+<ng-template #queueRow let-item>
+  <app-queue-item-row
+    [item]="item"
+    (approve)="onApprove($event)"
+    (reject)="onReject($event)"
+    (recycle)="onRecycle($event)" />
+</ng-template>

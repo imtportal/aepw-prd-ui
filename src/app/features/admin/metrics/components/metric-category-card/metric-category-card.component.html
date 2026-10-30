@@ -1,0 +1,248 @@
+<ui-card data-category-card>
+  <ui-card-content styleClass="p-0">
+    <!-- Header -->
+    <div
+      class="flex cursor-pointer items-center justify-between gap-3 p-4 hover:bg-muted/30"
+      [attr.data-category-header]="category().categoryCode"
+      (click)="toggleExpand.emit()"
+    >
+      <div class="flex gap-2 items-center">
+        <ui-badge [backgroundColor]="category().categoryColor!" class="text-white">{{
+          category().categoryCode
+        }}</ui-badge>
+        <span class="font-medium">{{ category().categoryName }}</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <lucide-icon
+          [name]="expanded() ? 'chevron-down' : 'chevron-right'"
+          class="h-4 w-4 text-muted-foreground"
+        />
+        <button
+          (click)="configureCategory.emit(category()); $event.stopPropagation()"
+          class="text-sm rounded bg-[hsl(var(--aepw-blue)/0.1)] text-[hsl(var(--aepw-blue))] px-3 py-1"
+        >
+          Configure
+        </button>
+      </div>
+    </div>
+
+    <!-- Body -->
+    @if (expanded()) {
+      <div class="border-t px-4 pb-4">
+        <div class="w-full overflow-x-auto">
+          <table
+            class="metric-table w-full min-w-[900px] md:min-w-[1000px] lg:min-w-0 table-fixed text-sm"
+          >
+            <colgroup>
+              <!-- Applicable -->
+              <col style="width: 50px" />
+
+              <!-- Code -->
+              <col style="width: 70px" />
+
+              <!-- Name -->
+              <col />
+
+              <!-- Unit -->
+              <col style="width: 150px" />
+
+              <!-- ICP -->
+              <col style="width: 80px" />
+
+              <!-- Source -->
+              <col style="width: 160px" />
+
+              <!-- Risk % -->
+              <col style="width: 70px" />
+
+              <!-- Action -->
+              <col style="width: 110px" />
+            </colgroup>
+            <thead>
+              <tr class="border-b text-xs text-muted-foreground">
+                <th class="py-2">Applicable</th>
+                <th class="py-2">Code</th>
+                <th class="py-2">Name</th>
+                <th class="py-2">Unit</th>
+                <th class="py-2">ICP</th>
+                <th class="py-2">Source</th>
+                <th class="py-2">Risk %</th>
+                <th class="py-2">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- table body looping over displayMetrics for each metric -->
+              @for (parent of category().metrics; track parent.metricId) {
+                <ng-container [formGroup]="metricForm(parent.metricId)">
+                  <tr
+                    [attr.data-metric-row]="parent.metricCode"
+                    [class]="parent.isTopLevel ? 'border-b bg-muted/20' : 'border-b'"
+                  >
+                    <!-- isActive checkbox -->
+                    <td class="py-2 text-center">
+                      <input type="checkbox" formControlName="isActive" />
+                    </td>
+                    <!-- metric code -->
+                    <td class="py-2 font-mono text-xs text-[hsl(var(--aepw-blue))]">
+                      <div class="flex items-center gap-2">
+                        @if (parent.children.length > 0) {
+                          <button type="button" (click)="toggleMetric(parent.metricId, $event)">
+                            <lucide-icon
+                              [name]="
+                                isMetricExpanded(parent.metricId) ? 'chevron-down' : 'chevron-right'
+                              "
+                              class="h-4 w-4"
+                            />
+                          </button>
+                        }
+                        <span [class.text-red-600]="invalidTopMetricIds().has(parent.metricId)">
+                          {{ parent.metricCode }}
+                        </span>
+                      </div>
+                    </td>
+                    <!-- Metric name -->
+                    <td class="py-2">
+                      <div class="min-w-0 break-words">
+                        {{ parent.metricName }}
+                      </div>
+                    </td>
+                    <!-- UNIT -->
+                    <td class="text-center">
+                      <span>{{ parent.unitName }}</span>
+                    </td>
+                    <!--------------------------- ICP Required-------------------------------->
+                    <td class="py-2 text-center">
+                      @if (!parent.isTopLevel) {
+                        <input type="checkbox" formControlName="isICPRequired" />
+                      }
+                    </td>
+                    <!-- Metric Source -->
+                    <td class="py-2 pr-4 text-center">
+                      @if (!parent.isTopLevel) {
+                        <ng-select
+                          [items]="metricSources()"
+                          bindLabel="name"
+                          bindValue="metricSourceId"
+                          [clearable]="false"
+                          [searchable]="false"
+                          formControlName="metricSourceId"
+                          [appendTo]="'body'"
+                          [dropdownPosition]="'auto'"
+                        >
+                        </ng-select>
+                      }
+                    </td>
+                    <!-- Risk adjustment required-->
+                    <td class="py-2">
+                      @if (!parent.isTopLevel) {
+                        <input type="checkbox" formControlName="isRiskAdjustmentRequired" />
+                      }
+                    </td>
+                    <td class="py-2 text-center">
+                      <!-- (click)="configureMetric(m)" -->
+                      <button
+                        (click)="onConfigureMetric(parent, $event)"
+                        class="rounded bg-[hsl(var(--aepw-blue)/0.1)] text-[hsl(var(--aepw-blue))] px-3 py-1"
+                      >
+                        Configure
+                      </button>
+                    </td>
+                  </tr>
+                </ng-container>
+                <!--------------------------- CHILDREN ------------------------------->
+                @if (isMetricExpanded(parent.metricId)) {
+                  @for (child of parent.children; track child.metricId) {
+                    <ng-container [formGroup]="metricForm(child.metricId)">
+                      <tr [attr.data-metric-row]="child.metricCode" class="border-b">
+                        <td class="py-2 text-center">
+                          <input type="checkbox" formControlName="isActive" />
+                        </td>
+                        <!-- metric code -->
+                        <td class="py-2 text-center font-mono text-xs text-[hsl(var(--aepw-blue))]">
+                          <span
+                            [class.pl-4]="!child.isTopLevel"
+                            [class.text-red-600]="invalidMetricIds().has(child.metricId)"
+                          >
+                            {{ child.metricCode }}
+                          </span>
+                        </td>
+                        <!-- Metric name -->
+                        <td class="py-2">
+                          <div class="flex items-center gap-2">
+                            @if (child.children.length > 0) {
+                              <button type="button" (click)="toggleMetric(child.metricId, $event)">
+                                <lucide-icon
+                                  [name]="
+                                    isMetricExpanded(child.metricId)
+                                      ? 'chevron-down'
+                                      : 'chevron-right'
+                                  "
+                                  class="h-4 w-4"
+                                />
+                              </button>
+                            }
+
+                            <span class="min-w-0 break-words">
+                              {{ child.metricName }}
+                            </span>
+                          </div>
+                        </td>
+                        <!-- <td class="py-2">
+                    <span [class.pl-4]="!m.isTopLevel">
+                      {{ m.description }}
+                    </span>
+                  </td> -->
+                        <!-- UNIT -->
+                        <td class="text-center">
+                          <span>{{ child.unitName }}</span>
+                        </td>
+
+                        <!--------------------------- ICP Required-------------------------------->
+                        <td class="py-2 text-center">
+                          @if (!child.isTopLevel) {
+                            <input type="checkbox" formControlName="isICPRequired" />
+                          }
+                        </td>
+                        <!-- Metric Source -->
+                        <td class="py-2 w-24 pr-4 text-center">
+                          @if (!child.isTopLevel) {
+                            <ng-select
+                              class=""
+                              [items]="metricSources()"
+                              bindLabel="name"
+                              bindValue="metricSourceId"
+                              [clearable]="false"
+                              [searchable]="false"
+                              formControlName="metricSourceId"
+                              [appendTo]="'body'"
+                              [dropdownPosition]="'auto'"
+                            >
+                            </ng-select>
+                          }
+                        </td>
+                        <!-- Risk adjustment required-->
+                        <td class="py-2 text-center">
+                          @if (!child.isTopLevel) {
+                            <input type="checkbox" formControlName="isRiskAdjustmentRequired" />
+                          }
+                        </td>
+                        <td class="py-2 text-center">
+                          <button
+                            (click)="onConfigureMetric(child, $event)"
+                            class="rounded bg-[hsl(var(--aepw-blue)/0.1)] text-[hsl(var(--aepw-blue))] px-3 py-1"
+                          >
+                            Configure
+                          </button>
+                        </td>
+                      </tr>
+                    </ng-container>
+                  }
+                }
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    }
+  </ui-card-content>
+</ui-card>

@@ -1,0 +1,161 @@
+@let saving  = savingMetricsConfig();
+
+<div class="flex min-h-screen flex-col bg-background blur-[10[px]]">
+
+  <!-- Sticky header -->
+  <div class="sticky top-0 z-20 border-b bg-card px-6 py-4 shadow-sm">
+
+    <!-- Breadcrumb -->
+    <!-- <div class="mb-3 flex items-center gap-1">
+      <a [routerLink]="['/reviews', id()]"
+         class="flex items-center gap-1 rounded-md px-2 py-1 text-xs text-muted-foreground hover:bg-muted/40">
+        <lucide-icon name="arrow-left" [size]="14" />
+        Review Details
+      </a>
+      <lucide-icon name="chevron-right" [size]="12" class="text-muted-foreground" />
+      <span class="text-xs text-muted-foreground">Configure Metrics</span>
+    </div> -->
+
+    <!-- Title row -->
+    <div class="flex items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <h1 class="text-base font-semibold text-foreground">Configure Metrics</h1>
+        <span class="rounded-full border border-border px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
+          {{ typeLabel() }}
+        </span>
+      </div>
+      <div class="flex items-center gap-2">
+        <button type="button"
+          (click)="cancel()"
+          class="flex items-center gap-1.5 rounded-md border border-border bg-transparent px-3 py-1.5 text-xs font-medium hover:bg-muted/40">
+          <lucide-icon name="x" [size]="12" />
+          Cancel
+        </button>
+        <button type="button"
+          [disabled]="saving"
+          (click)="save()"
+          class="flex items-center gap-1.5 rounded-md bg-[hsl(var(--aepw-blue))] px-3 py-1.5 text-xs font-medium text-white hover:bg-[hsl(var(--aepw-blue)/0.9)] disabled:opacity-50">
+          @if (saving) {
+            <lucide-icon class="animate-spin" name="loader-circle" [size]="12" />
+
+          }
+
+          @else {
+            <lucide-icon name="save" [size]="12" />
+
+          }
+          
+          Save Changes
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Body -->
+  <div class="flex-1 p-6" [class.opacity-50]="savingMetricsConfig()">
+
+    @if (loadingMetrics()) {
+      <div class="flex   items-center justify-center gap-2 rounded-lg border border-dashed border-border py-16 text-center">
+        <lucide-icon class="animate-spin" name="loader-circle" [size]="12" />
+        <span class="text-sm font-medium text-foreground">
+          Loading...
+        </span>
+      </div>
+    }
+
+    @else {
+      @if (filteredMetrics().length === 0) {
+        <div class="flex flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-border py-16 text-center">
+          <p class="text-sm font-medium text-foreground">No metrics available</p>
+          <p class="text-xs text-muted-foreground">No metrics match the selected type.</p>
+        </div>
+      }
+  
+      @for (group of filteredMetrics(); track group.categoryCode) {
+        <div class="mb-8">
+  
+          <!-- Category header -->
+          <div class="mb-3 flex items-center gap-2.5">
+            <span class="rounded px-2 py-0.5 text-[11px] font-bold" [style.background-color]="group.categoryColor" [class.text-white]="group.categoryColor">
+              {{ group.categoryCode }}
+            </span>
+            <h2 class="text-sm font-semibold text-foreground">{{ group.categoryName }}</h2>
+            <span class="text-xs text-muted-foreground">
+              ({{ group.metrics.length }} metric{{ group.metrics.length !== 1 ? 's' : '' }})
+            </span>
+          </div>
+  
+          <!-- Metrics list -->
+          <div class="overflow-hidden rounded-lg border border-border">
+            @for (metric of group.metrics; track metric.metricCode) {
+              <ng-container [ngTemplateOutlet]="metricLabel" [ngTemplateOutletContext]="{ metric: metric, isTopLevel: false }"></ng-container>
+  
+              @for (l1metric of metric.children; track l1metric.metricId) {
+                <ng-container [ngTemplateOutlet]="metricLabel" [ngTemplateOutletContext]="{ metric: l1metric, isTopLevel: true }"></ng-container>
+  
+                 
+              }
+            }
+          </div>
+  
+        </div>
+      }
+    }
+
+  </div>
+</div>
+
+
+
+<ng-template let-metric="metric" #metricLabel>
+  <label
+    [class]="'flex cursor-pointer items-start gap-3 border-b px-4 py-3 transition-colors last:border-0 hover:bg-muted/30'
+      + (selectedCodes()[metric.metricCode] ? ' bg-[hsl(var(--aepw-blue)/0.04)]' : '')
+      + (!metric.isTopLevel ? ' pl-10' : '')"
+    > 
+    
+
+    @if (metric.isTopLevel) {
+      <input
+        type="checkbox"
+        [(ngModel)]="selectedTopLevelCodes()[metric.metricCode]"
+        (change)="toggleMetric(metric.metricCode, metric.isTopLevel, $event.target.checked)"
+        (click)="$event.stopPropagation()"
+        class="mt-0.5 h-4 w-4 shrink-0 cursor-pointer rounded border-border accent-[hsl(var(--aepw-blue))]" />
+    }
+
+    @else {
+      
+      <input
+        type="checkbox"
+        [(ngModel)]="selectedCodes()[metric.metricCode]"
+        (change)="toggleMetric(metric.metricCode, metric.isTopLevel, $event.target.checked)"
+        (click)="$event.stopPropagation()"
+        class="mt-0.5 h-4 w-4 shrink-0 cursor-pointer rounded border-border accent-[hsl(var(--aepw-blue))]" />
+
+    }
+
+
+    <div class="min-w-0 flex-1">
+      <div class="mb-0.5 flex flex-wrap items-center gap-2">
+        <span class="font-mono text-[11px] font-bold text-[hsl(var(--aepw-blue))]">
+          {{ metric.metricCode }}
+        </span>
+        @if (metric.isTopLevel) {
+          <span class="rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">
+            Roll-up
+          </span>
+        }
+        <!-- @if (metric.dataProvider) {
+          <span class="rounded bg-muted/60 px-1.5 py-0.5 text-[10px] text-muted-foreground">
+            {{ metric.dataProvider }}
+          </span>
+        } -->
+      </div>
+      <p class="text-[13px]" [class.font-semibold]="metric.isTopLevel">{{ metric.metricName }}</p>
+      <p class="mt-0.5 text-[11px] text-muted-foreground">{{ metric.unitName }}</p>
+    </div>
+
+  </label>
+
+</ng-template>

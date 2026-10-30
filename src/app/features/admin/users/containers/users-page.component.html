@@ -1,0 +1,321 @@
+<div class="flex h-full min-h-0 flex-col px-2 font-sans text-foreground">
+  <!-- ====================================================== -->
+  <!-- HEADER                                                 -->
+  <!-- ====================================================== -->
+
+  <div class="shrink-0 flex flex-wrap items-start justify-between gap-3">
+    <div>
+      <!--
+      <h1 class="font-heading text-xl font-bold">
+        {{ 'USERS.TITLE' | transloco }}
+      </h1>
+      -->
+
+      <p class="text-sm text-muted-foreground">
+        {{ 'USERS.DESCRIPTION' | transloco }}
+      </p>
+    </div>
+
+    @if (canAddUser()) {
+      <button
+        type="button"
+        (click)="openAddDialog()"
+        class="flex items-center gap-2 rounded-md bg-[hsl(var(--aepw-blue))] px-4 py-2 text-sm font-medium text-white hover:opacity-90"
+      >
+        <lucide-icon name="plus" class="h-4 w-4" />
+
+        {{ 'USERS.ADD_USER' | transloco }}
+      </button>
+    }
+  </div>
+
+  <!-- ====================================================== -->
+  <!-- FILTER BAR                                             -->
+  <!-- ====================================================== -->
+
+  <div class="shrink-0 py-2">
+    <ui-card>
+      <ui-card-content styleClass="flex flex-wrap items-center justify-between gap-3 p-4">
+        <!-- FILTERS -->
+        <div class="flex flex-wrap gap-4">
+          <!-- User Search -->
+          <ng-select
+            [items]="userSearchResults()"
+            bindLabel="displayName"
+            [typeahead]="userSearchTypeahead"
+            [loading]="searchLoading()"
+            [placeholder]="'USERS.SEARCH_USER_PLACEHOLDER' | transloco"
+            [clearable]="true"
+            [searchable]="true"
+            [ngModel]="selectedSearchUser()"
+            (ngModelChange)="onSearchUserChange($event)"
+            (clear)="onSearchUserClear()"
+          >
+            <ng-template ng-option-tmp let-item="item">
+              <div class="flex flex-col">
+                <span>
+                  {{ item.displayName }}
+                </span>
+
+                <small class="text-muted-foreground">
+                  {{ item.email }}
+                </small>
+              </div>
+            </ng-template>
+          </ng-select>
+
+          <!-- ROLE -->
+          <ng-select
+            class="w-56"
+            [items]="systemRoles()"
+            bindLabel="roleName"
+            bindValue="roleId"
+            [placeholder]="'USERS.ALL_ROLES' | transloco"
+            [clearable]="true"
+            [ngModel]="selectedFilterRoleId()"
+            (ngModelChange)="onRoleFilterChange($event)"
+          >
+          </ng-select>
+
+          <!-- STATUS -->
+          <ng-select
+            class="w-40"
+            [items]="statusOptions"
+            bindLabel="label"
+            bindValue="value"
+            [placeholder]="'Status'"
+            [clearable]="true"
+            [ngModel]="selectedStatus()"
+            (ngModelChange)="onStatusFilterChange($event)"
+          >
+          </ng-select>
+        </div>
+
+        <!-- ACTIONS -->
+        <div class="flex gap-4">
+          <ui-button variant="outline" (clicked)="onClearFilters()">
+            {{ 'COMMON.CLEAR' | transloco }}
+          </ui-button>
+        </div>
+      </ui-card-content>
+    </ui-card>
+  </div>
+
+  <!-- ====================================================== -->
+  <!-- DEBUG / USER COUNT                                     -->
+  <!-- ====================================================== -->
+  <!-- 
+  <div class="shrink-0 py-1 text-xs">
+    UI users: {{ appUsers().length }} | Total: {{ totalUsers() }}
+  </div> -->
+
+  <!-- ====================================================== -->
+  <!-- TABLE                                                  -->
+  <!-- ====================================================== -->
+
+  <div class="min-h-0 flex-1">
+    <ui-card class="h-full">
+      <ui-card-content styleClass="h-full min-h-0 p-0">
+        <ui-data-table
+          [columns]="tableColumns"
+          [data]="appUsers()"
+          [total]="totalUsers()"
+          [loading]="loading()"
+          [rowTemplate]="userRow"
+          [maxBodyHeight]="'calc(100vh - 200px)'"
+          (pageChange)="onPageChange($event)"
+        />
+      </ui-card-content>
+    </ui-card>
+  </div>
+</div>
+
+<!-- Row template -->
+<ng-template #userRow let-user>
+  <tr
+    app-user-row
+    [user]="user"
+    (click)="onUserRowClick(user.userId)"
+    (deleteClicked)="openDeleteDialog($event)"
+    class="border-b last:border-0 hover:bg-muted/20 border"
+    [canDelete]="canDeleteUser()"
+    [class.cursor-pointer]="canEditUser()"
+    [class.hover:bg-muted/20]="canEditUser()"
+  ></tr>
+</ng-template>
+
+<!-- Add User Dialog -->
+<ui-dialog
+  [(visible)]="showAddModal"
+  [header]="
+    isDeleteMode()
+      ? ('USERS.DELETE_USER' | transloco)
+      : isEditMode()
+        ? ('USERS.EDIT_USER' | transloco)
+        : ('USERS.ADD_USER' | transloco)
+  "
+  styleClass="max-w-2xl user-dialog"
+>
+  @if (isDeleteMode()) {
+    @if (isDeleteMode()) {
+      <div class="flex flex-col gap-5 p-5">
+        <!-- Confirmation content -->
+        <div class="flex items-start gap-3">
+          <div
+            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-50 text-red-600"
+          >
+            <lucide-icon name="trash-2" class="h-5 w-5" />
+          </div>
+
+          <div class="min-w-0 flex-1">
+            <p class="text-sm text-muted-foreground">
+              {{ 'USERS.DELETE_CONFIRMATION' | transloco }}
+            </p>
+
+            @if (deletingUser(); as user) {
+              <p class="mt-1 text-base font-semibold text-foreground">
+                {{ user.displayName }}
+              </p>
+            }
+
+            <p class="mt-2 text-xs text-muted-foreground">
+              This action will remove the user from the system.
+            </p>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="flex justify-end gap-2 border-t pt-4">
+          <ui-button variant="outline" (clicked)="cancelAddUser()">
+            {{ 'COMMON.CANCEL' | transloco }}
+          </ui-button>
+
+          <ui-button
+            styleClass="bg-red-600 text-white hover:bg-red-700"
+            (clicked)="confirmDeleteUser()"
+          >
+            <lucide-icon name="trash-2" class="mr-1.5 h-4 w-4" />
+            {{ 'USERS.DELETE' | transloco }}
+          </ui-button>
+        </div>
+      </div>
+    }
+  } @else {
+    <div class="flex flex-col gap-4 p-4" [formGroup]="userForm">
+      <div class="grid grid-cols-2 gap-4">
+        <div class="space-y-2">
+          <label class="text-sm font-medium">
+            {{ 'USERS.USER_LABEL' | transloco }} <span class="text-red-500">*</span>
+          </label>
+          <ng-select
+            [items]="users()"
+            bindLabel="displayName"
+            [typeahead]="userTypeahead"
+            [loading]="userLoading()"
+            [minTermLength]="3"
+            [placeholder]="'USERS.TYPE_TO_SEARCH_USER' | transloco"
+            [disabled]="isEditMode()"
+            [searchable]="!isEditMode()"
+            [clearable]="!isEditMode()"
+            formControlName="user"
+            (clear)="onUserClear()"
+          >
+            <ng-template ng-option-tmp let-item="item">
+              <div class="flex flex-col">
+                <span class="font-medium">
+                  {{ item.displayName }}
+                </span>
+                <span class="text-xs text-gray-500">
+                  {{ item.mail || item.userPrincipalName }}
+                </span>
+              </div>
+            </ng-template>
+
+            <ng-template ng-label-tmp let-item="item">
+              <div class="flex flex-col leading-tight">
+                <span class="font-medium">
+                  {{ item.displayName }}
+                </span>
+                <span class="text-xs text-gray-500">
+                  {{ item.mail || item.userPrincipalName }}
+                </span>
+              </div>
+            </ng-template>
+          </ng-select>
+          @if (userForm.get('user')?.invalid && userForm.get('user')?.touched) {
+            <p class="text-xs text-red-500">{{ 'USERS.VALIDATION.USER_REQUIRED' | transloco }}</p>
+          }
+        </div>
+        <div class="space-y-2">
+          <label class="text-sm font-medium">
+            {{ 'USERS.ROLE_LABEL' | transloco }} <span class="text-red-500">*</span>
+          </label>
+          <ng-select
+            [items]="systemRoles()"
+            bindLabel="roleName"
+            bindValue="roleId"
+            [placeholder]="'USERS.SELECT_ROLE' | transloco"
+            [clearable]="false"
+            formControlName="roleId"
+          />
+          @if (userForm.get('roleId')?.invalid && userForm.get('roleId')?.touched) {
+            <p class="text-xs text-red-500">{{ 'USERS.VALIDATION.ROLE_REQUIRED' | transloco }}</p>
+          }
+        </div>
+
+        <div class="space-y-2">
+          <label class="text-sm font-medium">Time Zone <span class="text-red-500">*</span></label>
+          <ng-select
+            [items]="timeZones()"
+            bindLabel="timeZoneName"
+            bindValue="timeZoneId"
+            placeholder="Select time zone"
+            [clearable]="false"
+            [searchable]="true"
+            formControlName="timeZoneId"
+          />
+          @if (userForm.get('timeZoneId')?.invalid && userForm.get('timeZoneId')?.touched) {
+            <p class="text-xs text-red-500">
+              {{ 'USERS.VALIDATION.TIMEZONE_REQUIRED' | transloco }}
+            </p>
+          }
+        </div>
+
+        @if (isEditMode()) {
+          <div class="space-y-2">
+            <label class="text-sm font-medium">
+              {{ 'USERS.STATUS_LABEL' | transloco }} <span class="text-red-500">*</span>
+            </label>
+
+            <ng-select
+              [items]="statusOptions"
+              bindLabel="label"
+              bindValue="value"
+              [placeholder]="'USERS.SELECT_STATUS' | transloco"
+              [clearable]="false"
+              formControlName="isActive"
+            >
+            </ng-select>
+
+            @if (userForm.get('isActive')?.invalid && userForm.get('isActive')?.touched) {
+              <p class="text-xs text-red-500">
+                {{ 'USERS.VALIDATION.STATUS_REQUIRED' | transloco }}
+              </p>
+            }
+          </div>
+        }
+      </div>
+
+      <div class="flex justify-end gap-2">
+        <ui-button (clicked)="cancelAddUser()" variant="outline">{{
+          'COMMON.CANCEL' | transloco
+        }}</ui-button>
+        @if ((isEditMode() && canEditUser()) || (!isEditMode() && canAddUser())) {
+          <ui-button (clicked)="saveUser()">
+            {{ isEditMode() ? ('COMMON.SAVE' | transloco) : ('COMMON.ADD' | transloco) }}
+          </ui-button>
+        }
+      </div>
+    </div>
+  }
+</ui-dialog>

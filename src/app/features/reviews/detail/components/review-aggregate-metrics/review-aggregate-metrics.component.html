@@ -1,0 +1,984 @@
+@let isDetailsExpanded = detailsExpanded();
+
+@if (loading()) {
+<section class="rounded-xl border border-border bg-card px-4 py-8 text-center text-sm text-muted-foreground">
+  Loading review metrics...
+</section>
+} @else if (error()) {
+<section
+  class="rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-8 text-center text-sm text-destructive">
+  {{ error() }}
+</section>
+} @else if (reviewData(); as data) {
+<section class="rounded-xl border border-border bg-card p-4 shadow-sm sm:p-6">
+  <header (click)="expansionChanged()"
+    class="mb-4 rounded-lg border border-border bg-background p-3 sm:p-4 cursor-pointer hover:bg-muted/30">
+    <div class="flex flex-wrap items-center gap-2 text-xs sm:text-sm">
+      <span class="flex items-center gap-1 font-semibold text-foreground">
+        <lucide-icon [name]="isDetailsExpanded ? 'chevron-down' : 'chevron-right'"
+          [class]="'cursor-pointer hover:opacity-50'" [color]="'gray'" [size]="16"></lucide-icon>
+        Aggregated Impact Metrics
+      </span>
+    </div>
+  </header>
+
+  <div [class.hidden]="!isDetailsExpanded">
+    <div class="mb-4 border-b border-border" role="tablist" aria-label="Review categories">
+      <div class="flex flex-wrap items-end gap-1">
+        @for (category of categoryTabs(); track trackByCategory($index, category)) {
+        <button type="button" role="tab" [attr.id]="'category-tab-' + category.code"
+          [attr.aria-controls]="'category-panel-' + category.code"
+          [attr.aria-selected]="activeCategoryCode() === category.code"
+          class="relative flex items-center gap-2 rounded-t-md border border-b-0 px-3 py-2 text-xs sm:text-sm" [class]="
+                activeCategoryCode() === category.code
+                  ? 'z-10 border-border bg-card text-foreground'
+                  : 'border-transparent bg-transparent text-muted-foreground hover:text-foreground'
+              " (click)="setActiveCategory(category.code)">
+          <span class="rounded-full px-2 py-0.5 text-[10px] font-bold text-white"
+            [style.background-color]="category.color">{{ category.code }}</span>
+          <span class="font-semibold">{{ category.name }}</span>
+          <span class="font-mono text-sm" [class]="
+                  categoryPendingCount()[category.code].doneCount >=
+                  categoryPendingCount()[category.code].totalCount
+                    ? 'text-[hsl(var(--aepw-green))]'
+                    : 'text-[hsl(var(--destructive))]'
+                ">
+            {{ categoryPendingCount()[category.code].doneCount }}
+            /
+            {{ categoryPendingCount()[category.code].totalCount }}
+          </span>
+        </button>
+        }
+      </div>
+    </div>
+
+    <div class="mb-2 flex items-center justify-between rounded px-4 py-2">
+      <h2 class="text-sm font-semibold text-foreground">Metrics {{ totalVisibleMetrics() }}</h2>
+      <button type="button" class="text-xs text-muted-foreground hover:text-foreground hidden"
+        (click)="toggleExpandAll()">
+        {{ allExpandedForActiveCategory() ? 'Collapse All' : 'Expand All' }}
+      </button>
+    </div>
+
+    <div class="space-y-2" role="tabpanel" [attr.id]="'category-panel-' + activeCategoryCode()"
+      [attr.aria-labelledby]="'category-tab-' + activeCategoryCode()">
+      @for (topMetric of visibleTopMetrics(); track topMetric.metricId) {
+      <article>
+        <div (click)="toggleTopMetric(topMetric.metricCode)"
+          class="bg-background border border-[hsl(var(--aepw-blue)/0.2)] cursor-pointer flex flex-wrap gap-2 justify-between px-3 py-1.5 rounded">
+          <div class="flex flex-wrap items-center gap-3">
+            <button type="button" class="hover:bg-muted/30">
+              <ng-container [ngTemplateOutlet]="expanderArrow" [ngTemplateOutletContext]="{
+                      metric: topMetric,
+                      isExpanded: isTopMetricExpanded(topMetric.metricCode),
+                    }">
+              </ng-container>
+            </button>
+            <span class="font-semibold text-sm   text-[hsl(var(--aepw-blue))]">{{
+              topMetric.metricCode
+              }}</span>
+            <h3 class="max-w-[18rem] text-sm font-semibold text-foreground">
+              {{ topMetric.metricName }}
+            </h3>
+            <span class="flex shrink-0 items-center gap-1.5" (click)="$event.stopPropagation()">
+              @if (topMetric.isValorisationRequired) {
+              <span class="text-[10px] text-muted-foreground whitespace-nowrap">Type of Valorization</span>
+              <select [(ngModel)]="topMetric.valorisationTypeId" (change)="updateVt(topMetric.metricCode, $event)"
+                class="h-6 rounded border border-input bg-background px-1.5 text-[11px] outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                [disabled]="updatingVT()[topMetric.metricCode]">
+                <option value="" disabled>Select...</option>
+                @for (opt of valorizationOptions(); track opt) {
+                <option [value]="opt.id">{{ opt.description }}</option>
+                }
+              </select>
+              } @else {
+              <span class="text-[12px] font-medium text-foreground whitespace-nowrap">{{ topMetric.valorizationType ||
+                '—' }}</span>
+              }
+            </span>
+            <div (click)="
+                    $event.stopPropagation();
+                    showHideFrCommentForMetric(topMetric, false);
+                    showHideModalInfo(topMetric)
+                  " (mouseover)="showHideFrCommentForMetric(topMetric, true)"
+              (mouseout)="showHideFrCommentForMetric(topMetric, false)"
+              class="flex items-center gap-1 content-position-relative">
+              <lucide-icon name="info" [class]="'cursor-pointer hover:opacity-50'" [color]="'gray'"
+                [size]="13"></lucide-icon>
+
+              @if (showFrCommentForTopMetricCodes()[topMetric.metricCode]) {
+              <div class="floating-tooltip-top-right">
+                {{ topMetric.frComment || 'No comment added (click to show description)' }}
+              </div>
+              }
+            </div>
+          </div>
+          <div
+            class="flex flex-wrap reported-baseline-action-btns-row font-bold items-center justify-start gap-3 text-sm sm:justify-start lg:justify-end">
+            <div class="flex flex-wrap items-center">
+              <span class="">Reported
+                <span class="font-semibold text-foreground">{{
+                  topMetric.rawValue
+                  }}</span></span>
+              <span class="text-muted-foreground/50 mx-1">|</span>
+
+              <span (mouseover)="updateBaselineCaluclationvisiblity(topMetric.metricCode, true)"
+                (mouseout)="updateBaselineCaluclationvisiblity(topMetric.metricCode, false)" class=""
+                style="position: relative" [class.opacity-50]="updatingBaseline()[topMetric.metricCode]">
+                <div class="floating-tooltip"
+                  [class.hidden]="!showBaselineCalculationMetricCode()[topMetric.metricCode]">
+                  {{ getBaselineCalc(topMetric.metricCode) }}
+                </div>
+                Baseline
+                @if (editingBaselineMetricCodes()[topMetric.metricCode]) {
+                <input type="number" [(ngModel)]="topMetric.baseline" (click)="$event.stopPropagation()" (blur)="
+                          updateBaselineForMetric(
+                            topMetric.metricCode,
+                            topMetric.metricId,
+                            $event.target.value
+                          )
+                        "
+                  class="w-16 rounded border border-border bg-background px-2 py-1 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-[hsl(var(--aepw-blue))]" />
+                } @else {
+                <span class="font-semibold text-foreground">
+                  {{ topMetric.baseline }}
+                </span>
+                }
+
+                @if (allowEditBaseline() && !updatingBaseline()[topMetric.metricCode]) {
+                <span class="inline-block">
+                  <lucide-icon (click)="openBaselineEditInputForMetric(topMetric.metricCode)" name="pencil"
+                    [class]="'cursor-pointer hover:opacity-50'" [color]="'gray'" [size]="13"></lucide-icon>
+                </span>
+                }
+              </span>
+              <span class="text-muted-foreground/50 mx-1">|</span>
+
+              <span class="">Captured <span class="font-semibold text-foreground">{{ 0 }}</span></span>
+              <span class="text-muted-foreground/50 mx-1">|</span>
+
+              <span class="">Risk %
+                <span class="font-semibold text-foreground">{{
+                  riskPercentage(topMetric)
+                  }}</span></span>
+              <span class="text-muted-foreground/50 mx-1">|</span>
+              <!-- jay risk adj -->
+              <div (mouseover)="showHideRiskAdjTooltipForMetricCode(topMetric.metricCode, true)"
+                (mouseleave)="showHideRiskAdjTooltipForMetricCode(topMetric.metricCode, false)"
+                class="content-position-relative hover:opacity-90 text-[hsl(var(--aepw-blue))]">
+                Risk Adj
+                <span class="font-semibold text-[hsl(var(--aepw-blue))]">{{
+                  topMetric.adjustedValue
+                  }}</span>
+
+                @if (showRiskAdjTooltipForMetricCode()[topMetric.metricCode]) {
+                <div class="floating-tooltip-top-left">
+                  Risk Adjusted = (Reported &minus; Baseline) &times; Risk % / 100
+                </div>
+                }
+              </div>
+            </div>
+
+            @let statusLabelForTopMetric = getStatusLabelForTopMetric(topMetric?.status || '');
+            @if (statusLabelForTopMetric.show === true) {
+            <span class="shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold  {{
+                      statusLabelForTopMetric.class
+                    }}">
+              {{ topMetric.status }}
+            </span>
+            }
+
+            <div class="flex flex-wrap gap-0.5 max-width-35">
+              <!-- @if (showRecallButton() && !restatementModeActive()) {
+                      <button (click)="$event.stopPropagation(); recallAction(topMetric)" type="button" class="bg-[hsl(var(--aepw-orange)/0.1)] border flex font-semibold gap-1 hover:bg-destructive/90 hover:text-foreground hover:text-slate-700 items-center px-1.5 py-1.5 rounded-md text-red-500 text-xs">
+                        <lucide-icon [size]="14" name="clock-arrow-up"></lucide-icon>
+                        Recall
+                      </button>
+                    }
+                  -->
+              @if (showViewProgressButton()) {
+              <button (click)="$event.stopPropagation(); openViewProgressModal(topMetric)" type="button"
+                class="flex items-center gap-1 rounded-md bg-[hsl(var(--aepw-blue))] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[hsl(var(--aepw-blue)/0.9)]">
+                <lucide-icon [size]="14" name="chart-gantt"></lucide-icon>
+                <!-- View Progress -->
+              </button>
+              }
+
+              @if (showApproveTopLevelMetricbutton() || showRejectTopLevelMetricbutton()) {
+              <button (click)="
+                        $event.stopPropagation();
+                        topMetric.allowAction &&
+                          actionForTopLevelMetric.set({
+                            metricCode: topMetric.metricCode,
+                            comment: '',
+                            decision: '',
+                            actioninProgress: false,
+                          })
+                      " type="button"
+                class="flex items-center gap-1 rounded-md bg-[hsl(var(--aepw-green))] px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-30 hover:bg-[hsl(var(--aepw-green)/0.9)]"
+                [disabled]="!topMetric.allowAction">
+                <lucide-icon [size]="14" name="badge-check"></lucide-icon>
+                <!-- Take Action -->
+              </button>
+              }
+            </div>
+
+            @if (
+            actionForTopLevelMetric() &&
+            actionForTopLevelMetric()?.metricCode === topMetric.metricCode &&
+            !metricActionConfirmation()
+            ) {
+            <div class="relative">
+              <div
+                class="absolute right-0 bottom-full z-30 mt-1.5 w-72 rounded-lg border border-border bg-card shadow-xl"
+                (click)="$event.stopPropagation()">
+                <!-- Header -->
+                <div class="flex items-center justify-between border-b px-4 py-3">
+                  <h4 class="text-sm font-semibold">Review {{ topMetric.metricCode }}</h4>
+                  <button type="button" class="text-muted-foreground hover:text-foreground">
+                    <lucide-icon (click)="actionForTopLevelMetric.set(null)" name="x" [size]="14" />
+                  </button>
+                </div>
+
+                <!-- Comment -->
+                <div class="px-4 py-3">
+                  @if (!actionForTopLevelMetric()?.actioninProgress) {
+                  <label class="text-sm font-semibold"> Comment </label>
+                  <label class="my-2 mb-2 block text-xs font-medium text-muted-foreground">
+                    Comment is
+                    <span class="text-[hsl(var(--aepw-green))]">optional</span> for Approve
+                    and <span class="text-[hsl(var(--aepw-orange))]">mandatory</span> for
+                    Reject.
+                  </label>
+                  @if (actionForTopLevelMetric()) {
+                  @let ob = actionForTopLevelMetric() || { comment: '' };
+                  <div class="content-position-relative overflow-hidden">
+                    <div class="text-xs font-medium textarea-words-counter-text">
+                      {{ ob.comment.length }}
+                      / 500
+                    </div>
+                    <textarea rows="3" placeholder="Add a comment..."
+                      class="w-full resize-none font-normal rounded-md border border-input bg-background px-3 py-2 pb-4 text-sm placeholder:text-muted-foreground"
+                      maxlength="500" [(ngModel)]="ob.comment"></textarea>
+                  </div>
+                  }
+                  } @else {
+                  <label class="mb-1.5 block text-xs font-medium text-muted-foreground">
+                    <span class="inline-flex items-center gap-1" [class.text-[hsl(var(--aepw-green))]]="
+                                actionForTopLevelMetric()?.decision == 'approved'
+                              " [class.text-[hsl(var(--destructive))]]="
+                                actionForTopLevelMetric()?.decision == 'rejected'
+                              ">
+                      <lucide-icon class="animate-spin" name="loader-circle" [size]="12" />
+                      {{
+                      actionForTopLevelMetric()?.decision == 'approved'
+                      ? 'Approval'
+                      : 'Rejection'
+                      }}
+                      in progress.
+                    </span>
+                    <span class="font-normal">
+                      <br />
+                      Please wait...
+                    </span>
+                  </label>
+                  }
+                </div>
+
+                <!-- Actions -->
+                @if (!actionForTopLevelMetric()?.actioninProgress) {
+                <div class="flex gap-2 border-t px-4 py-3">
+                  @if (showApproveTopLevelMetricbutton()) {
+                  <button type="button" (click)="openMetricActionConfirmation('approved')"
+                    class="flex flex-1 items-center justify-center gap-1.5 rounded-md bg-[hsl(var(--aepw-green))] px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90">
+                    <lucide-icon name="check" [size]="12" />
+                    Approve
+                  </button>
+                  }
+
+                  @if (showRejectTopLevelMetricbutton()) {
+                  @let ob = actionForTopLevelMetric() || { comment: '' };
+                  <button type="button" [disabled]="!ob.comment" (click)="openMetricActionConfirmation('rejected')"
+                    class="border border-destructive disabled:opacity-50 flex flex-1 font-semibold gap-1.5 hover:bg-red-600 hover:opacity-90 hover:text-accent-foreground items-center justify-center ng-star-inserted px-3 py-1.5 rounded-md text-destructive text-xs">
+                    <lucide-icon name="x" [size]="12" />
+                    Reject
+                  </button>
+                  }
+                </div>
+                }
+              </div>
+            </div>
+            }
+          </div>
+        </div>
+
+        @if (isTopMetricExpanded(topMetric.metricCode)) {
+        @for (subMetric of topMetric.l1Metrics; track subMetric.metricId) {
+        <div class="border rounded my-2" [ngClass]="{
+                    'border-border/40': !isL1Expanded(subMetric.metricCode),
+                    'border-border': isL1Expanded(subMetric.metricCode),
+                  }">
+          <button type="button"
+            class="grid border-b w-full grid-cols-1 gap-2 px-3 py-1.5 text-left hover:bg-muted/30 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:px-4"
+            [ngClass]="{
+                      'border-border/40': !isL1Expanded(subMetric.metricCode),
+                      'border-b': isL1Expanded(subMetric.metricCode),
+                    }" (click)="toggleSubMetric(subMetric.metricCode)">
+            <div class="flex max-w-lg items-center px-4 gap-3">
+              <ng-container [ngTemplateOutlet]="expanderArrow" [ngTemplateOutletContext]="{
+                          metric: subMetric,
+                          isExpanded: isL1Expanded(subMetric.metricCode),
+                        }">
+              </ng-container>
+              <span class="font-semibold text-sm  text-[hsl(var(--aepw-blue))]">{{
+                subMetric.metricCode
+                }}</span>
+              <span class="text-sm text-foreground">{{ subMetric.metricName }}</span>
+
+              <div (click)="
+                          $event.stopPropagation();
+                          showHideFrCommentForMetric(subMetric, false);
+                          showHideModalInfo(subMetric)
+                        " (mouseover)="showHideFrCommentForMetric(subMetric, true)"
+                (mouseout)="showHideFrCommentForMetric(subMetric, false)"
+                class="flex items-center gap-1 content-position-relative">
+                <lucide-icon name="info" [class]="'cursor-pointer hover:opacity-50'" [color]="'gray'"
+                  [size]="13"></lucide-icon>
+
+                @if (showFrCommentForTopMetricCodes()[subMetric.metricCode]) {
+                <div class="floating-tooltip-top-right">
+                  {{
+                  subMetric.frComment || 'No comment added (click to show description)'
+                  }}
+                </div>
+                }
+              </div>
+            </div>
+            <!-- <div class="flex flex-wrap items-center justify-start gap-3 text-sm sm:justify-end"> -->
+            <div class="flex max-width items-center gap-1.5 whitespace-nowrap">
+              <!-- <span class="text-muted-foreground">Reported <span class="font-semibold text-foreground">{{ displayValue(subMetric) }}</span></span> -->
+              <span class="text-xs font-bold text-foreground"
+                [class.opacity-50]="updatingRawValue()[subMetric.metricCode]">Reported
+              </span>
+
+              @if (editingRawValueMetricCodes()[subMetric.metricCode]) {
+              <input type="number" [(ngModel)]="subMetric.rawValue" (click)="$event.stopPropagation()" (blur)="
+                            updateRawValueForMetric(
+                              subMetric.metricCode,
+                              subMetric.metricId,
+                              $event.target.value
+                            )
+                          "
+                class="width-80px rounded border border-border bg-background px-2 py-1 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-[hsl(var(--aepw-blue))]" />
+              } @else {
+              <span class="font-semibold text-foreground" [class.opacity-50]="updatingRawValue()[subMetric.metricCode]">
+                {{ subMetric.rawValue }}
+              </span>
+
+              @if (allowEditRawValue()) {
+              <span class="inline-block">
+                <lucide-icon (click)="openRawValueEditInputForMetric(subMetric.metricCode)" name="pencil"
+                  [class]="'cursor-pointer hover:opacity-50'" [color]="'gray'" [size]="10"></lucide-icon>
+              </span>
+              }
+              }
+              <span class="text-muted-foreground/50 mx-0.5">|</span>
+
+              <span class="text-xs font-bold text-foreground"> Captured </span>
+              <span class="font-semibold text-foreground">{{
+                formatNumber(subMetric.evidenceCount)
+                }}</span>
+
+              <span class="text-muted-foreground/50 mx-0.5">|</span>
+
+              <span class="text-xs font-bold text-foreground"
+                [class.opacity-50]="updatingRiskPercent()[subMetric.metricCode]">Risk %</span>
+
+              @if (editingRiskPercentMetricCodes()[subMetric.metricCode]) {
+              <input type="number" [(ngModel)]="subMetric.riskOriginal" (click)="$event.stopPropagation()" (blur)="
+                            updateRiskPercentForMetric(
+                              subMetric.metricCode,
+                              subMetric.metricId,
+                              $event.target.value
+                            )
+                          "
+                class="w-16 rounded border border-border bg-background px-2 py-1 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-[hsl(var(--aepw-blue))]" />
+              } @else {
+              @if (subMetric.riskOriginal != undefined) {
+              <span class="font-semibold text-foreground"
+                [class.opacity-50]="updatingRiskPercent()[subMetric.metricCode]">
+                {{ subMetric.riskOriginal }} %
+              </span>
+              }
+              @if (allowEditRiskPercent()) {
+              <span class="inline-block">
+                <lucide-icon (click)="openRiskPercentEditInputForMetric(subMetric.metricCode)" name="pencil"
+                  [class]="'cursor-pointer hover:opacity-50'" [color]="'gray'" [size]="10"></lucide-icon>
+              </span>
+              }
+              }
+
+              <span class="text-muted-foreground/50 mx-0.5">|</span>
+
+              <div (mouseover)="
+                          showHideRiskAdjTooltipForMetricCode(subMetric.metricCode, true)
+                        " (mouseleave)="
+                          showHideRiskAdjTooltipForMetricCode(subMetric.metricCode, false)
+                        " class="content-position-relative hover:opacity-90">
+                <span class="text-xs font-bold text-foreground"> Risk Adj </span>
+
+                @if (showRiskAdjTooltipForMetricCode()[subMetric.metricCode]) {
+                <div class="floating-tooltip-top-left">
+                  Risk Adjusted = (Reported &minus; Baseline) &times; Risk % / 100
+                </div>
+                }
+              </div>
+              <span class="font-semibold text-[hsl(var(--aepw-blue))]">{{
+                subMetric.adjustedValue
+                }}</span>
+              <!-- <span class="text-muted-foreground">Risk Adj <span class="font-semibold text-[hsl(var(--aepw-orange))]">{{ formatNumber(subMetric.riskAdjustmentTonnes) }}</span></span> -->
+            </div>
+          </button>
+
+          @if (isL1Expanded(subMetric.metricCode) && (reviewDetail()?.recordTypeName?.toLowerCase() != 'corporate')) {
+          <div class="bg-muted/20 px-3 py-3 sm:px-4">
+            <!-- <p class="mb-3 pt-2 text-sm text-muted-foreground">
+                            <span class="font-semibold text-foreground">ADDITIONAL DETAILS:</span>
+                            {{ subMetric.frComment || '—' }}
+                        </p> -->
+
+            <div class="my-2 px-4 flex items-center justify-between">
+              <div class="flex min-w-0 flex-1 gap-3 content-position-relative">
+                @if (additionalDetailsEditFor() == subMetric.metricCode) {
+                <div class="flex min-w-0 flex-1 items-center gap-2" (click)="$event.stopPropagation()">
+                  <label class="shrink-0 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                    Additional Details:
+
+                    @if (updatingAdditionalDetailsFor() == subMetric.metricCode) {
+                    <lucide-icon name="loader-circle" class="animate-spin" [size]="14" />
+                    }
+                  </label>
+                  <input type="text" [(ngModel)]="subMetric.frComment"
+                    [disabled]="updatingAdditionalDetailsFor() == subMetric.metricCode"
+                    class="min-w-0 flex-1 rounded border border-border bg-background px-2 py-1 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-[hsl(var(--aepw-blue))]" />
+                  <button type="button" (click)="saveAdditionalDetailsForMetric(subMetric)"
+                    class="inline-flex shrink-0 items-center gap-1 rounded px-1.5 py-1 text-xs text-[hsl(var(--aepw-green))] hover:bg-muted"
+                    title="Save additional details">
+                    <lucide-icon name="check" [size]="13" />
+                    Save
+                  </button>
+                  <button type="button" (click)="cancelAdditionalDetailsEdit(subMetric.metricCode)"
+                    class="inline-flex shrink-0 items-center gap-1 rounded px-1.5 py-1 text-xs text-muted-foreground hover:bg-muted hover:text-foreground"
+                    title="Cancel editing">
+                    <lucide-icon name="x" [size]="13" />
+                    Cancel
+                  </button>
+                </div>
+                } @else {
+                <span (mouseenter)="
+                                subMetric.frComment &&
+                                  showHideAdditionalDetailsTooltip(subMetric.metricCode, true)
+                              " (mouseleave)="
+                                showHideAdditionalDetailsTooltip(subMetric.metricCode, false)
+                              " data-excel-comment
+                  class="flex min-w-0 flex-1 items-center truncate text-[10px] text-muted-foreground">
+                  <span class="truncate"><span class="font-semibold uppercase tracking-wide">Additional Details:</span>
+                    {{ subMetric.frComment }}</span>
+                  <button type="button" (click)="
+                                  $event.stopPropagation();
+                                  openAdditionalDetailsEditInputForMetric(subMetric)
+                                "
+                    class="ml-2 inline-flex shrink-0 items-center rounded p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+                    title="Edit additional details">
+                    <lucide-icon name="pencil" [size]="11" />
+                  </button>
+
+                  <div class="floating-tooltip" [class.hidden]="
+                                  !additionalDetailsShowForMetric()[subMetric.metricCode]
+                                ">
+                    {{ subMetric.frComment }}
+                  </div>
+                </span>
+                }
+
+                <div class="flex items-center gap-1 justify-end flex-1 px-2"
+                  [class.opacity-50]="updatingRawValue()[subMetric.metricCode]">
+                  <span class="text-xs font-bold text-foreground"> Evidenced </span>
+
+                  <span class="font-semibold text-foreground"
+                    [class.opacity-50]="updatingRawValue()[subMetric.metricCode]">
+                    <!-- {{ subMetric.rawValue }} -->
+                  </span>
+
+                  <span class="text-muted-foreground/50 mx-0.5">|</span>
+
+                  <span class="text-xs font-bold text-foreground"> Evidenced % </span>
+
+                  <span class="font-semibold text-foreground"
+                    [class.opacity-50]="updatingRawValue()[subMetric.metricCode]">
+                    <!-- {{ subMetric.riskOriginal }} 
+                                @if (subMetric?.riskOriginal != undefined && subMetric?.riskOriginal != null) {
+                                  %
+                                } -->
+                  </span>
+
+                  <span class="text-muted-foreground/50 mx-0.5">|</span>
+
+                  <span class="text-xs font-bold text-foreground"> Weighted AI % </span>
+
+                  <span class="font-semibold text-foreground"
+                    [class.opacity-50]="updatingRawValue()[subMetric.metricCode]">
+                    <!-- {{ subMetric.riskOriginal }} 
+                                @if (subMetric?.riskOriginal != undefined && subMetric?.riskOriginal != null) {{
+                                  %
+                                } -->
+                  </span>
+                </div>
+              </div>
+
+              @if (allowAddingEvidences()) {
+              <app-add-evidence-dropdown (filesSelected)="
+                              filesSelected($event, subMetric.metricId, subMetric.metricCode)
+                            " [fromQueue]="true" />
+              }
+            </div>
+
+            <div class="overflow-x-auto rounded-md border my-2 mx-4 bg-background">
+              <table class="min-w-full text-left text-sm">
+                <thead class="bg-muted/30 text-xs uppercase text-muted-foreground">
+                  <tr>
+                    <th class="px-3 py-2">File</th>
+                    <th class="px-3 py-2">Evidence Category</th>
+                    <th class="px-3 py-2">Site</th>
+                    <th class="px-3 py-2">Date</th>
+                    <th class="px-3 py-2 text-right">AI Confidence (%)</th>
+                    <th class="px-3 py-2 text-right">Captured Value</th>
+                    <th class="px-3 py-2 text-right">% Contribution</th>
+                    <th class="px-3 py-2 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @if (subMetric.evidenceCount) {
+                  <tr>
+                    <td colspan="8" class="px-3 py-3 text-center text-muted-foreground">
+                      No evidence records for this metric.
+                    </td>
+                  </tr>
+                  } @else {
+                  @for (evidence of subMetric.evidences; track evidence.evidenceId) {
+                  <tr class="border-t border-border">
+                    <td class="px-3 py-2 text-[hsl(var(--aepw-blue))]">
+                      {{ evidence.fileName }}
+                    </td>
+                    <td class="px-3 py-2">{{ 'cateogry' }}</td>
+                    <td class="px-3 py-2">{{ evidence.siteTag }}</td>
+                    <td class="px-3 py-2">{{ evidence.uploadedUtc }}</td>
+                    <td class="px-3 py-2 text-right font-semibold">
+                      <!-- [class]="confidenceClass(evidence.aiConfidencePct)" -->
+                      <!-- {{ evidence.aiConfidencePct }}% -->
+                    </td>
+                    <td class="px-3 py-2 text-right font-semibold text-[hsl(var(--aepw-blue))]">
+                      <!-- {{ formatNumber(evidence.capturedValue) }} -->
+                    </td>
+                    <td class="px-3 py-2 text-right font-semibold">
+                      <!-- {{ formatNumber(evidence.contributionPct) }}% -->
+                    </td>
+                    <td class="px-3 py-2 text-right">
+                      <div class="flex align-items-center items-center gap-1">
+                        <button (click)="viewEvidence(evidence)" type="button"
+                          class="bg-muted hover:bg-muted/70 px-2 py-1 rounded text-[hsl(var(--aepw-blue))] text-xs">
+                          View
+                        </button>
+                        <button (click)="downloadEvidence(evidence)" type="button"
+                          class="bg-muted hover:bg-muted/70 px-2 py-1 rounded text-[hsl(var(--aepw-green))] text-xs">
+                          Download
+                        </button>
+                        <!-- <button (click)="confirmDeleteEvidence(evidence)" type="button" class="bg-destructive/10 hover:bg-muted/70 px-2 py-1 rounded text-destructive text-xs">Delete</button> -->
+                        <button (click)="promptDeleteEvidence(evidence)" type="button"
+                          class="bg-destructive hover:bg-[hsl(var(--aepw-orange)/0.25)] px-2 py-1 rounded text-[hsl(var(--destructive-foreground))] text-xs">
+                          Delete
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                  } @empty {
+                  <tr>
+                    <td colspan="8" class="px-3 py-2">No evidences uploaded</td>
+                  </tr>
+                  }
+
+                  @let fileNameUploading =
+                  uploadingEvidenceForMetricCode()[subMetric.metricCode];
+                  @if (fileNameUploading != undefined && fileNameUploading != null) {
+                  <tr>
+                    <td colspan="8" class="px-3 py-3 border-t bg-green-100 text-center text-muted-foreground">
+                      <div class="flex d-flex items-center align-items-center gap-1.5">
+                        <lucide-icon name="loader-circle" class="animate-spin" [size]="14" />
+                        <div>
+                          Uploading evidence:
+                          <span class="rounded border py-1 px-2 bg-muted">
+                            {{ fileNameUploading }}
+                          </span>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                  }
+                  }
+                </tbody>
+              </table>
+            </div>
+
+
+          </div>
+          }
+        </div>
+        }
+        }
+      </article>
+      }
+
+      @if (visibleTopMetrics().length === 0) {
+      <div class="rounded-md border border-dashed border-border px-4 py-6 text-center text-sm text-muted-foreground">
+        No metrics found for {{ activeCategory()?.name ?? 'selected category' }}.
+      </div>
+      }
+    </div>
+  </div>
+</section>
+} @else {
+<section
+  class="rounded-xl border border-dashed border-border bg-card px-4 py-8 text-center text-sm text-muted-foreground">
+  No review data found for review ID:
+  <span class="font-semibold text-foreground">{{ reviewId() }}</span>
+</section>
+}
+
+@if (modalInfoMetric() != null) {
+<div class="fixed inset-0 z-40 bg-black/40 backdrop-blur-[1px]" (click)="showHideModalInfo(null)"></div>
+<div
+  class="fixed left-1/2 top-1/2 z-50 w-[40rem] max-w-[92vw] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-xl border border-border bg-card shadow-2xl"
+  (click)="$event.stopPropagation()">
+  <!-- Header -->
+  <div class="flex items-center justify-between gap-3 border-b bg-muted/30 px-5 py-3.5">
+    <div class="flex min-w-0 items-center gap-2">
+      <span
+        class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[hsl(var(--aepw-blue)/0.12)] text-[hsl(var(--aepw-blue))]">
+        <lucide-icon name="info" [size]="14" />
+      </span>
+      <div class="min-w-0">
+        <p class="text-sm font-semibold text-foreground">{{ modalInfoMetric()?.metricName }}</p>
+        <p class="font-mono text-xs text-muted-foreground">{{ modalInfoMetric()?.metricCode }}</p>
+      </div>
+    </div>
+    <button type="button" (click)="showHideModalInfo(null)"
+      class="shrink-0 rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground">
+      <lucide-icon name="x" [size]="16" />
+    </button>
+  </div>
+
+  <!-- Body -->
+  <div class="max-h-[70vh] space-y-5 overflow-y-auto p-5">
+    <!-- Metric Description / Guiding Notes -->
+    <div class="space-y-1.5">
+      <label class="text-xs font-semibold text-muted-foreground">
+        {{ modalInfoMetric()?.isTopLevel ? 'Metric Description:' : 'Guiding Notes:' }}
+      </label>
+      <p class="text-sm text-foreground">{{ modalInfoMetric()?.metricDescription || '—' }}</p>
+    </div>
+  </div>
+</div>
+}
+
+@if (deleteEvidenceItemId() != null) {
+<div class="fixed inset-0 z-40 bg-black/40 backdrop-blur-[1px]" (click)="cancelEvidenceDeletion()"></div>
+<div
+  class="fixed left-1/2 top-1/2 z-50 w-[40rem] max-w-[92vw] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-xl border border-border bg-card shadow-2xl"
+  (click)="$event.stopPropagation()">
+  <!-- Header -->
+  <div class="flex items-center justify-between gap-3 border-b bg-muted/30 px-5 py-3.5">
+    <div class="flex min-w-0 items-center gap-2">
+      <span class="bg-destructive/10 flex h-7 items-center justify-center rounded-full shrink-0 text-destructive w-7">
+        <lucide-icon name="triangle-alert" [size]="14" />
+      </span>
+      <div class="min-w-0">
+        <p class="text-sm font-semibold text-foreground">Delete Evidence Confirmation</p>
+        <!-- <p class="font-mono text-xs text-muted-foreground">{{ modalInfoMetric()?.metricCode }}</p> -->
+      </div>
+    </div>
+    <button type="button" (click)="cancelEvidenceDeletion()"
+      class="shrink-0 rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground">
+      <lucide-icon name="x" [size]="16" />
+    </button>
+  </div>
+
+  <!-- Body -->
+  <div class="max-h-[70vh] space-y-5 overflow-y-auto p-5">
+    <!-- Metric Description / Guiding Notes -->
+    <div class="space-y-1.5">
+      <label class="text-xs font-semibold text-muted-foreground"> </label>
+      <p class="text-sm text-foreground">
+        @if (evidenceDeletionInProgress()) {
+        Deleting evidence...
+        } @else {
+        Are you sure you want to delete this evidence item?
+        }
+      </p>
+    </div>
+    <div class="flex items-center justify-end gap-2">
+      <button (click)="confirmDeleteEvidence()"
+        class="flex items-center gap-1 rounded-md bg-red-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-600 disabled:opacity-40"
+        [disabled]="evidenceDeletionInProgress()">
+        @if (evidenceDeletionInProgress()) {
+        <lucide-icon name="loader-circle" class="animate-spin" [size]="14" />
+        }
+
+        Delete
+      </button>
+      <button (click)="cancelEvidenceDeletion()"
+        class="rounded-md border border-border bg-transparent px-3 py-1.5 text-xs font-medium hover:bg-muted/40">
+        Cancel
+      </button>
+    </div>
+  </div>
+</div>
+}
+
+<ui-dialog [(visible)]="metricActionConfirmationVisible" (closed)="cancelMetricActionConfirmation()"
+  [header]="metricActionConfirmation() === 'approved' ? 'Approve Metric' : 'Reject Metric'" styleClass="max-w-lg">
+  <div class="flex flex-col gap-5 p-5">
+    <p class="text-sm text-muted-foreground">
+      Are you sure you want to
+      {{ metricActionConfirmation() === 'approved' ? 'approve' : 'reject' }}
+      this metric?
+    </p>
+    <div class="space-y-1 rounded-md bg-muted/30 px-3 py-2 text-sm">
+      <p><span class="font-semibold">Metric:</span> {{ getPendingMetricName() }}</p>
+      <p><span class="font-semibold">Stage:</span> {{ getPendingStageName() }}</p>
+    </div>
+
+    <div class="flex justify-end gap-2 border-t pt-4">
+      <button type="button"
+        class="rounded-md border border-border bg-transparent px-3 py-1.5 text-xs font-medium hover:bg-muted/40"
+        (click)="cancelMetricActionConfirmation()">
+        Cancel
+      </button>
+      <button type="button"
+        class="rounded-md bg-[hsl(var(--aepw-green))] px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90"
+        [class.bg-destructive]="metricActionConfirmation() === 'rejected'" (click)="confirmMetricAction()">
+        Confirm
+      </button>
+    </div>
+  </div>
+</ui-dialog>
+
+<ng-template let-metric="metric" let-metricIsExpanded="isExpanded" #expanderArrow>
+  <span class="w-5 items-center justify-center text-xs text-muted-foreground">
+    @if (metricIsExpanded) {
+    <lucide-icon [class]="'shrink-0 text-[hsl(var(--aepw-blue))]'" name="chevron-down" [size]="16" />
+    } @else {
+    <lucide-icon [class]="'shrink-0'" [color]="'#c2c2c2'" name="chevron-right" [size]="16" />
+    }
+  </span>
+</ng-template>
+
+@if (approvalProgressModalOpenFor() != null) {
+<div class="fixed inset-0 z-40 bg-black/40 backdrop-blur-[1px]" (click)="closeViewProgressModal()"></div>
+<div
+  class="fixed left-1/2 top-1/2 z-50 w-[68rem] max-w-[95vw] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-xl border border-border bg-card shadow-2xl"
+  (click)="$event.stopPropagation()">
+  <!-- Header -->
+  <div class="flex items-center justify-between border-b bg-muted/30 px-5 py-3.5">
+    <div class="flex items-center gap-2">
+      <span
+        class="flex h-7 w-7 items-center justify-center rounded-full bg-[hsl(var(--aepw-blue)/0.12)] text-[hsl(var(--aepw-blue))]">
+        <lucide-icon name="sparkles" [size]="14" />
+      </span>
+      <h2 class="text-sm font-semibold text-foreground">
+        Approval Progress
+        <span class="font-mono text-[hsl(var(--aepw-blue))]">{{
+          approvalProgressModalOpenFor()?.metricCode
+          }}</span>
+      </h2>
+    </div>
+    <button type="button" (click)="closeViewProgressModal()"
+      class="rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground">
+      <lucide-icon name="x" [size]="16" />
+    </button>
+  </div>
+
+  <!-- Stage table -->
+  <div class="max-h-[70vh] overflow-y-auto overflow-x-auto p-5">
+    <div class="overflow-hidden rounded-lg border border-border">
+      <table class="w-full min-w-[56rem] border-collapse text-left text-xs">
+        <thead>
+          <tr class="bg-muted/40 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+            <th class="px-4 py-2.5">Stage</th>
+            <th class="px-4 py-2.5">Status</th>
+            <th class="w-[12rem] min-w-[12rem] px-4 py-2.5">Assigned To</th>
+            <th class="px-4 py-2.5">Updated By</th>
+            <th class="px-4 py-2.5">Updated On</th>
+            <th class="w-[16rem] min-w-[16rem] px-4 py-2.5">Comment</th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (!approvalProgressLoading()) {
+          @for (row of approvalProgressRows(); track row.stage) {
+          <tr class="border-t border-border/60 even:bg-muted/10">
+            <td class="whitespace-nowrap px-4 py-3 font-medium text-foreground">
+              {{ row.stageDisplayName }}
+            </td>
+            <td class="px-4 py-3">
+              <span class="inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold {{
+                        getStatusLabelForTopMetric(row?.status || '').class
+                      }}">
+                {{ row.status }}
+              </span>
+            </td>
+
+            <!-- @if (canEditAssignedUser() && row.assignableRole && fromQueue()) {
+                      @if (editingAssigneeStage() === row.stage) {
+                        <select
+                          [ngModel]="row.assignedUser"
+                          (ngModelChange)="confirmEditAssignee(row.approverKey, $event)"
+                          class="h-6 rounded border border-input bg-background px-1.5 text-[11px] outline-none focus-visible:ring-1 focus-visible:ring-ring">
+                          @for (name of usersForRole(row.assignableRole); track name) {
+                            <option [value]="name">{{ name }}</option>
+                          }
+                        </select>
+                      } @else {
+                        <span class="inline-flex items-center gap-1.5">
+                          {{ row.assignedUser }}
+                          <button type="button"
+                            
+                            class="text-muted-foreground hover:text-[hsl(var(--aepw-blue))]"
+                            title="Reassign">
+                            <lucide-icon name="pencil" [size]="11" />
+                          </button>
+                        </span>
+                      }
+                    } @else {
+                      {{ row.assignedUser }}
+                    } -->
+            <td class="w-[12rem] min-w-[12rem] whitespace-nowrap px-4 py-3 text-muted-foreground">
+              @if (editingAssigneeRow() === assigneeRowKey(row)) {
+              <div class="flex items-center gap-2">
+                <ng-select class="min-w-[220px]" [items]="userSearchResults()" bindLabel="displayName"
+                  [typeahead]="userSearchTypeahead" [loading]="searchLoading()" placeholder="Search User"
+                  [clearable]="true" [searchable]="true" [ngModel]="selectedAssigneeUsers()[assigneeRowKey(row)]"
+                  (ngModelChange)="onAssigneeUserChange(row, $event)">
+                  <ng-template ng-option-tmp let-item="item">
+                    <div class="flex flex-col">
+                      <span>
+                        {{ item.displayName }}
+                      </span>
+
+                      <small class="text-muted-foreground">
+                        {{ item.email }}
+                      </small>
+                    </div>
+                  </ng-template>
+                </ng-select>
+
+                <button type="button" class="text-muted-foreground hover:text-[hsl(var(--aepw-blue))]" title="Save"
+                  (click)="saveAssigneeUser(row)" [disabled]="assigneeUpdateInProgress()[assigneeRowKey(row)]">
+                  <lucide-icon name="check" [size]="12" />
+                </button>
+
+                <button type="button" class="text-muted-foreground hover:text-destructive" title="Cancel"
+                  (click)="cancelAssigneeEdit()">
+                  <lucide-icon name="x" [size]="12" />
+                </button>
+              </div>
+              } @else {
+              <p class="flex items-center gap-1">
+                <span>
+                  {{ row.assigneeUserName }}
+                </span>
+
+                @if (row.status == 'Pending') {
+                <button type="button" class="text-muted-foreground hover:text-[hsl(var(--aepw-blue))]"
+                  title="Edit Assignee" (click)="onEditAssigneeUser(row)">
+                  <lucide-icon name="pencil" [size]="10" />
+                </button>
+                }
+              </p>
+              }
+            </td>
+            <td class="whitespace-nowrap px-4 py-3 text-muted-foreground">
+              <!-- UpdatedBy Column -->
+              {{ row.approvedBy || '-' }}
+            </td>
+            <td class="whitespace-nowrap px-4 py-3 text-muted-foreground">
+              {{ row.updatedOnUtc }}
+            </td>
+            <td class="w-[16rem] min-w-[16rem] max-w-[16rem] px-4 py-3 text-muted-foreground">
+              {{ row.comment }}
+            </td>
+          </tr>
+          }
+          } @else {
+          <tr>
+            <td colspan="6" class="px-4 py-3 text-center text-muted-foreground">
+              <div class="flex items-center justify-center gap-2">
+                <lucide-icon name="loader-circle" class="animate-spin" [size]="17" />
+                Loading...
+              </div>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+}
+
+
+@if (baselineConfirmationModalOpen()) {
+<div class="fixed inset-0 z-40 bg-black/40 backdrop-blur-[1px]" (click)="closeViewProgressModal()"> </div>
+<div
+  class="fixed left-1/2 top-1/2 z-50 w-[68rem] max-w-[95vw] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-xl border border-border bg-card shadow-2xl"
+  (click)="$event.stopPropagation()">
+  <!-- Header -->
+  <div class="flex items-center justify-between border-b bg-muted/30 px-5 py-3.5">
+    <div class="flex items-center gap-2">
+      <!--
+        <span
+          class="flex h-7 w-7 items-center justify-center rounded-full bg-[hsl(var(--aepw-blue)/0.12)] text-[hsl(var(--aepw-blue))]"
+        >
+           <lucide-icon name="sparkles" [size]="14" /> 
+          </span>
+          -->
+      <!-- <h2 class="text-sm font-semibold text-foreground">
+          Approval Progress
+          <span class="font-mono text-[hsl(var(--aepw-blue))]">{{
+            approvalProgressModalOpenFor()?.metricCode
+          }}</span>
+        </h2> -->
+    </div>
+    <button type="button" (click)="closeViewProgressModal()"
+      class="rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground">
+      <lucide-icon name="x" [size]="16" />
+    </button>
+  </div>
+
+  <div class="max-h-[70vh] overflow-y-auto overflow-x-auto p-5">
+    <div class="overflow-hidden rounded-lg  ">
+      The quarterly baseline number provided is higher than the reported number. Are you sure you want to proceed?
+    </div>
+    <div class="flex gap-1 justify-end py-2">
+      <button
+        class="flex items-center justify-center gap-1.5 rounded-md bg-[hsl(var(--aepw-green))] px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90 "
+        (click)="forceUpdateBaseline()">
+        Confirm
+      </button>
+      <button
+        class="border border-destructive disabled:opacity-50 flex font-semibold gap-1.5 hover:bg-red-600 hover:opacity-90 hover:text-accent-foreground items-center justify-center  px-3 py-1.5 rounded-md text-destructive text-xs">
+        Cancel
+      </button>
+    </div>
+  </div>
+</div>
+
+}

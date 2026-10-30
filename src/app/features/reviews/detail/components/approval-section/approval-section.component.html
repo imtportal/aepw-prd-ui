@@ -1,0 +1,39 @@
+@if (reviewItem() === null) {
+  <p class="py-6 text-center text-sm text-muted-foreground">No approval record found</p>
+} @else {
+  <div class="space-y-0 divide-y divide-border/40 rounded-lg border border-border">
+    @for (step of steps(); track step.stepId) {
+      <div class="flex items-center justify-between px-4 py-3">
+        <div class="flex items-center gap-3">
+          <span class="w-32 text-sm font-medium text-foreground">{{ step.label }}</span>
+          <span class="text-xs text-muted-foreground">{{ step.person }}</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <ui-badge variant="secondary"
+            [styleClass]="'text-[10px] font-semibold ' + statusClass(step.status)">
+            {{ step.status }}
+          </ui-badge>
+          @if (step.isActive) {
+            <div data-action-buttons class="flex items-center gap-1">
+              <button type="button" data-approve-btn
+                class="flex items-center gap-1 rounded bg-[hsl(var(--aepw-green)/0.15)] px-2 py-1 text-xs font-medium text-[hsl(var(--aepw-green))] hover:bg-[hsl(var(--aepw-green)/0.25)]"
+                (click)="approve.emit(step.stepId)">
+                <lucide-icon name="check" [size]="10" /> Approve
+              </button>
+              <button type="button" data-reject-btn
+                class="flex items-center gap-1 rounded bg-destructive/10 px-2 py-1 text-xs font-medium text-destructive hover:bg-destructive/20"
+                (click)="reject.emit(step.stepId)">
+                <lucide-icon name="x" [size]="10" /> Reject
+              </button>
+              <button type="button" data-recycle-btn
+                class="flex items-center gap-1 rounded bg-[hsl(var(--aepw-orange)/0.12)] px-2 py-1 text-xs font-medium text-[hsl(var(--aepw-orange))] hover:bg-[hsl(var(--aepw-orange)/0.25)]"
+                (click)="recycle.emit(step.stepId)">
+                <lucide-icon name="refresh-cw" [size]="10" /> Recycle
+              </button>
+            </div>
+          }
+        </div>
+      </div>
+    }
+  </div>
+}

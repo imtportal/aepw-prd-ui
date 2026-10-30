@@ -1,0 +1,401 @@
+<div class="flex flex-col gap-6">
+  <!-- Breadcrumb -->
+  <!-- <ui-breadcrumb>
+    <ui-breadcrumb-item label="Approval Queue" href="/reviewer"  [separator]="false" />
+    <ui-breadcrumb-item label="Category Approval" [current]="!category()" />
+    @if (category()) {
+      <ui-breadcrumb-item [label]="catCode() + ' — ' + categoryName()" [current]="true" />
+    }
+  </ui-breadcrumb> -->
+
+  <div class="flex items-center justify-between">
+    <div class="flex items-center">
+      <button
+        (click)="goToTaskListPage()"
+        class="rounded-md border border-input bg-card px-4 py-2 text-sm font-medium hover:bg-muted"
+      >
+        Back
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Section 1: Category Details ───────────────────────────────────────── -->
+  <div class="rounded-xl border border-border bg-card shadow-sm">
+    <!-- Card header -->
+    <div class="border-b px-6 py-4">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+          <ui-badge
+            [styleClass]="'px-3 py-1 text-sm font-bold '"
+            [backgroundColor]="catBadgeClass()"
+          >
+            {{ catCode() }}
+          </ui-badge>
+          <div>
+            <h1 class="text-base font-semibold text-foreground">
+              <!-- {{ 'category()?.name' ?? catCode() }} -->
+              {{ categoryName() }}
+            </h1>
+            @if (period()) {
+              <p class="font-mono text-[11px] text-muted-foreground">{{ period() }}</p>
+            }
+          </div>
+        </div>
+
+        <!-- Role-based action -->
+        @if (isAdmin()) {
+          @if (pushConfirmed()) {
+            <span
+              class="rounded-full bg-[hsl(var(--aepw-green)/0.12)] px-4 py-2 text-xs font-semibold text-[hsl(var(--aepw-green))]"
+            >
+              Pushed to Senior Leadership Team
+            </span>
+          } @else {
+            @if (topMetrics()?.length) {
+              @let approvalInProgress = approvalRejectionInProgress();
+              <button
+                type="button"
+                (click)="!approvalInProgress && onPushToSeniorLeadership()"
+                class="flex items-center gap-2 rounded-md bg-[hsl(var(--aepw-blue))] px-4 py-2 text-xs disabled:opacity-50 font-semibold text-white shadow-sm hover:bg-[hsl(var(--aepw-blue)/0.85)] transition-colors"
+                [disabled]="approvalInProgress"
+              >
+                @if (approvalInProgress) {
+                  <lucide-icon class="animate-spin" name="loader-circle" [size]="13" />
+                } @else {
+                  <lucide-icon name="send-horizontal" [size]="13" />
+                }
+
+                Push To Senior Leadership Team
+              </button>
+            }
+          }
+        }
+
+        @if (isSeniorLeadership()) {
+          <div class="flex items-center gap-3">
+            @if (selectedCount() > 0) {
+              <span class="text-xs font-medium text-muted-foreground"
+                >{{ selectedCount() }} selected</span
+              >
+            }
+            <div class="flex items-center gap-2">
+              @if (pageActionPermissions()[categoryApprovalPageActionKey.APPROVEMETRIC]) {
+                <button
+                  type="button"
+                  [disabled]="selectedCount() === 0"
+                  (click)="openDecisionModal('approve')"
+                  class="rounded-md bg-[hsl(var(--aepw-green))] px-4 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-[hsl(var(--aepw-green)/0.85)] disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  Approve
+                </button>
+              }
+
+              @if (pageActionPermissions()[categoryApprovalPageActionKey.REJECTMETRIC]) {
+                <button
+                  type="button"
+                  [disabled]="selectedCount() === 0"
+                  (click)="openDecisionModal('reject')"
+                  class="rounded-md bg-destructive px-4 py-1.5 text-xs font-semibold text-destructive-foreground transition-colors hover:bg-destructive/85 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  Reject
+                </button>
+              }
+              
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Summary stats -->
+    <!-- <div class="flex flex-col sm:flex-row sm:divide-x">
+      <div class="px-6 py-4 sm:w-44 sm:shrink-0">
+        <p class="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">IM Records</p>
+        <p class="mt-1 text-2xl font-bold text-foreground">{{ totalRecords() }}</p>
+        <p class="text-[11px] text-muted-foreground">contributing projects</p>
+      </div>
+    </div> -->
+  </div>
+
+  @if (loadingTopLevelAggregatedData()) {
+    <div class="overflow-hidden cursor-pointer rounded-xl border border-border bg-card shadow-sm">
+      <div class="flex flex-wrap items-center gap-4 border-b bg-muted/20 px-4 py-3">
+        <lucide-icon name="loader-circle" [size]="16" class="animate-spin" />
+        Loading aggregated data...
+      </div>
+    </div>
+  } @else {
+    <!-- ── Section 2: Per-metric project cards ──────────────────────────────── -->
+    @for (metric of topMetrics(); track metric.parentCode) {
+      <div
+        (click)="toggleCard(metric.parentCode)"
+        class="overflow-hidden cursor-pointer rounded-xl border border-border bg-card shadow-sm"
+      >
+        <!-- Card header -->
+        <div
+          class="flex flex-wrap items-center gap-4 border-b bg-muted/20 px-4 py-3"
+          [class.pl-0]="isSeniorLeadership()"
+        >
+          @if (isSeniorLeadership()) {
+            <div
+              (click)="topLevelCheckbox.click(); $event.stopPropagation()"
+              class="flex hover:bg-[hsl(var(--aepw-blue)/0.15)] px-4 py-12"
+            >
+              <input
+                type="checkbox"
+                (click)="$event.stopPropagation()"
+                (change)="onToplevelCheckboxChange(metric)"
+                [(ngModel)]="metric.selected"
+                class="h-4 w-4 shrink-0 rounded border-input accent-[hsl(var(--aepw-blue))]"
+                #topLevelCheckbox
+              />
+            </div>
+          }
+          <button
+            type="button"
+            class="flex shrink-0 items-center text-muted-foreground hover:text-foreground"
+          >
+            <lucide-icon
+              [name]="isCardCollapsed(metric.parentCode) ? 'chevron-right' : 'chevron-down'"
+              [size]="14"
+            />
+          </button>
+          <div class="min-w-0">
+            <span class="text-[hsl(var(--aepw-blue))]">{{
+              metric.parentCode
+            }}</span>
+
+            <span class="ml-2 text-sm text-muted-foreground">{{ metric.parentName }}</span>
+          </div>
+
+          <div class="ml-auto w-80 shrink-0 rounded-md border bg-card px-4 py-2">
+            <p class="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Aggregated Value for {{ metric.parentCode }}
+            </p>
+            <div class="mt-1 grid grid-cols-2 divide-x divide-border">
+              <div class="pr-4">
+                <p class="text-[11px] text-muted-foreground">Reported</p>
+                <p class="truncate text-xl font-bold text-foreground">{{ metric.rawValue }}</p>
+                <p class="text-[11px] text-muted-foreground">{{ metric.unit }}</p>
+              </div>
+              <div class="pl-4">
+                <p class="text-[11px] text-[hsl(var(--aepw-blue))]">Risk adjusted</p>
+                <p class="truncate text-xl font-bold text-[hsl(var(--aepw-blue))]">
+                  {{ metric.adjustedValue }}
+                </p>
+                <p class="text-[11px] text-muted-foreground">{{ metric.unit }}</p>
+              </div>
+            </div>
+            <p class="mt-1 text-[11px] text-muted-foreground">
+              Evidenced {{ metric.evidenced }}
+              <!-- TODO: replace with real value  -->
+            </p>
+          </div>
+        </div>
+
+        <!-- Project rows -->
+        @if (!isCardCollapsed(metric.parentCode)) {
+          <div class="divide-y divide-border" (click)="$event.stopPropagation()">
+            @if (loadingProjectAggregatedData()) {
+              <div
+                class="flex cursor-pointer flex-wrap items-center gap-4 px-4 py-3 hover:bg-muted/20"
+              >
+                <lucide-icon name="loader-circle" [size]="16" class="animate-spin" />
+                Loading projects...
+              </div>
+            } @else {
+              @for (row of metric.projects; track $index) {
+                <div
+                  class="flex cursor-pointer flex-wrap items-center gap-4 px-4 py-3 hover:bg-muted/20"
+                  [class.pl-0]="isSeniorLeadership()"
+                >
+                  @if (isSeniorLeadership()) {
+                    <div
+                      (click)="projectCheckbox.click(); $event.stopPropagation()"
+                      class="flex hover:bg-[hsl(var(--aepw-blue)/0.15)] px-4 py-12"
+                    >
+                      <input
+                        type="checkbox"
+                        (click)="$event.stopPropagation()"
+                        (change)="onProjectCheckboxChange(row)"
+                        [(ngModel)]="row.selected"
+                        class="h-4 w-4 shrink-0 rounded border-input accent-[hsl(var(--aepw-blue))]"
+                        #projectCheckbox
+                      />
+                    </div>
+                  }
+
+                  <div class="min-w-0 flex-1 flex items-center gap-2">
+                     
+                    <button
+                      type="button"
+                      style="visibility: hidden;"
+                      class="flex shrink-0 items-center text-muted-foreground hover:text-foreground"
+                    >
+                      <lucide-icon
+                        [name]="isCardCollapsed(metric.parentCode) ? 'chevron-right' : 'chevron-down'"
+                        [size]="14"
+                      />
+                    </button>
+
+                    <div 
+                      style="visibility: hidden;"
+                    
+                    class="min-w-0">
+                      <span class="font-mono text-sm font-bold text-[hsl(var(--aepw-blue))]">{{
+                        metric.parentCode
+                      }}</span>
+
+                      <!-- <span class="ml-2 text-sm text-muted-foreground">{{ metric.parentName }}</span> -->
+                    </div> 
+
+
+                    @if (row.pin) {
+                      <span
+                        class="text-[hsl(var(--aepw-blue))]"
+                        (click)="goToReview(row)"
+                      >
+                        {{ row.pin }}
+                      </span>
+                    }
+  
+                    @else {
+                      <!-- <span class="  text-red-500">
+                        PIN Unavailable
+                      </span> -->
+                    }
+                  
+                    <p class="truncate text-sm text-foreground" [title]="row.title">
+                      <span class="hover:underline hover:text-red-500 text-sm" (click)="goToReview(row)">
+                        {{ row.title }}
+                      </span>
+                    </p>
+                  </div> 
+                  <div
+                    class="ml-auto flex w-80 shrink-0 flex-col divide-y divide-border rounded-md border border-border text-sm"
+                  >
+                    <span class="px-3 py-1.5 text-[hsl(var(--aepw-blue))] ">
+                      Risk Adjusted:
+                      <span class="font-semibold">{{
+                        row.adjustedValue != undefined ? row.adjustedValue : '—'
+                      }}</span>
+                    </span>
+                    <span class="px-3 py-1.5 text-muted-foreground">
+                      Evidenced: <span class="font-semibold text-foreground">{{ row.evidenced }}</span>
+                    </span>
+                    <span class="px-3 py-1.5 text-muted-foreground">
+                      Reported:
+                      <span class="font-semibold text-foreground">{{
+                        row.rawValue != undefined ? row.rawValue : '—'
+                      }}</span>
+                    </span>
+                  </div>
+                </div>
+              }
+            }
+            <!-- TODO: uncomment when proper -->
+            <!-- @if (projectsForMetric(metric.code).length === 0) {
+              <p class="px-4 py-6 text-center text-sm text-muted-foreground">No contributing projects for this metric.</p>
+            } -->
+          </div>
+        }
+      </div>
+    } @empty {
+      <div class="overflow-hidden cursor-pointer rounded-xl border border-border bg-card shadow-sm">
+        <p
+          class="flex gap-2 items-center justify-center px-4 py-6 text-center text-muted-foreground text-sm"
+        >
+          <lucide-icon name="ban" [size]="16"></lucide-icon>
+          No items available for category approval.
+        </p>
+      </div>
+    }
+  }
+
+  @if (pendingDecision(); as decision) {
+    <ui-modal
+      [heading]="
+        (decision === 'approve' ? 'Confirm Approval' : 'Confirm Rejection') +
+        ' (' +
+        selectedCount() +
+        ')'
+      "
+      maxWidth="max-w-lg"
+      (close)="cancelDecision()"
+    >
+      <div class="px-6 py-5">
+        <p class="mb-3 text-sm text-muted-foreground">
+          You are about to {{ decision === 'approve' ? 'approve' : 'reject' }} the following
+          {{ selectedCount() }} item(s):
+        </p>
+        <div
+          class="max-h-64 divide-y divide-border overflow-y-auto rounded-md border border-border"
+        >
+          @for (item of selectedItems(); track item.parentCode + item.pin) {
+            <div class="flex items-center justify-between px-3 py-2 text-sm">
+              <span class="truncate text-foreground">{{ item.title }}</span>
+              <span class="ml-3 shrink-0 font-mono text-xs text-[hsl(var(--aepw-blue))]">{{
+                item.parentCode
+              }}</span>
+            </div>
+          }
+        </div>
+
+        @if (decision === 'reject') {
+          <div class="pt-1.5 pb-0 mt-1.5 border-t">
+            <textarea
+              data-comment-input
+              type="text"
+              class="h-9 w-full flex-1 rounded-md border border-input bg-card px-3 py-2 mb-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-none min-h-[56px]"
+              placeholder="Add comment for rejection"
+              [(ngModel)]="rejectionComment"
+            >
+            </textarea>
+          </div>
+        }
+        @if (decision === 'approve') {
+          <div class="pt-1.5 pb-0 mt-1.5 border-t">
+            <textarea
+              data-comment-input
+              type="text"
+              class="h-9 w-full flex-1 rounded-md border border-input bg-card px-3 py-2 mb-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-none min-h-[56px]"
+              placeholder="Add comment (optional)"
+              [(ngModel)]="approvalComment"
+            >
+            </textarea>
+          </div>
+        }
+      </div>
+      <div modal-footer class="flex justify-end items-center gap-2 border-t px-6 py-4">
+        @if (approvalRejectionInProgress()) {
+          <div>
+            <lucide-icon name="loader-circle" [size]="16" class="animate-spin" />
+          </div>
+        } @else {
+          <button
+            type="button"
+            (click)="cancelDecision()"
+            class="rounded-md border px-4 py-2 text-sm font-medium hover:bg-muted"
+          >
+            Cancel
+          </button>
+        }
+
+        <button
+          type="button"
+          (click)="confirmDecision()"
+          [disabled]="
+            approvalRejectionInProgress() || (decision === 'reject' && !rejectionComment.trim())
+          "
+          [class]="
+            decision === 'approve'
+              ? 'rounded-md bg-[hsl(var(--aepw-green))] px-4 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50'
+              : 'rounded-md bg-destructive px-4 py-2 text-sm font-semibold text-destructive-foreground hover:opacity-90 disabled:opacity-50'
+          "
+        >
+          Confirm
+        </button>
+      </div>
+    </ui-modal>
+  }
+</div>

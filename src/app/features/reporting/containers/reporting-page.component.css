@@ -1,0 +1,13 @@
+:host ::ng-deep .filter-multi-select.ng-select-multiple .ng-select-container {
+  height: 50px !important;
+  min-height: 38px !important;
+}
+
+:host ::ng-deep .filter-multi-select.ng-select-multiple .ng-value-container {
+  max-height: 42px !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  align-content: flex-start !important;
+  padding-top: 4px !important;
+  padding-bottom: 4px !important;
+}

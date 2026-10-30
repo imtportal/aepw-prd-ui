@@ -1,0 +1,37 @@
+<div data-kpi-card
+  class="rounded-lg border bg-card shadow-sm cursor-pointer p-3 flex flex-col gap-1"
+  [class.ring-1]="expanded()"
+  [class.ring-[hsl(var(--aepw-blue)/0.3)]]="expanded()"
+  (click)="toggleExpand.emit(metric().code)">
+
+  <div class="flex items-center justify-between">
+    <ui-badge variant="secondary" [styleClass]="categoryBadgeClass()" data-category-badge>
+      {{ metric().code }}
+    </ui-badge>
+    <div data-yoy-change
+      class="flex items-center gap-0.5 text-[10px]"
+      [class]="metric().yoyChange >= 0 ? 'text-[hsl(var(--aepw-green))]' : 'text-[hsl(var(--destructive))]'">
+      @if (metric().yoyChange >= 0) {
+        <lucide-icon name="trending-up" class="h-3 w-3" />+{{ metric().yoyChange }}%
+      } @else {
+        <lucide-icon name="trending-down" class="h-3 w-3" />{{ metric().yoyChange }}%
+      }
+    </div>
+  </div>
+
+  <p data-reported-value class="text-lg font-bold text-foreground">
+    {{ formatValue(metric().reported, metric().unit) }}
+  </p>
+  <p data-metric-name class="text-[10px] text-muted-foreground truncate">{{ metric().name }}</p>
+
+  <div class="flex items-center justify-between mt-1 pt-1 border-t border-border/50">
+    <span data-risk-adj class="text-[9px] text-muted-foreground">
+      Risk-adj: {{ formatValue(metric().riskAdjusted, metric().unit) }}
+    </span>
+    @if (expanded()) {
+      <lucide-icon data-chevron-down name="chevron-down" class="h-3 w-3 text-muted-foreground" />
+    } @else {
+      <lucide-icon data-chevron-right name="chevron-right" class="h-3 w-3 text-muted-foreground" />
+    }
+  </div>
+</div>

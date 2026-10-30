@@ -1,0 +1,671 @@
+<!-- @if (loading()) {
+  <div data-loading class="mb-4 rounded-md bg-muted px-4 py-2 text-sm text-muted-foreground">
+    Loading…
+  </div>
+} -->
+@if (error()) {
+  <div data-error class="mb-4 rounded-md bg-destructive/10 px-4 py-2 text-sm text-destructive">
+    {{ error() }}
+  </div>
+} 
+
+<div class="flex flex-col gap-5">
+  <div class="flex items-center justify-between">
+    <div class="flex items-center justify-between content-position-relative">
+      <!-- <h1 class="font-heading text-lg font-bold">Bulk Launch Reviews</h1> -->
+       @if (!loading()) {
+         <p  data-selection-count class="text-sm text-muted-foreground pr-4 cursor-pointer content-position-relative">
+            {{ selectedImpactIds().size }} project{{ selectedImpactIds().size === 1 ? '' : 's' }} selected 
+           <!-- @if (selectedImpactIds().size > 0) { · {{ selectedTotalMetrics() }} total metrics } --> 
+          </p>
+         
+         <p data-selection-count class="hidden text-sm text-muted-foreground pl-4 cursor-pointer">
+           <a class="hover:underline hover:text-[hsl(var(--aepw-blue))]" >
+            {{ selectedTotalMetrics() }} total {{ selectedTotalMetrics() === 1 ? 'metric' : 'metrics' }}
+            (for each project) 
+           </a>
+         </p>
+
+         
+          <div class="floating-tooltip-bottom" [class.hidden]="!showSelectedImpactsTooltip()">
+            @for (impact of (selectedImpacts() || []); track impact.impactMasterId; let lastProject = $last) { 
+              <span class="text-xs"> {{ impact.title }} </span>
+
+              @if (!lastProject) {
+                <br>
+              }
+            }  
+          </div>
+        
+       }
+    </div>
+    
+    @if (reviewStatus != reviewFilterValue.Created) {
+      @if (bulkLaunchActionPermissions()[bulkLaunchActionKey.ADD]) {
+        <button
+          data-launch-btn
+          (click)="openLaunchModal()"
+          [disabled]="selectedImpactIds().size === 0 || bulkLaunchInProgress()"
+          class="inline-flex items-center gap-1.5 rounded-md bg-[hsl(var(--aepw-green))] px-4 py-2 text-sm font-medium text-[hsl(var(--accent-foreground))]  disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          <!-- (click)="onLaunch()" -->
+          @if (bulkLaunchInProgress()) {
+            <span class="animate-spin">
+              <lucide-icon name="loader-circle" [size]="16" />
+            </span>
+          }
+    
+          @else {
+            <lucide-icon name="rocket" [size]="16" />
+          }
+          Launch
+          {{ (selectedImpactIds().size > 0) ? (' ' + selectedImpactIds().size) : ' ' }}
+          {{ (selectedImpactIds().size > 1) ? ('Reviews') : 'Review' }}
+        </button>
+      }
+
+    }
+    @else {
+      <!-- DELETE button -->
+      @if (bulkLaunchActionPermissions()[bulkLaunchActionKey.DELETE]) {
+        <button
+            data-launch-btn
+            (click)="openDeleteModal()"
+            [disabled]="selectedImpactIds().size === 0 || bulkLaunchInProgress()"
+            class="inline-flex items-center gap-1.5 rounded-md bg-[hsl(var(--aepw-orange))] px-4 py-2 text-sm font-medium text-[hsl(var(--accent-foreground))]  disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <!-- (click)="onLaunch()" -->
+            @if (bulkLaunchInProgress()) {
+              <span class="animate-spin">
+                <lucide-icon name="loader-circle" [size]="16" />
+              </span>
+            }
+      
+            @else {
+              <lucide-icon name="trash" [size]="16" />
+            }
+            Delete
+            {{ (selectedImpactIds().size > 0) ? (' ' + selectedImpactIds().size) : ' ' }}
+            {{ (selectedImpactIds().size > 1) ? ('Reviews') : 'Review' }}
+        </button>
+      }
+      
+    }
+  </div>
+
+  <div class="flex flex-wrap items-center gap-3">
+    <ui-search-input
+      styleClass="w-[220px]"
+      placeholder="Search by project or pin..."
+      [value]="searchQuery()"
+      (valueChange)="onSearchInput($event)"
+    />
+    <ui-select
+      [ngModel]="filterStatus()"
+      (ngModelChange)="filterStatus.set($event); filtersChanged()"
+      [options]="statusOptions()"
+      styleClass="h-9 w-[160px] border-border bg-card text-sm"
+    />
+    <div class="h-9 w-[160px] border-border bg-card text-sm">
+      <select
+        (change)="filtersChanged(); resetSelectedImpactIds()"
+        class="w-full h-9 appearance-none rounded-md border border-input bg-card pl-3 pr-8 text-sm text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+        [(ngModel)]="reviewStatus"
+      >
+  
+        @for (opt of reviewStatusOptions(); track opt.value) {
+          <option [value]="opt.value">
+            {{ opt.label }}
+          </option>
+        }
+      </select>
+    </div>
+
+    <div class="h-9 w-[160px] border-border bg-card text-sm" [class.hidden]="false">
+      <select
+        (change)="filtersChanged()"
+        class="w-full h-9 appearance-none rounded-md border border-input bg-card pl-3 pr-8 text-sm text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+        [(ngModel)]="selectedQuarter"
+      >
+  
+        <option disabled>
+          Select Quarter
+        </option>
+        @for (opt of quarterStatusOptions(); track opt.value) {
+          <option [style.backgroundColor]=" opt.isCurrent ? '#a4c4ff' : '#fff9f9'" [value]="opt.value">
+            {{ opt.label }}
+          </option>
+        }
+      </select>
+    </div>
+
+    <!-- <ui-select
+      [ngModel]="reviewStatus()"
+       [options]="reviewStatusOptions()"
+      styleClass=""
+    /> -->
+
+    <lucide-icon (click)="resetFilters()" name="rotate-cw" [size]="16" class="text-muted-foreground hover:opacity-80 cursor-pointer" />
+  </div>
+
+  <ui-card styleClass="border-none shadow-sm">
+    <ui-card-content styleClass="p-0">
+       <div class="overflow-x-auto overflow-y-auto h-[calc(100vh-250px)]">
+        <table class="w-full">
+          <thead>
+            <tr class="border-b bg-muted/40">
+              @if (bulkLaunchActionPermissions()[bulkLaunchActionKey.ADD]) {
+                <th (click)="selectAllToggle.click()" class=" sticky top-0 z-30 bg-background w-10 px-4 py-2.5 hover:bg-muted cursor-pointer">
+                  <input type="checkbox" data-select-all
+                    [checked]="allSelected()"
+                    (change)="$event.stopPropagation(); toggleSelectAll($event)"
+                    (click)="$event.stopPropagation();"
+                    [disabled]="bulkLaunchInProgress()"
+                    aria-label="Select all projects"
+                    class="h-4 w-4 rounded border-input cursor-pointer" #selectAllToggle />
+                </th>
+              }
+              @else {
+                 
+              }
+              <th class="sticky top-0 z-30 bg-background px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground" [attr.aria-sort]="ariaSort('pin')">
+                <button type="button" (click)="toggleSort('pin')" class="inline-flex items-center gap-1 cursor-pointer">
+                  Pin
+                  <span aria-hidden="true" class="inline-flex flex-col text-[8px] leading-none text-muted-foreground/60">
+                    <span [class.text-foreground]="sortKey() === 'pin' && sortDir() === 'asc'">▲</span>
+                    <span [class.text-foreground]="sortKey() === 'pin' && sortDir() === 'desc'">▼</span>
+                  </span>
+                </button>
+              </th>
+              <th class="sticky top-0 z-30 bg-background px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground" [attr.aria-sort]="ariaSort('title')">
+                <button type="button" (click)="toggleSort('title')" class="inline-flex items-center gap-1 cursor-pointer">
+                  Project
+                  <span aria-hidden="true" class="inline-flex flex-col text-[8px] leading-none text-muted-foreground/60">
+                    <span [class.text-foreground]="sortKey() === 'title' && sortDir() === 'asc'">▲</span>
+                    <span [class.text-foreground]="sortKey() === 'title' && sortDir() === 'desc'">▼</span>
+                  </span>
+                </button>
+              </th>
+              <th class="sticky top-0 z-30 bg-background whitespace-nowrap px-3 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground" [attr.aria-sort]="ariaSort('l1UserName')">
+                <button type="button" (click)="toggleSort('l1UserName')" class="inline-flex items-center gap-1 cursor-pointer">
+                  CPM
+                  <span aria-hidden="true" class="inline-flex flex-col text-[8px] leading-none text-muted-foreground/60">
+                    <span [class.text-foreground]="sortKey() === 'l1UserName' && sortDir() === 'asc'">▲</span>
+                    <span [class.text-foreground]="sortKey() === 'l1UserName' && sortDir() === 'desc'">▼</span>
+                  </span>
+                </button>
+              </th>
+              <th class="sticky top-0 z-30 bg-background whitespace-nowrap px-3 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground" [attr.aria-sort]="ariaSort('programName')">
+                <button type="button" (click)="toggleSort('programName')" class="inline-flex items-center gap-1 cursor-pointer">
+                  Program
+                  <span aria-hidden="true" class="inline-flex flex-col text-[8px] leading-none text-muted-foreground/60">
+                    <span [class.text-foreground]="sortKey() === 'programName' && sortDir() === 'asc'">▲</span>
+                    <span [class.text-foreground]="sortKey() === 'programName' && sortDir() === 'desc'">▼</span>
+                  </span>
+                </button>
+              </th>
+              <th class="sticky top-0 z-30 bg-background whitespace-nowrap px-3 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground" [attr.aria-sort]="ariaSort('statusName')">
+                <button type="button" (click)="toggleSort('statusName')" class="inline-flex items-center gap-1 cursor-pointer">
+                  Status
+                  <span aria-hidden="true" class="inline-flex flex-col text-[8px] leading-none text-muted-foreground/60">
+                    <span [class.text-foreground]="sortKey() === 'statusName' && sortDir() === 'asc'">▲</span>
+                    <span [class.text-foreground]="sortKey() === 'statusName' && sortDir() === 'desc'">▼</span>
+                  </span>
+                </button>
+              </th>
+              <!-- <th class="sticky top-0 z-30 bg-background whitespace-nowrap px-3 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground"></th>  -->
+              <!-- <th class="sticky top-0 z-30 bg-background whitespace-nowrap px-3 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground"> {{ (reviewStatus == reviewFilterValue.Created) ? "Review Status" : "Last Review"}}</th>  -->
+              <!-- <th class="whitespace-nowrap px-3 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Metrics</th> -->
+           
+            </tr>
+          </thead>
+          <tbody>
+            @if (loading()) {
+              <tr data-project-row 
+                  class="border-b last:border-0 hover:bg-muted/30">
+                <td colspan="8" class="px-4 py-3 cursor-pointer"> 
+                  <div style="display: flex; column-gap: 10px;">
+                    <div class="animate-spin" style="display: inline-flex; align-items: center; justify-content: center;">
+                      <lucide-icon name="loader-circle" [size]="16" />
+                    </div>
+
+                    Loading impacts
+
+                  </div>
+                  
+                  
+                </td>
+              </tr>
+            }
+            @else {
+              @if (filteredProjects().length === 0) {
+                <tr>
+                  <td colspan="8" data-empty
+                    class="py-12 text-center text-sm text-muted-foreground">
+                    <div class="flex gap-1 justify-center items-center">
+                      <lucide-icon name="ban" size="16"></lucide-icon>
+                      @if (reviewStatus == reviewFilterValue.Created) {
+                        No record found for the selected filter
+                      }
+                      @else {
+                        No projects match your filters.
+                      }
+
+                    </div>
+
+
+                  </td>
+                </tr>
+              }
+              @for (p of sortedProjects(); track p.impactMasterId) {
+                @let selected = isProjectSelected(p);
+                <tr (click)="((p.allowDeletion || reviewStatus == reviewFilterValue.Pending) && toggleRowSelection(p)); $event.stopPropagation()" data-project-row [attr.data-selected]="selected"
+                  class="border-b last:border-0 cursor-pointer " [ngClass]="{'bg-[hsl(var(--aepw-blue)/0.08)]': selected, 'hover:bg-muted/30': !selected}">
+
+
+                    <td class="px-4 py-3  hover:bg-muted" (mouseover)="p.reviewId && showHideCheckboxTooltip(p.reviewId, true)" (mouseout)="p.reviewId && showHideCheckboxTooltip(p.reviewId, false)" [hidden]="!bulkLaunchActionPermissions()[bulkLaunchActionKey.ADD] || reviewStatus != reviewFilterValue.Created"> 
+                      <div class="content-position-relative">
+
+                        @if (!p.allowDeletion) {
+                          <input type="checkbox"
+                            disabled
+                            class="h-4 w-4 rounded border-input cursor-pointer" /> 
+
+                          @if (p.reviewId && showCheckboxTooltip()[p.reviewId]) {
+                            <div class="floating-tooltip">
+                              <p class="text-xs ">{{p.deletionPreventionReason}}</p>
+                            </div>
+                          }
+                        }
+
+                        @else {
+                          <input type="checkbox"
+                            [checked]="selectedImpactIds().has(+(p.reviewId || 0))"
+                            (click)="p.allowDeletion && toggleCheckbox($event, +(p.reviewId || 0))"
+                            [disabled]="bulkLaunchInProgress()"
+                            class="h-4 w-4 rounded border-input cursor-pointer" /> 
+
+                        }
+  
+                      
+
+                      </div>
+                    </td>
+                    
+                  
+                 
+                  <td class="px-4 py-3  hover:bg-muted" [hidden]="!bulkLaunchActionPermissions()[bulkLaunchActionKey.ADD] || reviewStatus != reviewFilterValue.Pending"> 
+                  
+                    <input type="checkbox"
+                      [checked]="selectedImpactIds().has(p.impactMasterId || 0)"
+                      (click)="toggleCheckbox($event, p.impactMasterId || 0)"
+                      [disabled]="bulkLaunchInProgress()"
+                      class="h-4 w-4 rounded border-input cursor-pointer" />
+                  </td>
+
+                
+                  <td>
+                    <p class=" px-4 py-3"  >{{ p.pin  }}</p>
+                  </td>
+
+                  <td class="px-4 py-3">
+                    <p class="text-sm font-medium text-foreground">
+                      <!-- <span class="bg-[hsl(var(--aepw-blue)/0.12)] rounded px-2 text-xs">{{p.impactMasterId}}</span> -->
+                       {{ p.title }}
+                    </p>
+                  </td>
+                  <td class="whitespace-nowrap px-3 py-3 text-sm text-muted-foreground">{{ p.l1UserName }}</td>
+                  <td class="whitespace-nowrap px-3 py-3 text-sm text-muted-foreground">{{ p.programName }}</td>
+                  <td class="whitespace-nowrap px-3 py-3">
+                    <ui-badge variant="secondary" [styleClass]="statusColorClass(p.statusName) + ' text-[10px]'">{{ p.statusName }}</ui-badge>
+                  </td>
+                  <!-- 
+                  <td class="whitespace-nowrap px-3 py-3 text-sm text-muted-foreground">
+                    {{ enabledMetricCount(p) }}
+                     
+                  </td>
+                  -->
+                  <!-- <td class="px-3 py-3">
+                    <button data-config-btn (click)="openConfig((p.impactMasterId || 0))"
+                      class="rounded p-1 hover:bg-secondary/80" title="View impact info">
+                      <lucide-icon name="info" [size]="16" class="text-muted-foreground" />
+                    </button>
+                  </td> -->
+
+                  <!-- <td class="px-4 py-3">
+                    <p class="text-sm font-medium text-foreground">
+                      <span class="bg-[hsl(var(--aepw-blue)/0.12)] rounded px-2 text-xs">{{p.impactMasterId}}</span> 
+                      {{ p.lastReviewStage }}
+                    </p>
+                  </td> -->
+                </tr>
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+      <div class="shrink-0 flex items-center justify-between border-t bg-background px-4 py-3 text-sm">
+        <div class="whitespace-nowrap text-muted-foreground">
+          @if (totalRows()) {
+            {{ this.totalRows() === 0 ? 0 : this.currentPage() * this.itemsPerPage() + 1 }} 
+            
+            &dash;
+
+            {{ (( this.itemsPerPage()) < this.totalRows()) ? ((this.currentPage() + 1) * this.itemsPerPage()) : this.totalRows() }} 
+            
+            of 
+            
+            {{totalRows()}}
+          }
+        </div>
+        <div class="flex items-center justify-end">
+          <!-- ROWS PER PAGE -->
+          <div class="flex items-center gap-2 text-muted-foreground">
+            <span class="text-xs"> Rows per page </span>
+    
+            <select
+              [value]="itemsPerPage()"
+              (change)="onItemsPerPageChange($event)"
+              class="h-7 rounded border border-input bg-background px-2 text-xs"
+            >
+              @for (size of pageSizeOptions; track size) {
+                <option [value]="size">
+                  {{ size }}
+                </option>
+              }
+            </select>
+          </div>
+          
+          <!-- FIRST -->
+          <button
+            type="button"
+            class="inline-flex h-7 w-7 items-center justify-center rounded border text-muted-foreground hover:bg-muted mx-1 disabled:opacity-40"
+            [disabled]="currentPage() === 0"
+            (click)="goToPage(0)"
+            title="First page"
+          >
+            «
+          </button>
+   
+          <!-- PREVIOUS -->
+          <button
+            type="button"
+            class="inline-flex h-7 w-7 items-center justify-center rounded border text-muted-foreground hover:bg-muted mx-1disabled:opacity-40"
+            [disabled]="currentPage() === 0"
+            (click)="goToPage(currentPage() - 1)"
+            title="Previous page"
+          >
+            ‹
+          </button>
+   
+          <!-- CURRENT PAGE -->
+   
+          <span class="whitespace-nowrap px-2 text-xs text-muted-foreground">
+            Page {{ currentPage() + 1 }} / {{ pageCount() }}
+          </span>
+   
+          <!-- NEXT -->
+   
+          <button
+            type="button"
+            class="inline-flex h-7 w-7 items-center justify-center rounded border text-muted-foreground hover:bg-muted mx-1 disabled:opacity-40"
+            [disabled]="currentPage() >= pageCount() - 1"
+            (click)="goToPage(currentPage() + 1)"
+            title="Next page"
+          >
+            ›
+          </button>
+   
+          <!-- LAST -->
+   
+          <button
+            type="button"
+            class="inline-flex h-7 w-7 items-center justify-center rounded border text-muted-foreground hover:bg-muted mx-1 disabled:opacity-40"
+            [disabled]="currentPage() >= pageCount() - 1"
+            (click)="goToPage(pageCount() - 1)"
+            title="Last page"
+          >
+            »
+          </button>
+
+        </div>
+    </div>
+    </ui-card-content>
+  </ui-card>
+
+</div>
+
+
+<ui-sheet
+  [visible]="sheetOpen()"
+  (visibleChange)="sheetOpen.set($event)"
+  [header]="configProject()?.title ?? 'Project Config'"
+>
+  @if (configProject()) {
+    <div data-config-sheet class="flex flex-col gap-4">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <p class="font-mono text-sm text-[hsl(var(--aepw-blue))]">{{configProject()!.pin}}</p>
+        <!-- <span class="bg-blue/20 rounded px-2 mr-2 text-xs">{{configProject()!.impactMasterId}}</span> -->
+      </div>
+      <div class="flex flex-col gap-1 border-t">
+        <p class="text-sm font-medium text-foreground pt-2 pb-1">{{ configProject()!.programName }}</p>
+
+        @if (configProject()?.regionName) {
+          <p class="text-xs font-medium text-foreground">{{ configProject()?.regionName }}</p>
+          
+        }
+        <p class="border-b pb-1"></p>
+        @if (configProject()?.fundingRecipientOrgName || configProject()?.fundingRecipientName) {
+          <!-- <p class="text-xs font-medium text-muted-foreground border-t pt-2">
+            Funding Recipient:
+          </p> -->
+          <p class="text-sm font-medium pt-2 pb-1 text-foreground">
+            {{ configProject()?.fundingRecipientOrgName }}
+            <br>
+          </p>
+
+          <p class="text-xs font-medium text-foreground">{{ configProject()?.fundingRecipientCountryName || configProject()?.fundingRecipientName }}</p>
+
+          <p class="border-b pb-1"></p>
+        }
+
+
+        <table>
+          <tr class="text-[hsl(var(--aepw-blue))]">
+            <td class="w-30 "><p class="text-sm font-medium  py-2">Start: </p></td>
+            <td class=""><p class="text-sm font-medium  text-right py-2">
+              {{ configProject()!.startDate }}</p></td>
+          </tr>
+          <tr class="text-[hsl(var(--aepw-orange))]">
+            <td class=" w-30"><p class="text-sm font-medium">End:</p></td>
+            <td class=""><p class="text-sm font-medium text-right">{{ configProject()!.endDate }}</p></td>
+          </tr>
+        </table>
+        
+        <!-- <p class="text-sm font-medium text-foreground border-b py-2">End: {{ configProject()!.endDate }}</p> -->
+        <p class="text-xs font-medium text-muted-foreground mt-2 border-t pt-4"> 
+          <!-- Reporting Frequenssssscy: -->
+        </p>
+        <p class="text-sm font-medium text-foreground">
+          <!-- <ui-badge variant="secondary" styleClass="text-[10px] bg-black/10" >{{ configProject()!.reportingFrequency }}</ui-badge> -->
+        </p>
+      </div>
+      <div>
+       <!-- <h4 class="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          Review Metrics
+        </h4>
+         @if (configMetrics().length === 0) {
+          <p data-no-metrics class="text-sm text-muted-foreground">
+            No review metrics found for this project.
+          </p>
+        }
+        @for (m of configMetrics(); track m.metricCode) {
+          <div data-metric-row class="flex items-center gap-2 rounded px-2 py-1.5 hover:bg-muted/30">
+            <span class="font-mono text-xs text-[hsl(var(--aepw-blue))]">{{ m.metricCode }}</span>
+            <span class="text-sm text-foreground">{{ m.metricName }}</span>
+          </div>
+        } -->
+      </div>
+    </div>
+  }
+</ui-sheet>
+
+@if (metricsModalOpen()) {
+  <ui-modal heading="Applicable Metrics per project" maxWidth="max-w-5xl" (close)="showHideMetricsModal(false)">
+    <div class="mt-1 px-6  gap-3 text-sm text-muted-foreground max-h-[400px] overflow-y-auto"> 
+      @for (metric of availableMetrics(); let topLevelMetricIndex = $index; track topLevelMetricIndex) {
+        <table [class.mt-2]="topLevelMetricIndex > 0" class="pt-4 width-100">
+          <!-- <tr [class.border-t]="topLevelMetricIndex > 0" class="border-b py-2 bg-blue/50"> -->
+          <!-- bg-[hsl(var(--aepw-blue)/0.02)] -->
+          <tr [class.border-t]="topLevelMetricIndex > 0" class="font-medium border-b border-t py-2 text-[hsl(var(--aepw-dark-grey))]">
+            <!-- <div class="flex items-start"> -->
+              <td title="Top level metric" class="py-2">
+                <div class="w-fit rounded flex ml-1 px-1 py-1 text-xs font-bold bg-muted justify-center" 
+                    [class.text-white]="metric.topLevelMetric.categoryColor"
+                    [class.text-black]="!metric.topLevelMetric.categoryColor"
+                    [class.border]="!metric.topLevelMetric.categoryColor"
+                    [style.backgroundColor]="metric.topLevelMetric.categoryColor">
+                  {{ metric.topLevelMetric.metricCode }}
+                </div>  
+              </td>
+              <td title="Top level metric" class="py-2" >
+                <div class="py-1 px-2">
+                  {{ metric.topLevelMetric.description }}
+                </div>
+              </td>   
+              <td class="py-2">
+                <div class="bg-[hsl(var(--aepw-blue)/0.5)] px-1 mr-1 text-center text-xs font-bold rounded cursor-pointer"  
+                    (click)="showL1MetricsSerialNo.set((showL1MetricsSerialNo() == (metric.topLevelMetric.metricId)) ? null : metric.topLevelMetric.metricId)"
+                    [title]="'Total L1 Metrics: ' + metric.childMetrics.length"
+                    [class.text-white]="metric.topLevelMetric.categoryColor"
+                    [style.backgroundColor]="metric.topLevelMetric.categoryColor"
+                    [class.text-black]="!metric.topLevelMetric.categoryColor">
+                    {{ metric.childMetrics.length }}
+                </div>
+              </td> 
+            <!-- </div> -->
+          </tr>
+          @for (childMetric of metric.childMetrics; let childMetricIndex = $index; track childMetricIndex) {
+            <tr >
+              <td class="w-1">
+                <div class="flex items-center justify-center">
+                  <lucide-icon size="14" name="arrow-right"></lucide-icon>
+                </div>
+
+              </td>
+              <td>
+                <table class="pt-4 width-100"> 
+                  <tr class=" py-2"> 
+                    <!-- <div class="flex items-start"> -->
+                      <td title="L1 metric" class="w-10">
+                        <div class="rounded flex px-1 py-1 text-xs font-bold bg-muted justify-center" 
+                            [class.text-white]="childMetric.categoryColor"
+                            [class.text-black]="!childMetric.categoryColor"
+                            [class.border]="!childMetric.categoryColor"
+                            [style.backgroundColor]="childMetric.categoryColor">
+                          {{ childMetric.metricCode }}
+  
+                        </div>  
+                      </td>
+                      <td >
+                        <div class="hover:text-foreground py-1 px-2">
+                          {{ childMetric.description }}
+                        </div>
+                      </td>   
+                      <td>
+                        <div class="px-1 border-l text-center text-xs  text-muted-foreground" [class.hidden]="showL1MetricsSerialNo() != metric.topLevelMetric.metricId">
+                            {{ childMetricIndex + 1 }}
+                        </div>
+                      </td> 
+                    <!-- </div> -->
+                  </tr>
+                </table>
+              </td>
+              <td>
+                <div class="px-1 border-l text-center text-xs  text-muted-foreground">
+                  <!-- {{ childMetricIndex + 1 }} -->
+                </div>
+              </td>
+            </tr>
+          }
+        </table>
+        
+      }
+      </div>
+  </ui-modal>
+}
+  
+@if (launchConfirmationModalOpen()) {
+  <ui-modal [heading]="confirmationAction() === 'delete' ? 'Delete Reviews' : 'Launch Reviews'" [maxWidth]="'max-w-2xl'" (close)="closeLaunchModal()">
+    <div class="mt-1 px-6 py-2 gap-3 max-h-[400px] overflow-y-auto"> 
+      Are you sure you want to {{ confirmationAction() === 'delete' ? 'delete' : 'launch' }} {{selectedImpactIds().size}} {{ selectedImpactIds().size == 1 ? 'project' : 'projects' }}?
+    </div>
+    <div class="flex items-center justify-end py-2 px-6">
+      <button class="inline-flex items-center gap-1.5 rounded-md px-4 py-2 text-sm font-medium text-[hsl(var(--accent-foreground))]  disabled:cursor-not-allowed disabled:opacity-50 btn-primary px-4 py-2 bg-red" (click)="confirmationAction() === 'delete' ? onDeleteReviews() : onLaunch()"
+        [disabled]="bulkLaunchInProgress()"
+        [class.bg-[hsl(var(--aepw-green))]]="confirmationAction() !== 'delete'"
+        [class.bg-[hsl(var(--aepw-orange))]]="confirmationAction() == 'delete'"
+      >
+        @if (confirmationAction() === 'delete') {
+          @if (bulkLaunchInProgress()) {
+            <span class="animate-spin">
+              <lucide-icon name="loader-circle" [size]="16" />
+            </span>
+          }
+          @else {
+            <lucide-icon name="trash" [size]="16"></lucide-icon>
+          }
+          Delete
+        }
+        @else {
+          <lucide-icon name="circle-check-big" [size]="16"></lucide-icon>
+          Launch
+        }
+      </button>
+    </div>
+  </ui-modal>
+}
+
+@if (selectedImpactsModalOpen()) {
+  <ui-modal heading="Selected Projects" [maxWidth]="'max-w-5xl'" (close)="showHideSelectedImpactsModal(false)">
+    <div class="mt-1 px-2 py-2 gap-3 max-h-[400px] overflow-y-auto"> 
+
+      <table class="w-full">
+        <tr>
+          <th class="border px-2 py-1.5 text-left"></th>
+          <th class="border px-2 py-1.5 text-left width-70">
+            Project
+          </th>
+          <th class="border px-2 py-1.5 text-left ">
+            Pin
+          </th>
+        </tr>
+
+        @for (impact of selectedImpacts(); track impact.impactMasterId; let impactIndex = $index) {
+          <tr>
+            <td class="border px-2 py-1.5 text-left">
+              {{ impactIndex + 1 }}
+            </td>
+            <td class="border px-2 py-1.5">
+              {{ impact.title }}
+            </td>
+            <td class="border px-2 py-1.5">  
+              {{ impact.pin }}
+            </td>
+          </tr>
+        }
+
+      </table>
+    </div>
+    <div class="flex items-center gap-1.5 justify-end py-2 px-6">
+      <button class="inline-flex items-center gap-1.5 rounded-md bg-[hsl(var(--aepw-green))] px-4 py-2 text-sm font-medium text-[hsl(var(--accent-foreground))]  disabled:cursor-not-allowed disabled:opacity-50 btn-primary px-4 py-2 bg-red" (click)="onLaunch()">
+        <lucide-icon name="circle-check-big" [size]="16"></lucide-icon>
+        Launch
+      </button>
+      <button class="rounded-md border bg-transparent px-4 py-2 text-sm hover:bg-muted" (click)="showHideSelectedImpactsModal(false)">
+        Close
+      </button>
+    </div>
+  </ui-modal>
+         
+}

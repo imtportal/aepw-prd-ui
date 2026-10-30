@@ -1,0 +1,86 @@
+@if (file(); as f) {
+  <div class="fixed inset-0 z-50 flex justify-end" data-sheet-content>
+    <div class="fixed inset-0 bg-black/40" (click)="close.emit()"></div>
+    <div class="relative z-10 w-full max-w-md bg-card shadow-xl flex flex-col overflow-y-auto">
+      <div class="flex items-start justify-between p-4 border-b">
+        <h2 class="text-sm font-semibold pr-6">{{ f.fileName }}</h2>
+        <button type="button" class="p-1 rounded hover:bg-muted" (click)="close.emit()" data-close-btn>
+          <lucide-icon name="x" class="h-4 w-4" />
+        </button>
+      </div>
+
+      <div class="flex flex-col gap-4 p-4">
+        <div class="aspect-[4/3] bg-muted rounded-lg flex items-center justify-center">
+          @if (f.fileType === 'image') {
+            <lucide-icon name="image" class="h-12 w-12 text-muted-foreground/30" />
+          } @else if (f.fileType === 'pdf') {
+            <lucide-icon name="file-text" class="h-12 w-12 text-muted-foreground/30" />
+          } @else {
+            <lucide-icon name="file-check" class="h-12 w-12 text-muted-foreground/30" />
+          }
+        </div>
+
+        <div class="grid grid-cols-2 gap-3 text-xs">
+          <div>
+            <p class="text-muted-foreground">Project</p>
+            <p class="font-medium">{{ f.projectName }}</p>
+            <p class="text-[10px] text-muted-foreground font-mono">{{ f.projectId }}</p>
+          </div>
+          <div>
+            <p class="text-muted-foreground">Period</p>
+            <p class="font-medium">{{ f.period }}</p>
+          </div>
+          <div>
+            <p class="text-muted-foreground">Metric</p>
+            <p class="font-medium font-mono">{{ f.metricCode }}</p>
+          </div>
+          <div>
+            <p class="text-muted-foreground">Uploaded</p>
+            <p class="font-medium">{{ f.uploadedAt }}</p>
+            <p class="text-[10px] text-muted-foreground">by {{ f.uploadedBy }}</p>
+          </div>
+          <div>
+            <p class="text-muted-foreground">AI Confidence</p>
+            <p class="font-medium">{{ f.confidence !== undefined ? f.confidence + '%' : 'N/A' }}</p>
+          </div>
+          <div>
+            <p class="text-muted-foreground">Status</p>
+            <ui-badge variant="secondary" [styleClass]="statusBadgeClass()">{{ statusLabel() }}</ui-badge>
+          </div>
+        </div>
+
+        @if (f.validationNote) {
+          <div class="rounded-lg bg-[hsl(var(--aepw-orange)/0.1)] p-3 text-xs" data-validation-note>
+            <p class="font-medium text-[hsl(var(--aepw-orange))] flex items-center gap-1">
+              <lucide-icon name="alert-triangle" class="h-3.5 w-3.5" />
+              Validation Note
+            </p>
+            <p class="mt-1 text-foreground">{{ f.validationNote }}</p>
+          </div>
+        }
+
+        <div class="flex gap-2 pt-2">
+          @if (isApprovable()) {
+            <button type="button"
+              class="flex-1 flex items-center justify-center gap-1 rounded-md bg-[hsl(var(--aepw-green))] text-white px-3 py-1.5 text-sm hover:bg-[hsl(var(--aepw-green)/0.9)]"
+              (click)="approve.emit(f.id)"
+              data-approve-btn>
+              <lucide-icon name="thumbs-up" class="h-3.5 w-3.5" />
+              Approve
+            </button>
+          }
+          <button type="button"
+            class="flex-1 flex items-center justify-center gap-1 rounded-md border px-3 py-1.5 text-sm hover:bg-muted">
+            <lucide-icon name="download" class="h-3.5 w-3.5" />
+            Download
+          </button>
+          <a [routerLink]="['/reviews', f.projectId]"
+            class="flex-1 flex items-center justify-center gap-1 rounded-md border px-3 py-1.5 text-sm hover:bg-muted">
+            <lucide-icon name="external-link" class="h-3.5 w-3.5" />
+            Review
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+}

@@ -1,0 +1,123 @@
+@if (item(); as it) {
+  <div class="fixed inset-0 z-50 flex justify-end" data-detail-content>
+    <div class="fixed inset-0 bg-black/40" (click)="close.emit()"></div>
+    <div class="relative z-10 w-full max-w-md bg-card shadow-xl flex flex-col overflow-y-auto">
+      <div class="flex items-start justify-between p-4 border-b">
+        <div>
+          <h2 class="font-heading text-sm font-semibold flex items-center gap-2">
+            <lucide-icon name="sparkles" class="h-4 w-4 text-[hsl(var(--aepw-blue))]" />
+            Extraction Details
+          </h2>
+          <p class="text-xs text-muted-foreground truncate max-w-[300px] mt-0.5">{{ it.fileName }}</p>
+        </div>
+        <button type="button" class="p-1 rounded hover:bg-muted" (click)="close.emit()" data-close-btn>
+          <lucide-icon name="x" class="h-4 w-4" />
+        </button>
+      </div>
+
+      <div class="flex flex-col gap-4 p-4">
+        <div class="flex items-center justify-between">
+          <span class="text-sm text-muted-foreground">Status</span>
+          <ui-badge variant="secondary" [styleClass]="statusBadgeClass()">{{ statusLabel() }}</ui-badge>
+        </div>
+
+        <div class="rounded-lg border bg-muted/20 p-4">
+          <h4 class="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">File Details</h4>
+          <div class="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+            <span class="text-muted-foreground">Project</span><span class="font-medium">{{ it.projectName }}</span>
+            <span class="text-muted-foreground">Project ID</span><span class="font-mono text-[hsl(var(--aepw-blue))]">{{ it.projectId }}</span>
+            <span class="text-muted-foreground">Period</span><span>{{ it.period }}</span>
+            <span class="text-muted-foreground">Metric</span><span class="font-mono">{{ it.metricCode }}</span>
+            <span class="text-muted-foreground">Uploaded</span><span>{{ it.uploadedAt }}</span>
+            @if (it.processedAt) {
+              <span class="text-muted-foreground">Processed</span><span>{{ it.processedAt }}</span>
+            }
+            @if (it.processingTime) {
+              <span class="text-muted-foreground">Duration</span><span>{{ it.processingTime }}</span>
+            }
+          </div>
+        </div>
+
+        @if (it.status === 'queued' || it.status === 'processing') {
+          <div class="flex flex-col items-center justify-center py-8 text-center">
+            @if (it.status === 'processing') {
+              <lucide-icon name="loader-2" class="h-10 w-10 text-[hsl(var(--aepw-blue))] mb-3" />
+              <p class="text-sm font-medium">Processing file...</p>
+              <p class="text-xs text-muted-foreground">Extracting and validating</p>
+            } @else {
+              <lucide-icon name="clock" class="h-10 w-10 text-muted-foreground mb-3" />
+              <p class="text-sm font-medium">Queued for processing</p>
+              <p class="text-xs text-muted-foreground">Will start shortly</p>
+            }
+          </div>
+        }
+
+        @if (it.extracted; as ext) {
+          <div class="rounded-lg border bg-[hsl(var(--aepw-blue)/0.03)] p-4" data-extracted-fields>
+            <div class="flex items-center justify-between mb-3">
+              <h4 class="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Extracted Fields</h4>
+              @if (it.confidence) {
+                <span class="text-xs font-semibold" [class]="confidenceClass()">{{ it.confidence }}% confidence</span>
+              }
+            </div>
+            <div class="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+              @if (ext.challanNo) {
+                <span class="text-muted-foreground">Challan #</span><span class="font-mono font-semibold">#{{ ext.challanNo }}</span>
+              }
+              @if (ext.date) {
+                <span class="text-muted-foreground">Date</span><span class="font-medium">{{ ext.date }}</span>
+              }
+              @if (ext.client) {
+                <span class="text-muted-foreground">Client</span><span class="font-medium">{{ ext.client }}</span>
+              }
+              @if (ext.material) {
+                <span class="text-muted-foreground">Material</span><span class="font-medium">{{ ext.material }}</span>
+              }
+              @if (ext.quantity) {
+                <span class="text-muted-foreground">Quantity</span><span class="font-bold">{{ ext.quantity.toLocaleString() }} units</span>
+              }
+              @if (ext.weight) {
+                <span class="text-muted-foreground">Weight</span><span class="font-bold">{{ ext.weight.toLocaleString() }} kg</span>
+              }
+            </div>
+          </div>
+        }
+
+        @if (it.validationNote) {
+          <div [class]="validationNoteClass()" class="rounded-lg p-3 text-sm flex items-start gap-2">
+            @if (it.status === 'error') {
+              <lucide-icon name="x-circle" class="h-4 w-4 shrink-0 mt-0.5" />
+            } @else {
+              <lucide-icon name="alert-triangle" class="h-4 w-4 shrink-0 mt-0.5" />
+            }
+            <span>{{ it.validationNote }}</span>
+          </div>
+        }
+
+        <div class="flex flex-col gap-2 pt-4 border-t">
+          <button type="button" class="flex items-center justify-center gap-2 rounded-md border px-4 py-2 text-sm hover:bg-muted">
+            <lucide-icon name="eye" class="h-4 w-4" />
+            View Original File
+          </button>
+          @if (it.status === 'error') {
+            <button type="button"
+              class="flex items-center justify-center gap-2 rounded-md border px-4 py-2 text-sm hover:bg-muted"
+              (click)="reprocess.emit(it.id)"
+              data-reprocess-btn>
+              <lucide-icon name="rotate-ccw" class="h-4 w-4" />
+              Re-process File
+            </button>
+          }
+          @if (it.status === 'needs-review') {
+            <a [routerLink]="['/evidence']"
+              class="flex items-center justify-center gap-2 rounded-md bg-[hsl(var(--aepw-blue))] text-white px-4 py-2 text-sm hover:bg-[hsl(var(--aepw-blue)/0.9)]"
+              data-review-link>
+              <lucide-icon name="external-link" class="h-4 w-4" />
+              Review in Evidence Tracker
+            </a>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+}

@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>AEPW IM Portal</title>
+    <base href="/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/png" href="aepw-logo.png" />
+    <style>
+      html,
+      body {
+        min-height: 100%;
+        margin: 0;
+      }
+
+      #startup-loader {
+        position: fixed;
+        inset: 0;
+        z-index: 2147483647;
+        display: grid;
+        place-items: center;
+        box-sizing: border-box;
+        overflow: auto;
+        padding: 1.5rem;
+        /* background: #005c66; */
+        /* color: #fff; */
+        color: #006699;
+        font-family: Arial, Helvetica, sans-serif;
+      }
+
+      .startup-loader__content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+        padding: 1.5rem;
+        text-align: center;
+      }
+
+      .startup-loader__message {
+        margin: 0;
+        font-size: 1rem;
+        font-weight: 600;
+      }
+
+      .startup-loader__error {
+        color: #fff;
+      }
+
+      .startup-loader__refresh {
+        padding: 0.65rem 1.1rem;
+        border: 1px solid rgb(255 255 255 / 80%);
+        border-radius: 999px;
+        background: rgb(0 55 65 / 45%);
+        color: #fff;
+        font: inherit;
+        font-weight: 600;
+        cursor: pointer;
+      }
+
+      .startup-loader__refresh:hover {
+        background: rgb(0 55 65 / 70%);
+      }
+
+      .startup-loader__refresh:focus-visible {
+        outline: 3px solid #fff;
+        outline-offset: 3px;
+      }
+
+      #startup-loader [hidden] {
+        display: none !important;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="startup-loader" role="status" aria-live="polite" aria-atomic="true">
+      <div class="startup-loader__content">
+        <p id="startup-loader-message" class="startup-loader__message">Loading AEPW IM Portal...</p>
+        <p id="startup-loader-error" class="startup-loader__message startup-loader__error" role="alert" hidden>
+          Unable to load AEPW IMP Portal. Please refresh the page or contact support.
+        </p>
+        <button id="startup-loader-refresh" class="startup-loader__refresh" type="button" hidden>
+          Refresh page
+        </button>
+      </div>
+    </div>
+    <app-root></app-root>
+  </body>
+</html>

@@ -1,0 +1,35 @@
+<!-- Backdrop -->
+<div
+  class="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/50 p-3 sm:p-6"
+  (click)="close.emit()">
+
+  <!-- Panel -->
+  <div
+    class="relative my-auto w-full rounded-lg bg-card shadow-xl"
+    [class]="maxWidth()"
+    (click)="$event.stopPropagation()">
+
+    <!-- Header -->
+    <div class="flex items-start justify-between border-b px-6 py-4">
+      <div class="min-w-0 flex-1">
+        <h2 class="font-heading text-lg font-bold text-foreground">{{ heading() }}</h2>
+        <!-- Projected subheading (optional) -->
+        <ng-content select="[modal-subheading]" />
+      </div>
+      <button
+        type="button"
+        (click)="close.emit()"
+        class="ml-4 flex-shrink-0 rounded p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+        aria-label="Close">
+        ✕
+      </button>
+    </div>
+
+    <!-- Body -->
+    <ng-content />
+
+    <!-- Footer -->
+    <ng-content select="[modal-footer]" />
+
+  </div>
+</div>

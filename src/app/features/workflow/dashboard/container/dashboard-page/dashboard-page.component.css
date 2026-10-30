@@ -1,0 +1,596 @@
+/* =========================================================
+   CATEGORY BUTTON
+   ========================================================= */
+
+.category-btn {
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.category-btn:hover {
+  background-color: color-mix(
+    in srgb,
+    var(--hover-color) 10%,
+    white 90%
+  );
+}
+
+
+/* =========================================================
+   PORTFOLIO TABLE CONTAINER
+   ========================================================= */
+
+.portfolio-table-container {
+  position: relative;
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: visible;
+}
+
+
+/* =========================================================
+   LEVEL 1 HEADER
+   ========================================================= */
+
+.portfolio-main-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+.portfolio-main-header th {
+  background: #f9fafb;
+}
+
+
+/* =========================================================
+   PROGRAM PROJECT AREA
+   ========================================================= */
+
+.program-project-scroll {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: visible;
+  position: relative;
+}
+
+
+/* =========================================================
+   LEVEL 2 HEADER
+   ========================================================= */
+
+.program-project-header {
+  position: sticky;
+  top: 36px;
+  z-index: 45;
+}
+
+.program-project-header th {
+  background: #ffffff;
+}
+
+
+/* =========================================================
+   LEFT STICKY COLUMNS
+   ========================================================= */
+
+.portfolio-table td.sticky,
+.portfolio-table th.sticky,
+.program-project-table td.sticky,
+.program-project-table th.sticky {
+  background-clip: padding-box;
+}
+
+
+/* =========================================================
+   PREVENT CONTENT SHOWING THROUGH STICKY HEADER
+   ========================================================= */
+
+.program-project-header,
+.program-project-header tr,
+.program-project-header th {
+  opacity: 1 !important;
+}
+
+
+/* =========================================================
+   PROGRAM ROW
+   ========================================================= */
+
+.program-row td {
+  background-color: #ffffff;
+}
+
+
+/* =========================================================
+   PROJECT ROW
+   ========================================================= */
+
+.program-project-table tbody tr td {
+  background-color: rgba(249, 250, 251, 1);
+}
+
+
+/* =========================================================
+   PROGRAM PROJECT SCROLLBAR
+   ========================================================= */
+
+.program-project-scroll::-webkit-scrollbar {
+  height: 8px;
+}
+
+.program-project-scroll::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+.program-project-scroll::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 999px;
+}
+
+.program-project-scroll::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+
+/* =========================================================
+   PORTFOLIO TABLE WRAPPER
+   ========================================================= */
+
+.portfolio-table-wrapper {
+  width: 100%;
+}
+
+
+/* =========================================================
+   PORTFOLIO TABLE SCROLL
+   ========================================================= */
+
+.portfolio-table-scroll {
+  width: 100%;
+  height: 100%;
+
+  /*
+   * KEEP EXISTING SCROLLING BEHAVIOR
+   */
+  overflow: auto;
+
+  position: relative;
+  scrollbar-gutter: stable;
+}
+
+
+/* =========================================================
+   PORTFOLIO CONTAINER
+   ========================================================= */
+
+.portfolio-container {
+  width: 100%;
+
+  position: sticky;
+  top: 8px;
+
+  height: calc(100vh - 125px);
+  min-height: 420px;
+
+  display: flex;
+  flex-direction: column;
+
+  background: #ffffff;
+
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+
+  overflow: hidden;
+
+  z-index: 20;
+}
+
+
+/* =========================================================
+   PORTFOLIO TITLE
+   ========================================================= */
+
+.portfolio-title {
+  flex: 0 0 38px;
+
+  height: 38px;
+
+  display: flex;
+  align-items: center;
+
+  padding: 0 14px;
+
+  background: #ffffff;
+
+  border-bottom: 1px solid #e5e7eb;
+}
+
+
+/* =========================================================
+   TABLE AREA
+   ========================================================= */
+
+.portfolio-table-wrapper {
+  flex: 1 1 auto;
+  min-height: 0;
+
+  /*
+   * KEEP EXISTING BEHAVIOR
+   */
+  overflow: hidden;
+
+  background: #ffffff;
+}
+
+
+/* =========================================================
+   TABLE SCROLL
+   ========================================================= */
+
+.portfolio-table-scroll {
+  width: 100%;
+  height: 100%;
+
+  /*
+   * KEEP BOTH SCROLL DIRECTIONS
+   */
+  overflow: auto;
+
+  position: relative;
+
+  scrollbar-gutter: stable;
+}
+
+
+/* =========================================================
+   MAIN HEADER
+   ========================================================= */
+
+/*
+ * IMPORTANT:
+ * Do NOT put position/z-index on <thead>.
+ * Sticky behavior is controlled directly by <th>.
+ */
+
+.portfolio-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+
+  height: 36px;
+  min-height: 36px;
+
+  background-color: #f8fafc !important;
+  background-image: none !important;
+
+  border-bottom: 1px solid #dfe5eb;
+
+  box-shadow:
+    0 2px 3px rgba(0, 0, 0, 0.06);
+}
+
+/* =========================================================
+   MAIN HEADER - FIRST COLUMN
+   ========================================================= */
+
+.portfolio-table thead th:first-child {
+  /*
+   * This column is both:
+   * - top sticky
+   * - left sticky
+   */
+  z-index: 120;
+
+  background-color: #f8fafc !important;
+  background-image: none !important;
+}
+
+
+/* =========================================================
+   PROJECT HEADER
+   ========================================================= */
+
+/*
+ * IMPORTANT:
+ * This header is sticky below the main header.
+ *
+ * Main header:
+ *   top: 0
+ *
+ * Project header:
+ *   top: 36px
+ */
+
+
+
+/* =========================================================
+   PROJECT HEADER ROW BACKGROUND
+   ========================================================= */
+
+/* =========================================================
+   PROJECT HEADER
+   ========================================================= */
+
+/* =========================================================
+   PROJECT HEADER
+   ========================================================= */
+
+.portfolio-table .project-header-row th {
+  position: sticky;
+  top: 36px;
+  z-index: 110;
+
+  height: 36px;
+  min-height: 36px;
+
+  background-color: #ffffff !important;
+  background-image: none !important;
+
+  opacity: 1 !important;
+
+  border-bottom: 1px solid #e5e7eb;
+
+  box-shadow:
+    0 2px 3px rgba(0, 0, 0, 0.08);
+}
+/* =========================================================
+   PROJECT HEADER - FIRST COLUMN
+   ========================================================= */
+
+.portfolio-table .project-header-row th:first-child {
+  /*
+   * This column is both:
+   * - top sticky
+   * - left sticky
+   */
+  z-index: 120;
+
+  background-color: #ffffff !important;
+  background-image: none !important;
+}
+
+
+/* =========================================================
+   FROZEN FIRST COLUMN
+   ========================================================= */
+
+
+
+/* =========================================================
+   PROGRAM ROW
+   ========================================================= */
+
+.portfolio-table tbody tr.group td {
+  background-color: #ffffff;
+}
+
+
+/* =========================================================
+   PROJECT DATA ROW
+   ========================================================= */
+
+.portfolio-table .project-data-row td {
+  background-color: #f9fafb;
+}
+
+
+/*
+ * First project column stays opaque while
+ * horizontally scrolling.
+ */
+
+.portfolio-table .project-data-row td:first-child {
+  background-color: #ffffff !important;
+  background-image: none !important;
+}
+
+
+/* =========================================================
+   BODY DATA LAYER
+   ========================================================= */
+
+/*
+ * Normal body cells stay below sticky headers.
+ */
+
+.portfolio-table tbody td {
+  position: relative;
+
+  border-bottom: 1px solid #f0f2f4;
+
+  background-clip: padding-box;
+}
+
+
+/*
+ * Re-apply sticky behavior to first body column
+ * because the rule above uses position: relative.
+ */
+
+.portfolio-table tbody td.sticky {
+  position: sticky;
+
+  left: 0;
+
+  z-index: 20;
+
+  background-color: #ffffff !important;
+}
+
+
+/* =========================================================
+   HEADER SEPARATOR
+   ========================================================= */
+
+.portfolio-table thead tr {
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.portfolio-table .project-header-row {
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+
+/* =========================================================
+   IMPORTANT STICKY LAYERING
+   ========================================================= */
+
+/*
+ * DO NOT add:
+ *
+ * .portfolio-table thead,
+ * .portfolio-table .project-header-row {
+ *   position: relative;
+ *   z-index: 80;
+ * }
+ *
+ * That creates a stacking context and can cause the
+ * project data to appear through/over the sticky header.
+ *
+ *
+ * DO NOT add duplicate:
+ *
+ * .portfolio-table-scroll thead th
+ *
+ * .portfolio-table-scroll .project-header-row th
+ *
+ * with different z-index values.
+ *
+ *
+ * The header layering is controlled only here:
+ *
+ * Main header:
+ *     z-index: 100
+ *
+ * Main first column:
+ *     z-index: 120
+ *
+ * Project header:
+ *     z-index: 110
+ *
+ * Project first column:
+ *     z-index: 120
+ *
+ * Body:
+ *     z-index: 20
+ */
+
+
+/* =========================================================
+   FOOTER
+   ========================================================= */
+
+.portfolio-footer {
+  flex: 0 0 38px;
+
+  height: 38px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 0 12px;
+
+  background: #ffffff;
+
+  border-top: 1px solid #e5e7eb;
+
+  z-index: 40;
+}
+
+
+/* =========================================================
+   SCROLLBAR
+   ========================================================= */
+
+.portfolio-table-scroll::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+.portfolio-table-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.portfolio-table-scroll::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+}
+
+.portfolio-table-scroll::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+
+/* =========================================================
+   FIREFOX SCROLLBAR
+   ========================================================= */
+
+.portfolio-table-scroll {
+  scrollbar-width: thin;
+
+  scrollbar-color:
+    #cbd5e1
+    transparent;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 768px) {
+
+  .portfolio-container {
+    height: calc(100vh - 110px);
+    min-height: 350px;
+  }
+
+  .portfolio-title {
+    height: 36px;
+  }
+
+  .portfolio-table thead th {
+    top: 0;
+  }
+
+  .portfolio-table .project-header-row th {
+    top: 36px;
+  }
+}
+
+
+/* Dashboard Year Multi-Select */
+/* :host ::ng-deep .filter-multi-select.ng-select-multiple .ng-select-container {
+  height: 50px !important;
+  min-height: 38px !important;
+} */
+
+:host ::ng-deep .filter-multi-select.ng-select-multiple .ng-value-container {
+  max-height: 42px !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  align-content: flex-start !important;
+  /* padding-top: 4px !important;
+  padding-bottom: 4px !important; */
+}
+
+
+.year-select.ng-select-disabled {
+  background-color: #f8fafc;
+  border-color: #d6dee5;
+  color: #9ca3af;
+}
+
+.year-select.ng-select-disabled .ng-select-container {
+  background-color: #f8fafc;
+  border-color: #d6dee5;
+}
+
+.year-select.ng-select-disabled .ng-value-label {
+  color: #9ca3af;
+}

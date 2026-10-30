@@ -1,0 +1,47 @@
+<div data-event-row class="flex gap-4">
+  <!-- Icon circle -->
+  <div class="flex flex-col items-center shrink-0">
+    <div class="flex h-8 w-8 items-center justify-center rounded-full"
+      [class]="config().bgColor">
+      <lucide-icon [name]="config().iconName" class="h-4 w-4" [class]="config().color" />
+    </div>
+  </div>
+
+  <!-- Content -->
+  <div class="flex-1 pb-4">
+    <div class="flex flex-wrap items-center gap-2">
+      <h4 data-event-title class="text-sm font-semibold text-foreground">{{ event().title }}</h4>
+      @if (event().category && event().metricId) {
+        <ui-badge data-category-badge variant="secondary"
+          [styleClass]="categoryBadgeClass()">
+          {{ event().metricId }}
+        </ui-badge>
+      }
+      <span class="text-xs text-muted-foreground">{{ event().timestamp }}</span>
+    </div>
+
+    <p data-event-description class="mt-1 text-sm leading-relaxed text-muted-foreground">
+      {{ event().description }}
+    </p>
+
+    @if (event().oldValue && event().newValue) {
+      <div data-value-change
+        class="mt-2 inline-flex items-center gap-2 rounded bg-muted/50 px-3 py-1.5 text-xs">
+        <span class="text-muted-foreground line-through">{{ event().oldValue }}</span>
+        <span class="text-muted-foreground">→</span>
+        <span class="font-semibold text-foreground">{{ event().newValue }}</span>
+      </div>
+    }
+
+    <div class="mt-2 flex items-center gap-2">
+      <div data-user-initials
+        class="flex h-5 w-5 items-center justify-center rounded-full bg-[hsl(var(--aepw-blue)/0.15)] text-[8px] font-bold text-[hsl(var(--aepw-blue))]">
+        {{ event().userInitials }}
+      </div>
+      <span class="text-xs text-muted-foreground">
+        {{ event().user }}
+        <span class="text-muted-foreground/60">({{ event().role }})</span>
+      </span>
+    </div>
+  </div>
+</div>

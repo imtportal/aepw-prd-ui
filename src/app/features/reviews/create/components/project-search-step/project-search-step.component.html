@@ -1,0 +1,30 @@
+<div data-project-search-step class="flex flex-col gap-4">
+  <input
+    data-search-input
+    class="h-9 w-full rounded-md border border-input bg-card px-3 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+    placeholder="Search projects..."
+    [value]="searchQuery()"
+    (input)="searchQuery.set($any($event.target).value)"
+  />
+  <div data-project-list class="flex flex-col gap-1">
+    @for (p of filteredProjects(); track p.projectId) {
+      <button
+        data-project-option
+        [attr.data-project-id]="p.projectId"
+        [attr.data-selected]="p.pin === selectedId()"
+        (click)="selectProject.emit(p.pin)"
+        class="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left hover:bg-muted/50"
+        [class.bg-primary/10]="p.pin === selectedId()"
+      >
+        <span class="font-mono text-xs text-[hsl(var(--aepw-blue))]">{{ p.pin }}</span>
+        <span class="font-medium text-sm text-foreground">{{ p.title }}</span>
+        <span class="ml-auto text-sm text-muted-foreground">{{ p.pmUserName }}</span>
+      </button>
+    }
+    @if (filteredProjects().length === 0) {
+      <p data-no-results class="py-4 text-center text-sm text-muted-foreground">
+        No projects match "{{ searchQuery() }}".
+      </p>
+    }
+  </div>
+</div>

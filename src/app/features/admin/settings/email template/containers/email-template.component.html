@@ -1,0 +1,143 @@
+<div class="flex flex-col gap-6 bg-white p-4 rounded-md border">
+  <div>
+    <h1 class="text-xl font-semibold">Email Template Maintenance</h1>
+  </div>
+
+  <!-- Template -->
+  <div class="flex gap-16">
+    <div class="space-y-2">
+      <label class="text-sm font-medium"> Email Template </label>
+      <ng-select
+        [items]="templates()"
+        bindLabel="templateName"
+        bindValue="emailNotificationTemplateId"
+        [clearable]="false"
+        [searchable]="true"
+        [ngModel]="selectedTemplateId()"
+        (ngModelChange)="onTemplateChange($event)"
+        placeholder="Select email template"
+      >
+        <!--         
+       [loading]="isTemplatesLoading()"
+        [virtualScroll]="true" -->
+      </ng-select>
+    </div>
+    <!-- To -->
+    <div class="space-y-2">
+      <label class="text-sm font-medium"> To </label>
+
+      <ng-select
+        [items]="recipientKeywords()"
+        bindLabel="description"
+        bindValue="keyword"
+        [multiple]="true"
+        [disabled]="true"
+        [searchable]="true"
+        [ngModel]="selectedTo()"
+        (ngModelChange)="selectedTo.set($event)"
+        placeholder="Select recipients"
+      >
+        <ng-template ng-label-tmp let-item="item">
+          {{ item.description || item.keyword }}
+        </ng-template>
+        <ng-template ng-option-tmp let-item="item">
+          {{ item.description || item.keyword }}
+        </ng-template>
+      </ng-select>
+    </div>
+
+    <!-- CC -->
+    <div class="space-y-2">
+      <label class="text-sm font-medium"> CC </label>
+
+      <ng-select
+        [items]="recipientKeywords()"
+        bindLabel="description"
+        bindValue="keyword"
+        [multiple]="true"
+        [disabled]="true"
+        [searchable]="true"
+        [ngModel]="selectedCc()"
+        (ngModelChange)="selectedCc.set($event)"
+        placeholder="Select recipients"
+      >
+        <ng-template ng-label-tmp let-item="item">
+          {{ item.description || item.keyword }}
+        </ng-template>
+        <ng-template ng-option-tmp let-item="item">
+          {{ item.description || item.keyword }}
+        </ng-template>
+      </ng-select>
+    </div>
+  </div>
+
+  <!-- Subject -->
+  <div class="space-y-2">
+    <label class="text-sm font-medium">Subject</label>
+
+    <input
+      type="text"
+      class="w-full rounded border px-3 py-2"
+      [ngModel]="subject()"
+      (ngModelChange)="subject.set($event)"
+    />
+  </div>
+
+  <!-- Body -->
+  <div class="relative flex flex-col gap-4">
+    <label class="text-sm font-medium">Body</label>
+
+    <quill-editor
+      [modules]="quillModules"
+      [ngModel]="bodyHtml()"
+      (ngModelChange)="bodyHtml.set($event)"
+      (onEditorCreated)="onEditorCreated($event)"
+      (onContentChanged)="onBodyContentChanged($event)"
+      (onSelectionChanged)="onBodySelectionChanged($event)"
+      format="html"
+      [styles]="{ height: '400px', width: '100%' }"
+      placeholder="Enter email body..."
+    >
+    </quill-editor>
+
+    @if (showKeywordDropdown()) {
+      <div
+        class="absolute z-50 max-h-60 w-80 overflow-y-auto rounded-md border bg-white shadow-lg"
+        [style.top.px]="keywordDropdownPosition().top"
+        [style.left.px]="keywordDropdownPosition().left"
+      >
+        @for (
+          keyword of filteredBodyKeywords();
+          track keyword.emailNotificationInterpolationKeywordId
+        ) {
+          <button
+            type="button"
+            class="flex w-full flex-col px-3 py-2 text-left hover:bg-gray-100"
+            (mousedown)="$event.preventDefault(); insertKeyword(keyword)"
+          >
+            <span class="text-sm font-medium">
+              {{ keyword.description }}
+            </span>
+
+            <span class="text-xs text-gray-500"> {{ '{{' + keyword.keyword + '}}' }} </span>
+          </button>
+        }
+
+        @if (filteredBodyKeywords().length === 0) {
+          <div class="px-3 py-2 text-sm text-gray-500">No keywords found</div>
+        }
+      </div>
+    }
+  </div>
+
+  <!-- Save -->
+  <div class="flex justify-end">
+    <button
+      type="button"
+      class="rounded bg-[hsl(var(--aepw-blue))] px-4 py-2 text-white hover:bg-[hsl(var(--aepw-blue)/0.9)]"
+      (click)="saveTemplate()"
+    >
+      Save
+    </button>
+  </div>
+</div>

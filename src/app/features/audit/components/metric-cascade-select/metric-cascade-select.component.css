@@ -1,0 +1,4 @@
+/* Custom scrollbar and subtle transitions for cascade dropdown */
+:host {
+  display: block;
+}

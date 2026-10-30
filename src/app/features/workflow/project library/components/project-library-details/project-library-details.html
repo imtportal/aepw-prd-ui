@@ -1,0 +1,265 @@
+@let p = projectDetails();
+@let isCorporate = p?.recordTypeName?.toLowerCase() === 'corporate';
+
+<div class="rounded-lg border bg-card p-6 mx-6 my-4">
+  <div class="mb-4 flex items-center gap-3">
+    <h2 class="text-base font-semibold">
+      {{ isCorporate ? 'Corporate Details' : 'Project Details' }}
+    </h2>
+
+    <span
+      class="inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-semibold"
+      [class]="
+        isCorporate
+          ? 'bg-[hsl(var(--aepw-orange)/0.12)] text-[hsl(var(--aepw-orange))]'
+          : 'bg-[hsl(var(--aepw-blue)/0.12)] text-[hsl(var(--aepw-blue))]'
+      "
+    >
+      {{ isCorporate ? 'Corporate' : 'Project' }}
+    </span>
+  </div>
+
+  @if (isCorporate) {
+    <!-- ==================== CORPORATE ==================== -->
+
+    <div class="project-details-card flex flex-wrap justify-between gap-6">
+      <!-- IM ID -->
+      <div class="min-width-200px">
+        <p class="text-sm font-medium text-muted-foreground">IM ID</p>
+        <p class="mt-0.5 text-sm">
+          {{ p?.impactMasterId ?? '—' }}
+        </p>
+      </div>
+
+      <!-- Corporate Name -->
+      <div class="min-width-200px">
+        <p class="text-sm font-medium text-muted-foreground">Corporate Name</p>
+        <p class="mt-0.5 text-sm">
+          {{ p?.title ?? '—' }}
+        </p>
+      </div>
+
+      <!-- Corporate Data Provider -->
+      <div class="min-width-200px">
+        <p class="text-sm font-medium text-muted-foreground">Corporate Data Provider</p>
+        <p class="mt-0.5 text-sm">
+          {{ p?.l1UserName ?? '—' }}
+        </p>
+      </div>
+
+      <!-- Corporate Status -->
+      <div class="min-width-200px">
+        <p class="text-sm font-medium text-muted-foreground">Corporate Status</p>
+        <p class="mt-0.5 text-sm">
+          {{ p?.statusName ?? '—' }}
+        </p>
+      </div>
+
+      <!-- Brief Description -->
+      <div class="md:col-span-2 w-full">
+        <p class="text-xs font-medium text-muted-foreground">Brief Description</p>
+        <p class="mt-0.5 text-sm">
+          {{ p?.description ?? '—' }}
+        </p>
+      </div>
+    </div>
+  } @else {
+    <!-- ==================== PROJECT ==================== -->
+
+    <div class="project-details-card flex flex-wrap justify-between gap-6">
+      <!-- IM ID -->
+      <div class="min-width-200px">
+        <p class="text-sm font-medium text-muted-foreground">IM ID</p>
+        <p class="mt-0.5 text-sm">
+          {{ p?.impactMasterId }}
+        </p>
+      </div>
+
+      <!-- PIN -->
+      <div class="min-width-200px">
+        <p class="text-sm font-medium text-muted-foreground">PIN</p>
+        <p class="mt-0.5 text-sm">
+          {{ p?.pin }}
+        </p>
+      </div>
+
+      <!-- Project Title -->
+      <div class="min-width-200px">
+        <p class="text-sm font-medium text-muted-foreground">Project Title</p>
+
+        <div class="mt-0.5 flex flex-wrap items-center gap-2">
+          <p class="text-sm">
+            {{ p?.title }}
+          </p>
+        </div>
+      </div>
+
+      <!-- Program -->
+      <div>
+        <p class="text-sm font-medium text-muted-foreground">Program</p>
+        <p class="mt-0.5 text-sm">
+          {{ p?.programName }}
+        </p>
+      </div>
+
+      <!-- Countries & Cities -->
+      <div class="md:col-span-2">
+        <p class="text-sm font-medium text-muted-foreground">Countries & Cit(ies)</p>
+
+        @if (p?.cities && p?.cities?.length) {
+          <div class="mt-1.5 flex flex-wrap gap-1.5">
+            @for (loc of p?.cities || []; track $index) {
+              <span
+                class="inline-flex items-center rounded bg-[hsl(var(--aepw-blue)/0.1)] px-2 py-0.5 text-xs font-medium text-[hsl(var(--aepw-blue))]"
+              >
+                {{ loc?.cityName }}, {{ loc?.countryName }}
+              </span>
+            }
+          </div>
+        } @else {
+          <p class="mt-0.5 text-sm text-muted-foreground">—</p>
+        }
+      </div>
+
+      <!-- Contract Performance Manager -->
+      <div>
+        <p class="text-sm font-medium text-muted-foreground">Contract Performance Manager</p>
+        <p class="mt-0.5 text-sm">
+          {{ p?.l1UserName }}
+        </p>
+      </div>
+
+      <!-- Funding Recipient -->
+      <div>
+        <p class="text-sm font-medium text-muted-foreground">Funding Recipient</p>
+
+        <div class="flex flex-wrap gap-1 mt-1.5">
+          @for (
+            fundingRecipient of p?.fundingRecipients;
+            track fundingRecipient.fundingRecipientId;
+            let lastFr = $last
+          ) {
+            <span
+              class="inline-flex items-center rounded bg-[hsl(var(--aepw-blue)/0.1)] px-2 py-0.5 text-xs font-medium text-[hsl(var(--aepw-blue))]"
+              style="min-width: max-content"
+            >
+              {{ fundingRecipient.fundingRecipientName }}
+            </span>
+
+            @if (
+              fundingRecipient.fundingRecipientOrgName != fundingRecipient.fundingRecipientName
+            ) {
+              <span
+                class="inline-flex text-xs text-muted-foreground pb-2"
+                style="min-width: max-content"
+                [class.border-b]="!lastFr"
+              >
+                {{ fundingRecipient.fundingRecipientOrgName }}
+              </span>
+            }
+          }
+        </div>
+      </div>
+
+      <!-- Project Status -->
+      <div>
+        <p class="text-sm font-medium text-muted-foreground">Project Status</p>
+
+        <span class="mt-0.5 text-sm">
+          {{ p?.statusName }}
+        </span>
+      </div>
+
+      <!-- Project Category -->
+      <div>
+        <p class="text-sm font-medium text-muted-foreground">Project Category</p>
+
+        <p class="mt-0.5 text-sm">
+          {{ p?.categoryName ?? '—' }}
+        </p>
+      </div>
+
+      <!-- Project Start Date -->
+      <div>
+        <p class="text-sm font-medium text-muted-foreground">Project Start Date</p>
+
+        <p class="mt-0.5 text-sm">
+          {{ p?.startDate ? (p?.startDate | date: 'd MMM yyyy') : '—' }}
+        </p>
+      </div>
+
+      <!-- Project End Date -->
+      <div>
+        <p class="text-sm font-medium text-muted-foreground">Project End Date</p>
+
+        <p class="mt-0.5 text-sm">
+          {{ p?.endDate ? (p?.endDate | date: 'd MMM yyyy') : '—' }}
+        </p>
+      </div>
+
+      <!-- Project Budget -->
+      <div>
+        <p class="text-sm font-medium text-muted-foreground">Project Budget (USD)</p>
+
+        <p class="mt-0.5 text-sm">
+          {{ p?.totalFunding ? p?.totalFunding : '—' }}
+        </p>
+      </div>
+
+      <!-- Project Folder Link -->
+      <div>
+        <p class="text-sm font-medium text-muted-foreground">Project Folder Link</p>
+
+        <p class="mt-0.5 text-sm text-[hsl(var(--aepw-blue))] word-wrap-anywhere">
+          <a
+            class="hover:text-destructive hover:underline text-[hsl(var(--aepw-blue))]"
+            [href]="p?.dataCollectionFolderUrl || '#'"
+            target="_blank"
+          >
+            {{ p?.dataCollectionFolderUrl || '—' }}
+          </a>
+        </p>
+      </div>
+
+      <!-- Last Field Check Date -->
+      <div>
+        <p class="text-sm font-medium text-muted-foreground">Last Field Check Date</p>
+
+        <p class="mt-0.5 text-sm">
+          {{ p?.lastFieldCheckDate || '—' }}
+        </p>
+      </div>
+
+      <!-- Field Check Report -->
+      <div>
+        <p class="text-sm font-medium text-muted-foreground">Field Check Report</p>
+
+        <p class="mt-0.5 text-sm">
+          {{ p?.fieldCheckReport || '—' }}
+        </p>
+      </div>
+
+      <!-- Brief Description -->
+      @if (p?.description) {
+        <div class="md:col-span-2 w-full">
+          <p class="text-sm font-medium text-muted-foreground">Brief Description</p>
+
+          <p class="mt-0.5 text-sm">
+            {{ p?.description }}
+          </p>
+        </div>
+      }
+
+      <!-- Actual Completion Date -->
+      <div>
+        <p class="text-sm font-medium text-muted-foreground">Actual Completion Date</p>
+
+        <!--
+        <p class="mt-0.5 text-sm">
+          {{ p?.actualCompletionDate ?? '—' }}
+        </p>
+        -->
+      </div>
+    </div>
+  }
+</div>

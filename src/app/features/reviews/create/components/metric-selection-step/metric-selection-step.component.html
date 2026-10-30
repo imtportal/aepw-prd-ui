@@ -1,0 +1,118 @@
+<p data-note-bar class="mb-3 rounded-md bg-muted/50 px-3 py-2 text-xs text-muted-foreground">
+  <strong class="text-foreground">Note:</strong>
+  Check a metric to mark it as <strong class="text-foreground">Mandatory</strong>.
+  Unchecked metrics are considered <strong class="text-foreground">Optional</strong> by default.
+</p>
+
+<div data-metric-selection-step class="flex flex-col gap-2">
+  @if (!metricsLoading()) {
+    @for (entry of categoryEntries(); track entry[0]) {
+      <div data-category-panel [attr.data-category]="entry[0]"
+        class="rounded-lg border border-border/50 overflow-hidden">
+  
+        <button data-category-header type="button"
+          (click)="toggleCategory(entry[0])"
+          class="flex w-full items-center justify-between px-4 py-3 text-left hover:bg-muted/50">
+          <div class="flex items-center gap-3">
+            <span [class]="categoryColor(entry[0])">
+              {{ entry[0] }}
+            </span>
+            <span class="font-heading text-sm font-bold">{{ categoryName(entry[0]) }}</span>
+            <span class="rounded-full bg-muted px-2 py-0.5 text-[10px] text-muted-foreground">
+              {{ selectedInCategory(entry[1]) }} / {{ entry[1].length }}
+            </span>
+          </div>
+        </button>
+  
+        @if (expandedCategories().has(entry[0])) {
+          <div data-category-metrics class="border-t border-border/50 px-4 py-2 flex flex-col gap-1">
+            <!-- <button type="button"
+              class="mb-2 text-left text-xs font-medium text-[hsl(var(--aepw-blue))] hover:underline disabled:opacity-40 disabled:cursor-not-allowed disabled:no-underline"
+              [disabled]="includedInCategory(entry[1]) === 0"
+              (click)="onToggleCategoryAll(entry[1])">
+              {{ selectedInCategory(entry[1]) === includedInCategory(entry[1]) && includedInCategory(entry[1]) > 0 ? 'Deselect All' : 'Select All' }}
+            </button> -->
+            @for (m of entry[1]; track m.code) {
+              <div data-metric-row [attr.data-code]="m.code"
+                class="flex items-center gap-3 rounded-md px-3 py-2 hover:bg-muted/50 transition-opacity border-b cursor-pointer"
+                 (click)="metricCheckbox.click()"
+                 >
+                <!-- [disabled]="excludedCodes().has(m.code)" -->
+                <input type="checkbox"
+                  [(ngModel)]="selectedParentMetricIds()[m.code]"
+                  (change)="updateSelectedParentMetricIds(m.code, $event)"
+                  class="h-4 w-4 rounded border-input" #metricCheckbox />
+                <span class="text-sm text-foreground cursor-pointer">
+                  <span class='border px-2 py-1'
+                    [ngClass]="{ 'bg-[hsl(var(--aepw-blue)/0.03)]': !selectedParentMetricIds()[m.code] }"
+                    [class.text-blue-500]="selectedParentMetricIds()[m.code]"
+                  >
+                    {{ m.code }}
+                  </span> 
+                  <span class="mx-2" [class.text-[hsl(var(--aepw-blue))]]="selectedParentMetricIds()[m.code]">
+                    {{ m.name }}
+                  </span>
+                </span>
+                <span class="ml-auto rounded border border-border px-1.5 py-0.5 text-[10px] text-muted-foreground">
+                  {{ m.unit }}
+                </span>
+                <!-- <ui-include-exclude-toggle
+                  [included]="!excludedCodes().has(m.code)"
+                  (includedChange)="toggleExclude.emit(m.code)"
+                /> -->
+              </div>
+
+              @if (m.isTopLevel) { 
+                @if (m.metrics) {
+                  @for (l1Metric of m.metrics; track l1Metric.code) {
+                    <div data-metric-row [attr.data-code]="l1Metric.code"
+                      class="flex items-center gap-3 rounded-md px-3 hover:bg-muted/50 transition-opacity ml-6"
+                      [class.opacity-50]="!selectedParentMetricIds()[m.code]">
+                      <!-- <input type="checkbox"
+                        [checked]="selectedCodes().has(l1Metric.code)"
+                        [disabled]="excludedCodes().has(l1Metric.code)"
+                        (change)="toggleCode.emit(l1Metric.code)"
+                        class="h-4 w-4 cursor-pointer rounded border-input" #metricCheckbox /> -->
+                      <span class="text-sm text-foreground cursor-pointer">
+                        <span class='border px-2 py-1'
+                          [ngClass]="{ 'bg-[hsl(var(--aepw-blue)/0.03)]': !selectedParentMetricIds()[m.code] }"
+                          [class.text-blue-500]="selectedParentMetricIds()[m.code]"
+                        >
+                          {{ l1Metric.code }}
+                        </span> 
+                        <span class="mx-2" [class.text-[hsl(var(--aepw-blue))]]="selectedParentMetricIds()[m.code]">
+                          {{ l1Metric.name }}
+                        </span>
+                      </span>
+                      <span class="ml-auto rounded border border-border px-1.5 py-0.5 text-[10px] text-muted-foreground">
+                        {{ l1Metric.unit }}
+                      </span>
+                      <!-- <ui-include-exclude-toggle
+                        [included]="!excludedCodes().has(l1Metric.code)"
+                        (includedChange)="toggleExclude.emit(l1Metric.code)"
+                      /> -->
+                    </div>
+
+                  }
+                  <ul>
+                    <li>
+    
+                    </li>
+                  </ul>
+                  
+                }
+              }
+            }
+          </div>
+        }
+      </div>
+    }
+  }
+  @else {
+    <div class="border flex gap-1 p-5 rounded">
+      <lucide-icon name="hourglass" [size]="16" />
+      Loading Metrics...
+
+    </div>
+  }
+</div>

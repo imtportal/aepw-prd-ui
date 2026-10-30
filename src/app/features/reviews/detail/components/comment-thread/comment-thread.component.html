@@ -1,0 +1,129 @@
+<div class="mt-4">
+  @if (showHeader()) {
+    <h3 class="mb-3 text-sm font-semibold text-foreground">Comments</h3>
+  } 
+
+  <!-- addingComments() -->
+  
+  <div class="content-position-relative">
+    <textarea
+      data-comment-input
+      type="text"
+      class="h-9 w-full flex-1 rounded-md border border-input bg-card px-3 py-2 my-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-none min-h-[56px]"
+      placeholder="Add a comment..."
+      [(ngModel)]="commentText"
+      (ngModelChange)="onTextChange($event)"
+      (keydown)="onKeyPress($event)" 
+    > </textarea>
+
+
+    @if (allowMentioningUsers() && showSuggestionBox()){
+      <div class="suggestion-box" > 
+        @if (loadingSuggestions()) {
+          <div class="suggestion-loading">Loading...</div>
+        }
+        @else {
+          @for (suggestion of suggestionList(); track suggestion.id) {
+            <div (click)="mentionUser(suggestion)" class="suggestion-list-item">{{ suggestion.text }}</div>
+          }
+          @empty{
+            <div class="suggestion-list-item">No results found</div>
+          }
+        }
+        
+      </div>
+      
+    }
+  </div>
+  <div class="flex items-center justify-start gap-2">
+    <button
+      type="button"
+      data-submit-btn
+      class="rounded-md bg-[hsl(var(--aepw-blue))] px-4 py-1.5 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-40 hover:bg-[hsl(var(--aepw-blue)/0.9)]"
+      [disabled]="disableSubmitButton()"
+      (click)="onSubmit()"
+    >
+      Comment
+    </button>
+    <button
+      type="button"
+      data-submit-btn
+      class="rounded-md border border-input px-4 py-1.5 text-sm text-muted-foreground hover:bg-muted"
+      [disabled]="disableSubmitButton()"
+      (click)="commentText = ''; onTextChange('')"
+    >
+      Clear
+    </button>
+
+  </div>
+    <!-- @if (addingComments()?.length) {
+      <lucide-icon name="hourglass" [size]="16" />
+    } -->
+
+    @if (!comments().length && !addingComments().length) {
+      <div class="mt-4 space-y-3"> 
+        <div data-comment-row class="rounded-md border border-border/50 bg-muted/20 px-3 py-2.5">
+          <div class="mb-1 flex items-center justify-between">
+            <span class="text-xs font-semibold text-foreground"> </span>
+            <div class="flex items-center gap-2">
+              <span class="text-[10px] text-muted-foreground"> </span>
+              <span class="text-[10px] text-muted-foreground"> </span>
+            </div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 0.5rem;" class="text-sm text-foreground">
+            <lucide-icon color="grey" name="ban" [size]="16" /> 
+            No comments yet
+          </div>
+        </div>
+      </div>
+    }
+
+    @else {
+      <div class="mt-2 border-b border-gray-200" ></div>
+    }
+
+    @if (addingComments().length > 0) {
+      <ng-container [ngTemplateOutlet]="commentsTemplate" [ngTemplateOutletContext]="{ comments: addingComments(), unconfirmed: true   }"></ng-container>
+    }
+
+    @if (comments().length > 0) {
+      <ng-container [ngTemplateOutlet]="commentsTemplate" [ngTemplateOutletContext]="{ comments: comments() }"></ng-container>
+    }
+    
+    
+</div>
+
+
+<ng-template let-comments="comments" let-unconfirmed="unconfirmed" #commentsTemplate>
+  <div class="mt-2 space-y-3 comments-container">
+    @for (c of comments; track c.reviewCommentId) {
+      <div data-comment-row class="rounded-md border border-border/50 bg-muted/20 px-3 py-2.5" [class.opacity-50]="unconfirmed">
+        <div class="mb-1 flex items-center justify-between">
+          <span class="text-xs font-semibold text-foreground">{{ c.authorName }}</span>
+          <div class=" flex items-center gap-2">
+            <span class="text-[10px] text-muted-foreground">{{ c.role }}</span>
+            <span class="text-[10px] text-muted-foreground">{{ c.createdOnUtc }}</span>
+          </div>
+        </div>
+        <div class="comment-text-container">
+          @if (notToBeShortened()[c.reviewCommentId]) {
+            <p class="text-sm text-foreground">{{ c.body }}</p>
+          }
+          @else {
+            @if (showMoreForComments()[c.reviewCommentId]) {
+              <p class="text-sm text-foreground">{{ c.body }}</p>
+              <p>
+                <a class="cursor-pointer hover:text-[hsl(var(--aepw-orange))] text-[hsl(var(--aepw-blue))] text-sm underline" (click)="showMoreOrLess(c.reviewCommentId, false)">Show Less</a>
+              </p>
+            }
+            @else {
+              <p (click)="showMoreOrLess(c.reviewCommentId, true)" class="text-sm text-foreground cursor-pointer">{{ c.shortenedBody }}... <a class="hover:text-[hsl(var(--aepw-orange))] text-[hsl(var(--aepw-blue))] underline" >Show more</a></p>
+            }
+
+          }
+
+        </div>
+      </div>
+    }
+  </div>
+</ng-template>

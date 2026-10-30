@@ -1,0 +1,41 @@
+<div
+  class="pointer-events-none fixed top-6 left-1/2 z-[9999] flex w-full max-w-md -translate-x-1/2 flex-col gap-3 px-4"
+>
+  @for (toast of toastService.toasts(); track toast.id) {
+  <div
+    class="pointer-events-auto flex items-start gap-3 rounded-xl border bg-white p-4 shadow-md transition-all duration-300 animate-toast"
+    [class.border-emerald-500]="toast.type === 'success'"
+    [class.border-red-500]="toast.type === 'error'"
+    [class.border-blue-500]="toast.type === 'info'"
+    [class.border-amber-500]="toast.type === 'warning'"
+  >
+
+    <div class="flex-1">
+      <p class="text-sm font-medium text-slate-900">
+
+        @switch (toast.type) {
+          @case ('success') { Success }
+          @case ('error') { Error }
+          @case ('info') { Information }
+          @case ('warning') { Warning }
+        }
+
+      </p>
+
+      <p class="mt-1 text-sm text-slate-600">
+        {{ toast.message }}
+      </p>
+
+    </div>
+
+    <button
+      type="button"
+      class="text-slate-400 hover:text-slate-700"
+      (click)="toastService.remove(toast.id)"
+    >
+      ✕
+    </button>
+
+  </div>
+  }
+</div>

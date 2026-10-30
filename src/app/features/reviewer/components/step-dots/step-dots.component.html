@@ -1,0 +1,11 @@
+<div class="flex items-center gap-1.5" data-step-dots>
+  @for (stage of stages; track stage) {
+    <span
+      [attr.data-stage]="stage"
+      [attr.data-active]="stage === currentStage()"
+      class="h-2 w-2 rounded-full transition-colors"
+      [class.bg-primary]="stage === currentStage()"
+      [class.bg-muted-foreground]="stage !== currentStage()"
+    ></span>
+  }
+</div>

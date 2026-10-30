@@ -1,0 +1,36 @@
+<div class="rounded-lg border bg-card shadow-sm">
+  <div class="px-3 py-2 border-b">
+    <h4 class="text-xs font-semibold text-muted-foreground">Projects</h4>
+  </div>
+  <ui-data-table
+    [columns]="tableColumns"
+    [data]="pageData()"
+    [total]="projects().length"
+    [loading]="false"
+    [rowTemplate]="projectRow"
+    (pageChange)="onPage($event)" />
+</div>
+
+<ng-template #projectRow let-project>
+  <tr [attr.data-project-row]="project.pin"
+    class="border-b last:border-0 cursor-pointer hover:bg-muted/50"
+    (click)="projectSelected.emit(project.pin)">
+    <td class="px-3 py-1.5 text-[11px] font-mono">{{ project.pin }}</td>
+    <td class="px-3 py-1.5 text-[11px] font-medium">{{ project.title }}</td>
+    <td class="px-3 py-1.5 text-[11px] text-muted-foreground">{{ project.pm }}</td>
+    <td class="px-3 py-1.5">
+      <ui-badge variant="outline" styleClass="text-[9px] px-1.5 py-0">
+        {{ project.status }}
+      </ui-badge>
+    </td>
+    <td class="px-3 py-1.5 text-[11px] text-right font-medium">{{ metricValue(project, 'MW1.1') }}</td>
+    <td class="px-3 py-1.5 text-[11px] text-right font-medium">{{ metricValue(project, 'CV1.1') }}</td>
+    <td class="px-3 py-1.5">
+      <a [routerLink]="['/reviews', project.pin]"
+        class="flex items-center justify-center h-6 w-6 rounded hover:bg-muted"
+        (click)="$event.stopPropagation()">
+        <lucide-icon name="external-link" class="h-3.5 w-3.5 text-muted-foreground" />
+      </a>
+    </td>
+  </tr>
+</ng-template>

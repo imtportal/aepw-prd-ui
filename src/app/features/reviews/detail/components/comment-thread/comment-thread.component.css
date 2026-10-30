@@ -1,0 +1,50 @@
+
+
+
+.comments-container {
+    max-height: calc(66vh - 5px);
+    overflow-y: auto;
+}
+
+.suggestion-box {
+    position: absolute;
+   
+    top: 100%;
+    padding: 5px;
+    border: 1px solid #dce2e5;
+
+    background: white;
+    border-radius: 10px;
+
+    max-height: 150px;
+    overflow-y: auto;
+}
+
+ .suggestion-box > .suggestion-list-item { 
+    padding: 5px;
+    border-bottom: 1px solid #dce2e5;
+    cursor: pointer;
+}
+
+.suggestion-list-item:hover {
+    background-color: #f0f0f0;
+}
+
+.comment-text-container {
+    /* max-height: 50px;
+    overflow-y: hidden;
+
+    text-overflow: ellipsis; */
+}
+
+.comment-mention {
+    color: hsl(var(--aepw-blue));
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+[data-comment-input][contenteditable='true']:empty::before {
+    color: hsl(var(--muted-foreground));
+    content: attr(data-placeholder);
+    pointer-events: none;
+}

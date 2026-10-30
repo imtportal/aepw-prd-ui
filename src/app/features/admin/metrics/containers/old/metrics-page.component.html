@@ -1,0 +1,47 @@
+<div class="flex flex-col gap-6 font-sans text-foreground">
+  <!-- Header -->
+  <div class="flex flex-wrap items-start justify-between gap-3">
+    <div>
+      <h1 class="font-heading text-xl font-bold">Metric Configuration</h1>
+      <p class="text-sm text-muted-foreground">Configure metrics, evidence requirements, and risk factors</p>
+    </div>
+    <button (click)="showAddModal.set(true)"
+            class="flex items-center gap-2 rounded-md bg-[hsl(var(--aepw-blue))] px-4 py-2 text-sm font-medium text-white hover:opacity-90">
+      <lucide-icon name="plus" class="h-4 w-4" />Add Metric
+    </button>
+  </div>
+
+  <!-- Info banner -->
+  <ui-info-banner
+    title="Metric Hierarchy"
+    message="Top-level (Roll-up) metrics are calculated automatically from sub-metrics. Corporate metrics apply across all projects. Project-level metrics can be enabled per-project." />
+
+  <!-- Category cards -->
+  @for (cat of categories; track cat.code) {
+    <app-metric-category-card
+      [category]="cat"
+      [metrics]="metricsByCategory().get(cat.code) ?? []"
+      [expanded]="expandedCategories().has(cat.code)"
+      (toggleExpand)="onToggleCategory(cat.code)"
+      (metricChanged)="onMetricChanged($event.code, $event.changes)" />
+  }
+
+  <!-- Summary footer -->
+  <div data-metric-summary class="flex gap-6 rounded-md border bg-muted/20 px-4 py-3 text-sm">
+    <span>Total metrics: <strong>{{ metricSvc.metrics().length }}</strong></span>
+    <span>Corporate: <strong>{{ corporateCount() }}</strong></span>
+    <span>Project-level: <strong>{{ projectLevelCount() }}</strong></span>
+  </div>
+</div>
+
+<!-- Add Metric Dialog -->
+<ui-dialog [(visible)]="showAddModal" header="Add Metric" styleClass="max-w-lg">
+  <div class="flex flex-col gap-4 p-4">
+    <p class="text-sm text-muted-foreground">Metric creation form — coming soon.</p>
+    <div class="flex justify-end gap-2">
+      <button (click)="showAddModal.set(false)" class="rounded-md border px-4 py-2 text-sm">Cancel</button>
+      <button (click)="showAddModal.set(false)"
+              class="rounded-md bg-[hsl(var(--aepw-blue))] px-4 py-2 text-sm text-white">Add</button>
+    </div>
+  </div>
+</ui-dialog>

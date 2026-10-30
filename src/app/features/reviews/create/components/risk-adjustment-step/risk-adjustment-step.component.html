@@ -1,0 +1,124 @@
+<!-- Search + Filter bar -->
+<div class="mb-3 flex items-center gap-2">
+  <input
+    type="text"
+    [placeholder]="'RISK_ADJUSTMENT_STEP.NAME_FILTER_PLACEHOLDER' | transloco"
+    [value]="searchQuery()"
+    (input)="searchQuery.set($any($event.target).value)"
+    class="h-8 flex-1 rounded border border-input bg-card px-3 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+  />
+  <select
+    [value]="typeFilter()"
+    (change)="typeFilter.set($any($event.target).value)"
+    class="h-8 rounded border border-input bg-card px-2 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+    <option value="all">{{'RISK_ADJUSTMENT_STEP.ALL_TYPES_PLACEHOLDER' | transloco}}</option>
+    <option value="mandatory">{{'RISK_ADJUSTMENT_STEP.MANDATORY_PLACEHOLDER' | transloco}}</option>
+    <option value="optional">{{'RISK_ADJUSTMENT_STEP.OPTIONAL_PLACEHOLDER' | transloco}}</option>
+  </select>
+</div>
+
+<div data-risk-adjustment-step>
+  <ui-data-table
+    [columns]="columns"
+    [data]="pageSlice()"
+    [total]="filteredTotal()"
+    [rowTemplate]="rowTpl"
+    [maxBodyHeight]="'calc(100vh - 400px)'"
+    (pageChange)="onPageChange($event)"
+  />
+</div>
+
+<ng-template #rowTpl let-m>
+  <tr [attr.data-metric-row]="m.code" class="border-b last:border-0 hover:bg-muted/30">
+
+    <!-- Metric -->
+    <td class="px-4 py-3">
+      <div class="flex items-center gap-2">
+        <span class="rounded border border-border px-1.5 py-0.5 font-mono text-[10px] font-bold">
+          {{ m.code }}
+        </span>
+        <span class="text-sm text-foreground">{{ m.name }}</span>
+      </div>
+    </td>
+
+    <!-- Type -->
+    <td class="px-3 py-3">
+      @if (mandatoryCodes().has(m.code)) {
+        <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-primary/10 text-primary">
+          {{'RISK_ADJUSTMENT_STEP.MANDATORY_PLACEHOLDER' | transloco}}
+        </span>
+      } @else {
+        <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-muted text-muted-foreground">
+          {{'RISK_ADJUSTMENT_STEP.OPTIONAL_PLACEHOLDER' | transloco}}
+        </span>
+      }
+    </td>
+
+    <!-- Default % -->
+    <td class="px-3 py-3 text-center text-sm text-muted-foreground">
+      {{ m.defaultRiskPct }}%
+    </td>
+
+    <!-- Updated % -->
+    <td class="px-3 py-3 text-center">
+      <input
+        type="number"
+        data-risk-input
+        min="0" max="100"
+        [value]="getUpdatedPercentColumnValue(m)"
+        (change)="onRiskChange(m, +$any($event.target).value)"
+        [disabled]="readOnly()"
+        class="h-8 w-20 rounded border border-input bg-card px-2 text-center text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+      />
+    </td>
+
+    <!-- Status -->
+    <!-- <td class="px-3 py-3 text-center">
+      @switch (metricStatus(m)) {
+        @case ('Default') {
+          <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-muted text-muted-foreground">
+            Default
+          </span>
+        }
+        @case ('Pending') {
+          <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-[hsl(var(--aepw-accent-green)/0.15)] text-[hsl(var(--aepw-dark-grey))]">
+            Pending
+          </span>
+        }
+        @case ('Approved') {
+          <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-[hsl(var(--aepw-green)/0.15)] text-[hsl(var(--aepw-green))]">
+            Approved
+          </span>
+        }
+        @case ('Rejected') {
+          <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-destructive/10 text-destructive">
+            Rejected
+          </span>
+        }
+      }
+    </td> -->
+
+    <!-- Reason -->
+    <td class="min-w-[224px] px-3 py-3">
+      @if (rejectionInfo()[m.code]) {
+        <!-- Approver's rejection reason — shown smaller when PM is also entering a new reason -->
+        <p [class]="hasChanged(m) ? 'mb-1 text-xs text-destructive' : 'text-sm text-destructive'">
+          {{ rejectionInfo()[m.code] }}
+        </p>
+      }
+      @if (hasChanged(m) && readOnly()) {
+        <span class="text-sm italic text-muted-foreground">Approval Pending</span>
+      } @else if (hasChanged(m) ) {
+        <textarea
+          data-reason-input
+          placeholder="Reason for change..."
+          rows="1"
+          [value]="riskOverrides()[m.code]?.reason ?? ''"
+          (input)="onReasonChange(m, $any($event.target).value)"
+          class="min-h-[32px] w-full resize-none rounded border border-input bg-card px-2 py-1.5 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+        ></textarea>
+      }
+    </td>
+
+  </tr>
+</ng-template>

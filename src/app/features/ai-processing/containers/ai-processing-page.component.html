@@ -1,0 +1,54 @@
+<div class="flex flex-col gap-4 p-6">
+  <div class="flex items-start gap-2 rounded-md border border-dashed border-[hsl(var(--aepw-blue)/0.3)] bg-[hsl(var(--aepw-blue)/0.04)] px-3 py-2 text-xs text-[hsl(var(--aepw-blue))]">
+    <lucide-icon name="info" class="h-4 w-4 shrink-0 mt-0.5" />
+    <span>
+      <span class="font-medium">Background Queue:</span>
+      Files uploaded via Evidence Tracker are processed here. Low-confidence extractions (&lt;85%) are flagged for review.
+    </span>
+  </div>
+
+  <app-ai-stats-row
+    [total]="totalCount()"
+    [queued]="queuedCount()"
+    [processing]="processingCount()"
+    [completed]="completedCount()"
+    [needsReview]="needsReviewCount()"
+    [errorCount]="errorCount()" />
+
+  <ui-card>
+    <ui-card-header styleClass="py-3 flex-row items-center justify-between">
+      <div>
+        <ui-card-title styleClass="font-heading text-sm font-bold tracking-wide">Processing Queue</ui-card-title>
+        <p class="text-xs text-muted-foreground">Real-time AI document processing status</p>
+      </div>
+      <ui-select
+        [options]="statusOptions"
+        [ngModel]="statusFilter()"
+        (ngModelChange)="onFilterChange($event)"
+        styleClass="w-36" />
+    </ui-card-header>
+    <ui-card-content styleClass="pt-0 p-0">
+      <ui-data-table
+        [columns]="tableColumns"
+        [data]="pageData()"
+        [total]="pageTotal()"
+        [loading]="loading()"
+        [rowTemplate]="aiRow"
+        (pageChange)="onPageChange($event)" />
+    </ui-card-content>
+  </ui-card>
+
+  <app-ai-detail-sheet
+    [item]="detailItem()"
+    (close)="onCloseDetail()"
+    (reprocess)="onReprocess($event)" />
+</div>
+
+<!-- Row template -->
+<ng-template #aiRow let-item>
+  <tr app-ai-queue-row
+    [item]="item"
+    (openDetail)="onOpenDetail($event)"
+    class="border-b last:border-0 hover:bg-muted/30 text-xs">
+  </tr>
+</ng-template>

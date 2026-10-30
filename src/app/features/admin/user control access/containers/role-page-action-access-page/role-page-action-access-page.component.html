@@ -1,0 +1,89 @@
+<div class="p-6">
+  <!-- Back Button -->
+  <div class="mb-4">
+    <ui-button variant="outline" size="sm" (clicked)="goBack()">
+      <lucide-angular name="arrow-left" [size]="16" class="mr-2"></lucide-angular>
+      Back to Page Access
+    </ui-button>
+  </div>
+
+  <ui-card>
+    <ui-card-header>
+      <div class="flex items-start justify-between">
+        <div>
+          <ui-card-title>Page Action Access - Security</ui-card-title>
+          <ui-card-description>
+            Configure which roles have access to specific actions on this page.
+          </ui-card-description>
+        </div>
+        <ui-button (clicked)="save()" [disabled]="saving()">
+          {{ saving() ? 'Saving...' : 'Save' }}
+        </ui-button>
+      </div>
+    </ui-card-header>
+    <ui-card-content>
+      <div class="relative max-h-[calc(100vh-200px)] overflow-auto">
+        <table class="w-max min-w-full border-collapse">
+          <thead>
+            <tr class="border-b bg-muted/50">
+              <th
+                class="sticky left-0 top-0 z-30 w-[180px] min-w-[180px] border-b border-r p-4 text-left text-sm font-semibold text-white bg-[hsl(var(--aepw-dark-grey))]"
+              >
+                Page Action
+              </th>
+              <!-- <th
+                class="text-left p-4 font-semibold text-sm bg-[hsl(var(--aepw-dark-grey))] text-white"
+              >
+                Description
+              </th> -->
+              @for (role of roles(); track role.systemRoleId) {
+                <th
+                  class="sticky top-0 z-20 min-w-[160px] bg-[hsl(var(--aepw-blue))] p-4 text-center text-sm font-semibold text-white"
+                >
+                  {{ role.systemRoleName }}
+                </th>
+              }
+            </tr>
+          </thead>
+          <tbody>
+            @for (action of actions(); track action.pageActionStructureId) {
+              <tr class="border-b hover:bg-muted/30 transition-colors">
+                <td
+                  class="sticky left-0 z-10 w-[180px] min-w-[180px] border-r p-4 text-sm font-medium bg-background"
+                >
+                  {{ action.actionName }}
+                </td>
+                <!-- <td class="p-4 text-sm text-muted-foreground">
+                  {{ action.actionDescription }}
+                </td> -->
+                @for (role of roles(); track role.systemRoleId) {
+                  <td class="p-4 text-center">
+                    <div class="flex justify-center">
+                      <input
+                        type="checkbox"
+                        [checked]="hasAccess(action, role.systemRoleId)"
+                        (change)="
+                          onAccessChange(action, role.systemRoleId, $any($event.target).checked)
+                        "
+                        class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-2 focus:ring-primary cursor-pointer"
+                      />
+                    </div>
+                  </td>
+                }
+              </tr>
+            } @empty {
+              <tr>
+                <td
+                  [attr.colspan]="roles().length + 2"
+                  class="p-8 text-center text-muted-foreground"
+                >
+                  No action access data available
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </ui-card-content>
+  </ui-card>
+</div>

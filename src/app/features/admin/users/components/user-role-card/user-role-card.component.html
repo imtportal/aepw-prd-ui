@@ -1,0 +1,20 @@
+<ui-card class="w-full" data-role-card>
+  <ui-card-content styleClass="p-3 sm:p-3">
+    <div class="flex min-w-0 items-center justify-between gap-3">
+      <span
+        [class]="roleColor()"
+        class="min-w-0  max-w-[calc(100%-1.75rem)] whitespace-normal break-words"
+        data-role-badge
+      >
+        {{ role() }}
+      </span>
+
+      <span
+        data-role-count
+        class="shrink-0 text-base font-bold"
+      >
+        {{ count() }}
+      </span>
+    </div>
+  </ui-card-content>
+</ui-card>

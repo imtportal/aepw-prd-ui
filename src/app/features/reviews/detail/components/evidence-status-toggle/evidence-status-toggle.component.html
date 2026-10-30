@@ -1,0 +1,7 @@
+<button
+  type="button"
+  [class]="'rounded px-2 py-0.5 text-[10px] font-semibold transition-colors ' + statusClass()"
+  (click)="cycle()"
+>
+  {{ statusLabel() }}
+</button>

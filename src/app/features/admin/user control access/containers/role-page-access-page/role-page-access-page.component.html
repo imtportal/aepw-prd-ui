@@ -1,0 +1,83 @@
+<div class="p-6">
+  <ui-card>
+    <ui-card-header>
+      <div class="flex items-start justify-between">
+        <div>
+          <ui-card-title>User Control Access - Page Access</ui-card-title>
+          <ui-card-description>
+            Manage which roles have access to each page. Click on a page row to configure
+            action-level access.
+          </ui-card-description>
+        </div>
+        <ui-button (clicked)="save()" [disabled]="saving()">
+          {{ saving() ? 'Saving...' : 'Save' }}
+        </ui-button>
+      </div>
+    </ui-card-header>
+    <ui-card-content>
+      <div class="relative max-h-[calc(100vh-200px)] w-full overflow-auto">
+        <table class="w-max min-w-full border-collapse">
+          <thead>
+            <tr class="border-b bg-muted/50">
+              <th
+                class="sticky left-0 top-0 z-30 w-[180px] min-w-[180px] border-b border-r bg-[hsl(var(--aepw-dark-grey))] p-4 text-left text-sm font-semibold text-white"
+              >
+                Page
+              </th>
+              <th
+                class="sticky top-0 z-20 w-[360px] min-w-[360px] border-b bg-[hsl(var(--aepw-dark-grey))] p-4 text-left text-sm font-semibold text-white"
+              >
+                Description
+              </th>
+              @for (role of roles(); track role.systemRoleId) {
+                <th
+                  class="sticky top-0 z-20 min-w-[160px] border-b bg-[hsl(var(--aepw-blue))] p-4 text-center text-sm font-semibold text-white"
+                >
+                  {{ role.systemRoleName }}
+                </th>
+              }
+            </tr>
+          </thead>
+          <tbody>
+            @for (page of pages(); track page.pageStructureId) {
+              <tr
+                class="border-b hover:bg-muted/30 transition-colors cursor-pointer"
+                (click)="navigateToPageActions(page.pageStructureId)"
+              >
+                <td class="p-4 font-medium text-sm sticky left-0 bg-background">
+                  {{ page.pageName }}
+                </td>
+                <td class="p-4 text-sm text-muted-foreground">
+                  {{ page.description }}
+                </td>
+                @for (role of roles(); track role.systemRoleId) {
+                  <td class="p-4 text-center" (click)="$event.stopPropagation()">
+                    <div class="flex justify-center">
+                      <input
+                        type="checkbox"
+                        [checked]="hasAccess(page, role.systemRoleId)"
+                        (change)="
+                          onAccessChange(page, role.systemRoleId, $any($event.target).checked)
+                        "
+                        class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-2 focus:ring-primary cursor-pointer"
+                      />
+                    </div>
+                  </td>
+                }
+              </tr>
+            } @empty {
+              <tr>
+                <td
+                  [attr.colspan]="roles().length + 2"
+                  class="p-8 text-center text-muted-foreground"
+                >
+                  No page access data available
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </ui-card-content>
+  </ui-card>
+</div>

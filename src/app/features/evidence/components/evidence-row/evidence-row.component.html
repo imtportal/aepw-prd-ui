@@ -1,0 +1,75 @@
+<td class="px-2 py-1.5">
+  @if (isApprovable()) {
+    <input type="checkbox"
+      [checked]="selected()"
+      (change)="selectToggle.emit(file().evidenceId.toString())"
+      data-select-checkbox
+      class="rounded border-input" />
+  }
+</td>
+<td class="py-2.5 px-3">
+  <div class="flex flex-col gap-0.5">
+    <span class="text-sm font-medium text-foreground leading-tight" data-project-name>{{ file().projectName }}</span>
+    <span class="text-xs text-muted-foreground font-mono" data-project-id>{{ file().projectId }}</span>
+  </div>
+</td>
+<td class="py-2.5 px-3 text-sm text-muted-foreground" data-period>{{ file().period }}</td>
+<td class="py-2.5 px-3">
+  <div class="flex items-start gap-1.5">
+    @if (file().fileType === 'pdf') {
+      <lucide-icon name="file-text" class="h-4 w-4 text-red-500 shrink-0" />
+    } @else if (file().fileType === 'image') {
+      <lucide-icon name="image" class="h-4 w-4 text-blue-500 shrink-0" />
+    } @else {
+      <lucide-icon name="file-check" class="h-4 w-4 text-green-600 shrink-0" />
+    }
+    <button type="button"
+      class="text-sm font-medium text-foreground hover:text-[hsl(var(--aepw-blue))] hover:underline text-left leading-tight"
+      (click)="openDetail.emit(file().evidenceId.toString())"
+      data-file-btn>
+      {{ file().fileName }}
+    </button>
+  </div>
+</td>
+<td class="py-2.5 px-3">
+  <ui-badge variant="outline" styleClass="text-xs font-mono px-1.5 py-0" data-metric-code>
+    {{ file().metricCode }}
+  </ui-badge>
+</td>
+<td class="py-2.5 px-3">
+  <span class="text-sm text-muted-foreground cursor-help"
+    [uiTooltip]="'By ' + file().uploadedBy"
+    data-uploaded>{{ file().uploadedAt }}</span>
+</td>
+<td class="py-2.5 px-3 text-center" data-ai-pct>
+  @if (file().aiConfidence !== undefined) {
+    <span class="text-sm font-semibold" [class]="confidenceClass()" data-confidence>{{ file().aiConfidence }}%</span>
+  } @else {
+    <span class="text-xs text-muted-foreground">—</span>
+  }
+</td>
+<td class="py-2.5 px-3">
+  <ui-badge variant="secondary" [styleClass]="statusBadgeClass()">{{ statusLabel() }}</ui-badge>
+</td>
+<td class="py-2.5 px-3 text-xs" data-notes>
+  @if (file().validationNote) {
+    <span class="text-[hsl(var(--aepw-orange))] flex items-center gap-1">
+      <lucide-icon name="alert-circle" class="h-3 w-3 shrink-0" />
+      <span class="truncate">{{ file().validationNote }}</span>
+    </span>
+  }
+</td>
+<td class="py-2.5 px-3">
+  <div class="flex items-center gap-1">
+    <button type="button" class="h-6 w-6 p-0 flex items-center justify-center rounded hover:bg-muted"
+      (click)="openDetail.emit(file().evidenceId.toString())"
+      data-eye-btn>
+      <lucide-icon name="eye" class="h-3.5 w-3.5 text-muted-foreground" />
+    </button>
+    <a [routerLink]="['/reviews', file().projectId]"
+      class="h-6 w-6 flex items-center justify-center rounded hover:bg-muted"
+      data-review-link>
+      <lucide-icon name="external-link" class="h-3.5 w-3.5 text-muted-foreground" />
+    </a>
+  </div>
+</td>

@@ -1,0 +1,8 @@
+<textarea
+  [class]="classes()"
+  [disabled]="isDisabled()"
+  [attr.rows]="rows()"
+  [value]="value()"
+  (input)="onInput($event)"
+  (blur)="onTouched()"
+></textarea>

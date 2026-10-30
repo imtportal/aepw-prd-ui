@@ -1,0 +1,343 @@
+@if (loading()) {
+  <div data-loading class="mb-4 rounded-md bg-muted px-4 py-2 text-sm text-muted-foreground">
+    Loading reviews…
+  </div>
+}
+@if (error()) {
+  <div class="mb-4 rounded-md bg-destructive/10 px-4 py-2 text-sm text-destructive">
+    {{ error() }}
+  </div>
+}
+
+<div class="flex flex-col gap-5">
+  <div class="flex items-center justify-between">
+    <p class="text-sm text-muted-foreground">
+      Showing {{ pageTotal() }} of {{ reviewSvc.reviews().length }} reviews
+      <br>
+      <button class="button bg-[hsl(var(--aepw-blue))] px-4 py-2 text-white m-1" (click)="mode.set('bar'); type.set('circle')"> Circle </button>
+      <button class="button bg-[hsl(var(--aepw-green))] px-4 py-2 text-white m-1" (click)="mode.set('bar'); type.set('square')"> Square </button> 
+      <button class="button bg-[hsl(var(--aepw-orange))] px-4 py-2 text-white m-1" (click)="mode.set('text')"> Text </button>
+
+    </p>
+    <div class="flex items-center gap-3">
+      <a routerLink="/reviews/bulk-launch"
+         class="inline-flex items-center gap-1.5 rounded-md bg-[hsl(var(--aepw-green))] px-4 py-2 text-sm font-medium text-[hsl(var(--accent-foreground))] hover:bg-[hsl(var(--aepw-green)/0.9)]">
+        <lucide-icon name="rocket" [size]="16" />
+        Bulk Launch Reviews
+      </a>
+      <div class="flex items-center gap-2">
+        <lucide-icon name="calendar-range" [size]="16" class="text-muted-foreground" />
+        <ui-select
+          (ngModelChange)="onFilterPeriodChange($event)"
+          [(ngModel)]="selectedPeriod"
+          [options]="periodsOptions()"
+          styleClass="h-9 w-[150px] border-border bg-card text-sm"
+        />
+      </div>
+    </div>
+  </div>
+
+  <div class="flex flex-wrap items-center gap-3">
+    <ui-search-input
+      styleClass="w-[240px]"
+      placeholder="Search by ID or project..."
+      [value]="searchId()"
+      (valueChange)="onSearchChange($event)"
+    />
+    <ui-select
+      [ngModel]="filterPM()"
+      (ngModelChange)="onFilterPMChange($event)"
+      [options]="pmOptions()"
+      placeholder="All PMs"
+      styleClass="h-9 w-[170px] border-border bg-card text-sm"
+    />
+    <ui-select
+      [ngModel]="filterStage()"
+      (ngModelChange)="onFilterStageChange($event)"
+      [options]="stageOptions()"
+      placeholder="All Stages"
+      styleClass="h-9 w-[180px] border-border bg-card text-sm"
+    />
+    
+    <button title="Reset Filters" (click)="onResetFilters()"> 
+      <lucide-icon name="rotate-cw" [size]="16" />
+    </button>
+  
+
+
+  </div>
+
+  <app-active-filters
+    [filters]="activeFilters()"
+    (clear)="clearFilter($event)"
+    (clearAll)="clearAllFilters()"
+  />
+
+  <ui-card styleClass="border-none shadow-sm">
+    <ui-card-content styleClass="p-0">
+      <ui-data-table
+        [columns]="tableColumns"
+        [data]="combinedTableData()"
+        [total]="combinedTotal()"
+        [loading]="tableLoading()"
+        [rowTemplate]="reviewRow"
+        (pageChange)="onPageChange($event)" />
+    </ui-card-content>
+  </ui-card>
+
+  <ui-card styleClass="border-none shadow-sm">
+    <ui-card-header styleClass="pb-2">
+      <div class="flex items-center justify-between">
+        <ui-card-title styleClass="font-heading text-sm font-bold tracking-wide">
+          Impact by Category
+        </ui-card-title>
+        <span class="text-xs text-muted-foreground">{{ selectedPeriod }}</span>
+      </div>
+    </ui-card-header>
+    <ui-card-content>
+      <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+        @for (cat of metricCategories; track cat.code) {
+          <a routerLink="/reporting"
+             class="flex flex-col gap-1 rounded-lg border border-border/50 p-3 transition-colors hover:border-[hsl(var(--aepw-blue)/0.3)] hover:bg-muted/20">
+            <div class="flex items-center gap-2">
+              <ui-badge [styleClass]="'h-5 text-[10px] font-bold ' + categoryColors[cat.code]">
+                {{ cat.code }}
+              </ui-badge>
+              <span class="text-xs text-muted-foreground">{{ cat.projects }} projects</span>
+            </div>
+            <p class="text-lg font-bold text-foreground">{{ cat.total }}</p>
+            <p class="text-xs text-muted-foreground">{{ cat.name }}</p>
+          </a>
+        }
+      </div>
+      <!-- TODO: Remove later -->
+      <div>
+        <ul class="cursor-pointer">
+          @for (upload of allExcelUploads(); track upload.documentId) {
+            <li (click)="downLoadExcelUpload(upload)" style="border: 1px solid navy; color: navy; border-width: 0 0 1px 0 ; padding: 10px 5px;">
+              <input  style="margin: 0 10px; width:20px; height: 20px" type="checkbox"  [checked]="upload.blobUri" disabled />
+              <a id="upload-{{ upload.documentId }}" href="#upload-{{ upload.documentId }}">
+                <span style="border:1px solid navy; border-radius: 100px; padding: 5px 10px;">documentId: {{ upload.documentId }}</span> <span style="margin-left:10px;">|</span> <span style="margin-left:10px; color: maroon;"> reviewId: {{ upload.reviewId }} </span>  
+                <p style="margin-top: 10px;"> {{ upload.fileName }} - <small>{{ upload.createdOnUTC }}</small></p>
+              </a>
+            </li>
+          }
+        </ul>
+      </div>
+    </ui-card-content>
+  </ui-card>
+</div>
+
+<!-- Row template -->
+<ng-template #reviewRow let-review>
+    <!-- (click)="review.pendingId
+      ? router.navigate(['/reviews/create'], { queryParams: { pendingId: review.pendingId } })
+      : router.navigate(['/reviews', review.projectId])" -->
+  <tr
+    class="cursor-pointer border-b last:border-0 transition-colors hover:bg-muted/30"
+    (click)="rowClicked(review)"
+      >
+    <td class="whitespace-nowrap px-4 py-3 font-mono text-sm text-[hsl(var(--aepw-blue))]">
+      @if (review.pendingId) {
+        <a [routerLink]="['/reviews/create']" [queryParams]="{ pendingId: review.pendingId }"
+           class="hover:underline underline-offset-2" (click)="$event.stopPropagation()">
+          {{ review.reviewId }}
+        </a>
+      } @else {
+        <a [routerLink]="['/reviews', review.projectId]"
+           class="hover:underline underline-offset-2" (click)="$event.stopPropagation()">
+          {{ review.projectId }}
+        </a>
+      }
+    </td>
+    <td class="px-3 py-3 text-sm font-medium text-foreground">{{ review.project }}</td>
+    <td class="whitespace-nowrap px-3 py-3 text-sm text-muted-foreground">{{ review.pm }}</td>
+    <td class="whitespace-nowrap px-3 py-3 text-sm text-muted-foreground">{{ review.recipient }}</td>
+    <td class="whitespace-nowrap px-3 py-3">
+      <ui-badge variant="secondary"
+        [styleClass]="'text-[10px] font-semibold ' + stageColor(review.stageDisplayValue)">
+        {{ review.stageDisplayValue }}
+      </ui-badge>
+    </td>
+    <td class="px-3 py-3">
+      @if (review.pendingId) {
+        <div class="flex items-center gap-2" (click)="$event.stopPropagation()">
+          @if (upperCasedWithoutSpaceStages[review.stageDisplayValue] == upperCasedWithoutSpaceStages['Draft'] || upperCasedWithoutSpaceStages[review.pendingApprovalStatus] === upperCasedWithoutSpaceStages['draft']) {
+            <a [routerLink]="['/reviews/create']" [queryParams]="{ pendingId: review.pendingId }"
+              class="inline-flex items-center rounded bg-[hsl(var(--aepw-blue)/0.1)] px-2.5 py-1 text-xs font-medium text-[hsl(var(--aepw-blue))] hover:bg-[hsl(var(--aepw-blue)/0.2)]">
+              Continue
+            </a>
+          } @else if (upperCasedWithoutSpaceStages[review.stageDisplayValue] == upperCasedWithoutSpaceStages['Pending Review Launch']  ) {
+             <a [routerLink]="['/reviews/create']" [queryParams]="{ pendingId: review.pendingId }"
+              class="inline-flex items-center rounded bg-[hsl(var(--aepw-green)/0.12)] px-2.5 py-1 text-xs font-medium text-[hsl(var(--aepw-green))] hover:bg-[hsl(var(--aepw-green)/0.2)]">
+              Ready to Launch
+            </a>
+          }
+          @else if (upperCasedWithoutSpaceStages[review.stageDisplayValue] == upperCasedWithoutSpaceStages['Data Collection'] || upperCasedWithoutSpaceStages[review.stageDisplayValue] == upperCasedWithoutSpaceStages['Evidence Collection']) {
+            <app-review-progress-cell
+                [review]="review"
+                (initiate)="router.navigate(['/reviews/create'])"
+              />
+          }
+          @else if (upperCasedWithoutSpaceStages[review.stageDisplayValue] == upperCasedWithoutSpaceStages['Pending Risk Adjust']) {
+            <button type="button" (click)="openApprovalModal(review.pendingId)"
+              class="inline-flex items-center rounded border border-input px-2.5 py-1 text-xs font-medium text-foreground hover:bg-muted"
+              [class.disabled:opacity-40]="selectedPendingId() === review.pendingId" 
+              [disabled]="selectedPendingId() === review.pendingId"
+              >
+              @if (selectedPendingId() === review.pendingId) {
+                Viewing...
+              }
+              @else {
+                View
+              }
+            </button>
+          }
+        </div>
+      } @else {
+        <app-review-progress-cell
+          [review]="review"
+          (initiate)="router.navigate(['/reviews/create'])"
+        />
+      }
+    </td>
+    <td class="whitespace-nowrap px-3 py-3 text-sm text-muted-foreground">
+      <!-- {{ formatDate(review.updatedAt) }} -->
+      {{ review.updatedOnStr }}
+      
+    </td>
+    <td>
+      <ng-container [ngTemplateOutlet]="quarterDisplayCell" [ngTemplateOutletContext]="{ review: review, mode: mode(), type: type() }"></ng-container>
+    </td>
+  </tr>
+</ng-template>
+
+@if (approvalModalForPendingReview()) {
+  <app-approval-review-modal
+    [review]="approvalModalForPendingReview()!"
+    [_changedMetrics]="approvalModalMetrics()"
+    [showPendingRiskAdjustments]="true"
+    [submittingDecision]="submittingApprovalDecision()"
+    (close)="closeApprovalModal()"
+    (submitted)="onApprovalSubmitted($event)"
+  />
+}
+
+
+<ng-template let-review="review" let-mode="mode" let-type="type" #quarterDisplayCell>
+  <div [title]="'Quarter ' + review.quarter"> 
+    @if (mode == "text") {
+      <div style="display: flex; border-radius: 3px; font-weight: 600; font-size: 9px; background: #f4f4f4; border: 0px solid grey; color: black; width: 6px;overflow: hidden;height: 20px; width: 20px;align-items: center;justify-content: center;"> {{ review.quarter }} </div>
+    }
+    
+    @if (mode == "bar") {
+      <ng-container [ngTemplateOutlet]="quarterDisplayBar" [ngTemplateOutletContext]="{ value: review.quarter, type: type }"></ng-container>
+    }
+
+  </div>
+</ng-template>
+
+
+<ng-template let-value="value" let-type="type" #quarterDisplayBar>
+  <svg width="4" height="20" viewBox="0 0 20 110"  >
+    <!-- <line x1="10" y1="10" x2="10" y2="90" stroke="black" stroke-width="2px"/> -->
+    <!-- <circle cx="10" cy="10" r="10" fill="tomato"/> -->
+     @if (value == 1) {
+        @if (type == 'circle') {
+          <circle cx="10" cy="10" r="10" fill="tomato"/>
+          
+        }
+        @if (type == 'square') {
+
+          <polygon points="0,0 20,0 20,20 0,20" fill="tomato" /> 
+        }
+    
+        <!-- <polygon points="0,0 20,0 20,20 0,20" fill="tomato" /> -->
+      }
+      @else {
+        @if (type == 'circle') {
+          <circle cx="10" cy="10" r="10" fill="lightgray"/>
+        }
+
+        @if (type == 'square') {
+          <polygon points="0,0 20,0 20,20 0,20" fill="lightgray" /> 
+        }
+        <!-- <polygon points="0,0 20,0 20,20 0,20" fill="lightgray" /> -->
+    
+      }
+    
+      @if (value == 2) {
+        @if (type == 'circle') {
+          <circle cx="10" cy="37" r="10" fill="tomato"/>
+        }
+
+        @if (type == 'square') {
+          <polygon points="0,30 20,30 20,50 0,50" fill="tomato" />
+        }
+    
+        <!-- <polygon points="0,30 20,30 20,50 0,50" fill="tomato" /> -->
+      }
+      @else {
+        @if (type == 'circle') {
+          <circle cx="10" cy="37" r="10" fill="lightgray"/>
+        }
+      
+        @if (type == 'square') {
+          <polygon points="0,30 20,30 20,50 0,50" fill="lightgray" />
+        }
+          
+        <!-- <polygon points="0,30 20,30 20,50 0,50" fill="tomato" /> -->
+      }
+    
+      @if (value == 3) {
+        @if (type == 'circle') {
+          <circle cx="10" cy="63" r="10" fill="tomato"/>
+        }
+
+        @if (type == 'square') {
+          <polygon points="0,60 20,60 20,80 0,80" fill="tomato" />
+        }
+        
+        
+        <!-- <polygon points="0,44 20,44 20,64 0,64" fill="tomato" /> -->
+    
+      }
+      @else {
+        @if (type == 'circle') {
+          <circle cx="10" cy="63" r="10" fill="lightgray"/>
+        }
+        @if (type == 'square') {
+          <polygon points="0,60 20,60 20,80 0,80" fill="lightgray" />
+        }
+    
+        <!-- <polygon points="0,44 20,44 20,64 0,64" fill="lightgray" /> -->
+      }
+    
+      @if (value == 4) {
+        @if (type == 'circle') {
+          <circle cx="10" cy="90" r="10" fill="tomato"/>
+        }
+
+        @if (type == 'square') {
+          <polygon points="0,90 20,90 20,110 0,110" fill="tomato" />
+        }
+    
+        <!-- <polygon points="0,66 20,66 20,86 0,86" fill="tomato" /> --> 
+    
+      }
+      @else {
+        @if (type == 'circle') {
+          <circle cx="10" cy="90" r="10" fill="lightgray"/>
+        }
+
+        @if (type == 'square') {
+          <polygon points="0,90 20,90 20,110 0,110" fill="lightgray" />
+        }
+    
+        <!-- <polygon points="0,66 20,66 20,86 0,86" fill="lightgray" /> -->
+      }
+    
+  </svg>
+</ng-template>
+
+ 
