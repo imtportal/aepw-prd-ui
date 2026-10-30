@@ -1,0 +1,104 @@
+name: Build and Deploy Angular to Azure App Service
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  AZURE_WEBAPP_NAME: 'aepw-prd-ui'
+  NODE_VERSION: '24.x'
+  DIST_PATH: 'dist/aepw-angular/browser'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Inject Azure AD credentials
+        run: |
+          sed -i "s/YOUR_CLIENT_ID/${{ secrets.AZURE_AD_CLIENT_ID }}/g" src/environments/environment.prod.ts
+          sed -i "s/YOUR_TENANT_ID/${{ secrets.AZURE_AD_TENANT_ID }}/g" src/environments/environment.prod.ts
+
+      - name: Build for production
+        run: npx ng build --configuration production
+
+      - name: Add Node server for SPA routing
+        run: |
+          cat > ${{ env.DIST_PATH }}/server.js << 'EOF'
+          const http = require('http');
+          const fs = require('fs');
+          const path = require('path');
+
+          const PORT = process.env.PORT || 8080;
+          const ROOT = __dirname;
+
+          const MIME = {
+            '.html': 'text/html',
+            '.js': 'application/javascript',
+            '.css': 'text/css',
+            '.json': 'application/json',
+            '.png': 'image/png',
+            '.jpg': 'image/jpeg',
+            '.jpeg': 'image/jpeg',
+            '.svg': 'image/svg+xml',
+            '.ico': 'image/x-icon',
+            '.woff': 'font/woff',
+            '.woff2': 'font/woff2'
+          };
+
+          http.createServer((req, res) => {
+            const urlPath = req.url.split('?')[0];
+
+            let filePath = path.join(
+              ROOT,
+              urlPath === '/' ? 'index.html' : urlPath
+            );
+
+            fs.access(filePath, fs.constants.F_OK, (err) => {
+              if (err) {
+                filePath = path.join(ROOT, 'index.html');
+              }
+
+              fs.readFile(filePath, (readErr, data) => {
+                if (readErr) {
+                  res.writeHead(500);
+                  res.end('Error loading file');
+                  return;
+                }
+
+                res.writeHead(200, {
+                  'Content-Type':
+                    MIME[path.extname(filePath)] || 'text/plain'
+                });
+
+                res.end(data);
+              });
+            });
+          }).listen(PORT, () => {
+            console.log(`Server running on port ${PORT}`);
+          });
+          EOF
+
+      - name: Package build output
+        run: |
+          cd ${{ env.DIST_PATH }}
+          zip -r "$GITHUB_WORKSPACE/app.zip" .
+
+      - name: Deploy to Azure App Service
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ env.AZURE_WEBAPP_NAME }}
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          package: app.zip
