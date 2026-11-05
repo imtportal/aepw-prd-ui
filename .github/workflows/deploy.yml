@@ -6,7 +6,7 @@ on:
       - main
 
 env:
-  AZURE_WEBAPP_NAME: 'aepw-prd-ui'
+  AZURE_WEBAPP_NAME: 'aepw-imt'
   NODE_VERSION: '24.x'
   DIST_PATH: 'dist/aepw-angular/browser'
 
