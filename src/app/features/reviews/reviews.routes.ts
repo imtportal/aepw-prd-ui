@@ -14,6 +14,16 @@ export const reviewsRoutes: Routes = [
         (m) => m.CreateReviewPageComponent,
       ),
   },
+  {
+    path: 'metric-config/:id',
+    canActivate: [authGuard],
+    canDeactivate: [unsavedChangesGuard],
+    data: { pageKey: 'REVIEWMETRICCONFIG', title: 'Review Metric Configuration' },
+    loadComponent: () =>
+      import('./detail/components/metric-config/containers/review-metric-config-page.component').then(
+        (m) => m.ReviewMetricConfigPageComponent,
+      ),
+  },
   // {
   //   path: 'review-stage-management',
   //   // canActivate: [authGuard],
@@ -34,19 +44,10 @@ export const reviewsRoutes: Routes = [
       ),
   },
   {
-    path: 'metric-config/:id',
-    canActivate: [authGuard],
-    canDeactivate: [unsavedChangesGuard],
-    loadComponent: () =>
-      import('./detail/components/metric-config/containers/review-metric-config-page.component').then(
-        (m) => m.ReviewMetricConfigPageComponent,
-      ),
-  },
-  {
     path: 'evidence-review',
     canActivate: [authGuard],
     canDeactivate: [unsavedChangesGuard],
-    data: { pageKey: 'CREATEREVIEW', title: 'Review Details' },
+    data: { pageKey: 'EVIDENCEREVIEW', title: 'Review Details' },
     loadComponent: () =>
       import('./evidence-review/containers/evidence-review-page.component').then(
         (m) => m.EvidenceReviewComponent,
@@ -55,7 +56,7 @@ export const reviewsRoutes: Routes = [
   {
     path: ':id/:stageId',
     canActivate: [authGuard],
-    data: { pageKey: 'CREATEREVIEW', title: 'Review Details' },
+    data: { pageKey: 'REVIEWDETAIL', title: 'Review Details' },
     loadComponent: () =>
       import('./detail/containers/review-detail-page.component').then(
         (m) => m.ReviewDetailPageComponent,

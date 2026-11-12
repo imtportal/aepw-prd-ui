@@ -4,7 +4,8 @@ export enum AuditModuleType {
   ImpactMaster = 3,
   ReviewLifecycle = 4,
   ReviewApproval = 5,
-  Restatement = 6
+  Restatement = 6,
+  Evidence = 7
 }
 
 export interface AuditTimelineItem {

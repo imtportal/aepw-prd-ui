@@ -62,6 +62,7 @@
           [sourcePage]="reviewMetricsByIdSourceNames.ProjectLibrary"
           [showViewProgressButton]="projectLibraryPermissions()[projectLibraryPermissionKeys.TRACKPROGRESS]"
           [showRecallButton]="projectLibraryPermissions()[projectLibraryPermissionKeys.RECALL]"
+          [showRecallAfterClosedButton]="projectLibraryPermissions()[projectLibraryPermissionKeys.RECALLCLOSEDREVIEW]"
           [showRestatementButton]="projectLibraryPermissions()[projectLibraryPermissionKeys.RESTATEMENT]"
           [detailsExpanded]="expandedReviewIds().has(reviewId)"
           [projectId]="impactMasterId()"

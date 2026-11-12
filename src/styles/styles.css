@@ -3,6 +3,12 @@
 @import '@ng-select/ng-select/themes/default.theme.css';
 @import 'quill/dist/quill.snow.css';
 
+.evidence-confidence-tooltip .p-tooltip-text {
+  width: min(22rem, calc(100vw - 2rem));
+  max-width: calc(100vw - 2rem);
+  box-sizing: border-box;
+}
+
 /* Funding Recipient chips */
 .funding-recipient-select .ng-select-container .ng-value-container .ng-value {
   display: inline-flex;

@@ -5,7 +5,7 @@ export const workFlowRoutes: Routes = [
   {
     path: 'reviewTasks',
     canActivate: [authGuard],
-    data: { pageKey: 'REVIEWTASK', title: 'Review Tasks' },
+    data: { pageKey: 'REVIEWDETAIL', title: 'Review Tasks' },
     loadComponent: () =>
       import('./Task/containers/task-page/review-task.component').then(
         (m) => m.ReviewTasksComponent,

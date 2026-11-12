@@ -261,23 +261,27 @@
                   {{ data.validation.validationStatus || 'Not Available' }}
                 </span>
               </div>
-              <div
-                class="rounded-lg border px-3 py-2.5 text-sm font-medium"
-                [ngClass]="
-                  isWithinReporting(data.validation.isWithinReporting)
-                    ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
-                    : 'border-red-200 bg-red-50 text-red-800'
-                "
-              >
-                <span class="mr-2" aria-hidden="true">
-                  {{ isWithinReporting(data.validation.isWithinReporting) ? '✓' : '!' }}
-                </span>
-                {{
-                  isWithinReporting(data.validation.isWithinReporting)
-                    ? 'Within Reporting Cycle'
-                    : 'Out of Reporting Cycle'
-                }}
-              </div>
+              <!-- Not required -->
+              @if (isReportingRequired(data.validation.isWithinReporting)) {
+                <div
+                  class="rounded-lg border px-3 py-2.5 text-sm font-medium"
+                  [ngClass]="
+                    isWithinReporting(data.validation.isWithinReporting)
+                      ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
+                      : 'border-red-200 bg-red-50 text-red-800'
+                  "
+                >
+                  <span class="mr-2" aria-hidden="true">
+                    {{ isWithinReporting(data.validation.isWithinReporting) ? '✓' : '!' }}
+                  </span>
+                  {{
+                    isWithinReporting(data.validation.isWithinReporting)
+                      ? 'Within Reporting Cycle'
+                      : 'Out of Reporting Cycle'
+                  }}
+                </div>
+              }
+
               @if (data.validation.validationComment) {
                 <p
                   class="rounded-lg bg-[hsl(var(--background))] p-3 text-sm leading-6 text-[hsl(var(--muted-foreground))]"

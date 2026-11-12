@@ -36,7 +36,7 @@ export const adminRoutes: Routes = [
     path: 'projects-info',
     canActivate: [authGuard],
     canDeactivate: [unsavedChangesGuard],
-    data: { pageKey: 'PROJECTINFO', title: 'Project Library' },
+    data: { pageKey: 'PROJECTLIBRARY', title: 'Project Library' },
     loadComponent: () =>
       import('./projects/containers/project-information/project-information.component').then(
         (m) => m.ProjectInformationComponent,
@@ -46,7 +46,7 @@ export const adminRoutes: Routes = [
     path: 'projects-info/:impactMasterId',
     canActivate: [authGuard],
     canDeactivate: [unsavedChangesGuard],
-    data: { pageKey: 'PROJECTINFO', title: 'Project Library' },
+    data: { pageKey: 'PROJECTLIBRARY', title: 'Project Library' },
     loadComponent: () =>
       import('./projects/containers/project-information/project-information.component').then(
         (m) => m.ProjectInformationComponent,
@@ -79,7 +79,8 @@ export const adminRoutes: Routes = [
   // },
   {
     path: 'funding-recipients',
-    data: { title: 'Funding Recipient' },
+    canActivate: [authGuard],
+    data: { pageKey: 'FUNDINGRECIPIENTMANAGEMENT', title: 'Funding Recipient' },
     loadComponent: () =>
       import('./funding recipient/containers/funding-recipient-page/funding-recipient-page.component').then(
         (m) => m.FundingRecipientPageComponent,
@@ -107,7 +108,8 @@ export const adminRoutes: Routes = [
   },
   {
     path: 'programs',
-    data: { title: 'Program' },
+    canActivate: [authGuard],
+    data: { pageKey: 'PROGRAMMANAGEMENT', title: 'Program' },
 
     loadComponent: () =>
       import('./program/containers/program-page/program-page.component').then(

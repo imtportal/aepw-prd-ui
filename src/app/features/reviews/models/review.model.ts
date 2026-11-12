@@ -292,12 +292,13 @@ export interface ReviewMetricDto {
   currentStage?: string;
   evidenced?: number;
   evidencedPer?: number;
-  
+
   rejectedInSubsequentStages?: number;
   allowRejection?: boolean;
   allowAction?: boolean;
 
   allowRecall?: boolean;
+  allowRecallAfterClosed?: boolean;
   // allowRestatement?: boolean;
 }
 
@@ -311,7 +312,7 @@ export interface EvidenceDto {
   fileUriDownload: string;
   uploadedByUserId: number;
   uploadedUtc: string;
-  status: number;
+  status: number | null;
   isLocked: boolean;
   createdBy: number;
   createdOnUTC: string;
@@ -331,7 +332,20 @@ export interface EvidenceDto {
 
   statusTextColor?: string;
   statusBadgeColor?: string;
+}
 
+export interface ReviewEvidenceStatusDto {
+  evidenceId: number;
+  status: number | null;
+  statusDisplayValue: string;
+  statusBadgeColor: string;
+  statusTextColor: string;
+
+  //
+  contribution: number;
+  evidenceTypeCode: string | null;
+  evidenceTypeDescription: string | null;
+  evidencedValue: string | null;
 }
 
 export interface ReviewCommentDto {
@@ -390,7 +404,7 @@ export interface ReviewDto {
 
   updatedOnStr?: string;
   comments?: ReviewCommentDto[];
-  
+
   allowRestatement?: boolean;
   reviewMetrics: ReviewMetricDto[];
 
@@ -674,6 +688,14 @@ export interface UpdateReviewMetricFRCommentDto {
   MetricCode?: string;
   Comment: string;
   UserId: number;
+}
+
+export interface ZeroRawValueBaselineCheckDTO  {
+  metricId: number,
+  metricCode: string,
+  rawValue?: number,
+  baselinePct?: number,
+  promptMessage?: string;
 }
 
 // ── Backward-compat aliases for renamed DTOs ──────────────────────────────────

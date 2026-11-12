@@ -1,5 +1,5 @@
+@let isFileSizeExceeded = fileSizeExceeded();
 <input #fileInput type="file" multiple class="hidden" (change)="onFilePicked($event)" />
-
 <!-- Trigger -->
 @if (fromQueue()) {
 <button
@@ -25,7 +25,7 @@
         <h3 id="uploadEvidenceModalHeader" class="text-sm font-semibold"> Upload Evidence 
           @if (evidenceUploadMaxFileSize()) {
             <span class="font-normal">
-              (max. file size: <span class="font-bold text-[hsl(var(--destructive))]">{{ evidenceUploadMaxFileSize() }}</span>) 
+              (The maximum file size allowed is <span class="font-bold text-[hsl(var(--destructive))]">{{ evidenceUploadMaxFileSize() }}</span>) 
             </span>
 
           }  
@@ -79,8 +79,33 @@
             }
           </button>
 
+          <!-- Files List -->
+          @if (selectedFiles().length > 0) {
+            <div class="mt-4 space-y-2">
+              <p class="text-xs font-medium">Selected Files:</p>
+              <div class="max-h-48 overflow-y-auto border rounded-lg bg-muted/30">
+                @for (file of selectedFiles(); track $index) {
+                  <div class="flex items-center justify-between gap-3 p-2 border-b last:border-b-0 hover:bg-muted/50">
+                    <div class="flex-1 min-w-0">
+                      <p class="text-xs font-medium truncate">{{ file.name }}</p>
+                      <p class="text-[10px] text-muted-foreground">{{ getFileSizeMB(file.size) }} MB</p>
+                    </div>
+                    <button type="button"
+                            class="flex-shrink-0 p-1 text-muted-foreground hover:text-destructive transition-colors"
+                            (click)="removeFile($index)"
+                            title="Remove file">
+                      <lucide-icon name="x" [size]="16" />
+                    </button>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+
           <div class="flex border-t mt-4 py-2 items-center justify-between">
-            <label class="text-xs "> Evidence Type</label>
+            <label class="text-xs "> Evidence Type 
+              <span class="text-destructive">*</span>
+            </label>
             <select class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
               [(ngModel)]="selectedType"
             >
@@ -96,6 +121,16 @@
             </select>
             
           </div>
+          @if (totalFileSize() > 0) {
+            <p class="text-sm text-muted-foreground">Total file size: {{ totalFileSize() | formatAmount }} MB
+
+
+            @if (isFileSizeExceeded) {
+              <span class="text-sm text-destructive" > (File size limit exceeded) </span>
+            }
+            </p>
+          }
+          
         </div>
 
       </div>
@@ -109,7 +144,7 @@
         </button>
         <button type="button"
                 class="rounded-md bg-[hsl(var(--aepw-blue))] px-4 py-1.5 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-40 hover:opacity-90"
-                [disabled]="!selectedFiles().length || !selectedType"
+                [disabled]="!selectedFiles().length || !selectedType || isFileSizeExceeded"
                 (click)="onUpload()">
           Upload
         </button>

@@ -210,16 +210,12 @@
       <div>
         <p class="text-sm font-medium text-muted-foreground">Project Folder Link</p>
 
-        <p class="mt-0.5 text-sm text-[hsl(var(--aepw-blue))] word-wrap-anywhere">
-          <a
-            class="hover:text-destructive hover:underline text-[hsl(var(--aepw-blue))]"
-            [href]="p?.dataCollectionFolderUrl || '#'"
-            target="_blank"
-          >
-            {{ p?.dataCollectionFolderUrl || '—' }}
+            <p class="mt-0.5 text-sm text-[hsl(var(--aepw-blue))] word-wrap-anywhere">
+                <a class="hover:text-destructive hover:underline text-[hsl(var(--aepw-blue))]" [href]="dataCollectionFolderUrl() || p?.dataCollectionFolderUrl || '#'" target="_blank">
+            {{ dataCollectionFolderUrl() || p?.dataCollectionFolderUrl || '—' }}
           </a>
-        </p>
-      </div>
+            </p>
+        </div>
 
       <!-- Last Field Check Date -->
       <div>

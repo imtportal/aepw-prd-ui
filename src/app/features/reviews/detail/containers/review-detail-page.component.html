@@ -36,27 +36,16 @@
 
 @if (!roleAboveAdmin) {
 <div class="p-6 pt-0">
-  <!-- <app-review-metrics-by-id [reviewId]="id()"></app-review-metrics-by-id> -->
-  @if (numericId() != undefined ) {
-  <app-review-metrics-by-id [reviewId]="numericId()" [stageId]="stageId()" [reviewDetail]="reviewDetail()"
-    [refreshReviewMetricsData]="refreshReviewMetricsData()" [detailsExpanded]="reviewDetailsExpanded()"
-    [showRecallButton]="reviewDetailPerm[reviewDetailPageActionKey.ISSUERECALL] && allowActions()"
-    [showViewProgressButton]="reviewDetailPerm[reviewDetailPageActionKey.VIEWPROGRESS]"
-    
-    [showApproveTopLevelMetricbutton]="((stageNameLowerCased() != 'admin') && stageNameLowerCased() != 'l4') && allowActions() && reviewDetailPerm[reviewDetailPageActionKey.APPROVEMETRIC]"
-    [showRejectTopLevelMetricbutton]="((stageNameLowerCased() != 'admin') && stageNameLowerCased() != 'l4') && allowActions() && reviewDetailPerm[reviewDetailPageActionKey.REJECTMETRIC]"
-    
-    [allowEditBaseline]="reviewDetailPerm[reviewDetailPageActionKey.EDITBASELINE] && (restatementModeActive() || allowActions())"
-    [allowEditRawValue]="reviewDetailPerm[reviewDetailPageActionKey.EDITREPORTEDVALUE] && (restatementModeActive() || allowActions())"
-    [allowEditRiskPercent]="reviewDetailPerm[reviewDetailPageActionKey.EDITRISKPERCENT] && (restatementModeActive() || allowActions())"
-    [allowAddingEvidences]="reviewDetailPerm[reviewDetailPageActionKey.ADDEVIDENCE] && allowActions()"
-    [allowViewEvidence]="reviewDetailPerm[reviewDetailPageActionKey.VIEWEVIDENCEEXTRACTION]"
-    [allowDeleteEvidence]="reviewDetailPerm[reviewDetailPageActionKey.DELETEEVIDENCE]"
-    [restatementModeActive]="restatementModeActive()"
-    (baselineRawValueForMetricIds_RSUpdated)="baselineRawValueForMetricIds_RSUpdated($event)"
-    (detailsExpansionChange)="reviewDetailsExpanded.set(!$event.expanded)"
-    (action)="reviewMetricByIdAction($event)"></app-review-metrics-by-id>
-  }
+    <!-- <app-review-metrics-by-id [reviewId]="id()"></app-review-metrics-by-id> -->
+    @if (numericId() != undefined ) {
+    <app-review-metrics-by-id [reviewId]="numericId()" [stageId]="stageId()" [reviewDetail]="reviewDetail()" [refreshReviewMetricsData]="refreshReviewMetricsData()" [detailsExpanded]="reviewDetailsExpanded()" [showRecallButton]="reviewDetailPerm[reviewDetailPageActionKey.ISSUERECALL] && allowActions()"
+        [showViewProgressButton]="reviewDetailPerm[reviewDetailPageActionKey.VIEWPROGRESS]" [showApproveTopLevelMetricbutton]="((stageNameLowerCased() != 'admin') && stageNameLowerCased() != 'l4') && allowActions() && reviewDetailPerm[reviewDetailPageActionKey.APPROVEMETRIC]"
+        [showRejectTopLevelMetricbutton]="((stageNameLowerCased() != 'admin') && stageNameLowerCased() != 'l4') && allowActions() && reviewDetailPerm[reviewDetailPageActionKey.REJECTMETRIC]" [allowEditBaseline]="reviewDetailPerm[reviewDetailPageActionKey.EDITBASELINE] && (restatementModeActive() || allowActions())"
+        [allowEditRawValue]="reviewDetailPerm[reviewDetailPageActionKey.EDITREPORTEDVALUE] && (restatementModeActive() || allowActions())" [allowEditRiskPercent]="reviewDetailPerm[reviewDetailPageActionKey.EDITRISKPERCENT] && (restatementModeActive() || allowActions())"
+        [allowAddingEvidences]="reviewDetailPerm[reviewDetailPageActionKey.ADDEVIDENCE] && allowActions()" [allowViewEvidence]="reviewDetailPerm[reviewDetailPageActionKey.VIEWEVIDENCEEXTRACTION]" [allowDeleteEvidence]="reviewDetailPerm[reviewDetailPageActionKey.DELETEEVIDENCE]"
+        [restatementModeActive]="restatementModeActive()" (baselineRawValueForMetricIds_RSUpdated)="baselineRawValueForMetricIds_RSUpdated($event)" [zeroRawValueBaselineCheck]="zeroRawValueBaselineCheck()" (detailsExpansionChange)="reviewDetailsExpanded.set(!$event.expanded)"
+        (action)="reviewMetricByIdAction($event)"></app-review-metrics-by-id>
+    }
 
 </div>
 

@@ -249,6 +249,12 @@ export class ImpactMasterService {
       .pipe(
         map((res: { data: any }) => {
           console.log('ImpactMasterFilterOptionsDto:', res.data);
+          // Filter out Draft status from statusOptions
+          if (res.data?.statusOptions) {
+            res.data.statusOptions = res.data.statusOptions.filter(
+              (status: any) => status.statusName?.toLowerCase() !== 'draft'
+            );
+          }
           return res.data;
         }),
       );

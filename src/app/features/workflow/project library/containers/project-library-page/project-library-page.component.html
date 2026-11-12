@@ -56,6 +56,7 @@
             placeholder="Search by IM ID, PIN, IM Name or FR"
             [ngModel]="selectedImpactMasterId()"
             (ngModelChange)="onProjectFilterChange($event)"
+            (change)="onImpactMasterChange($event)"
             (search)="onImpactMasterSearch($event)"
             (keydown.enter)="onImpactMasterSearchEnter($event)"
           >

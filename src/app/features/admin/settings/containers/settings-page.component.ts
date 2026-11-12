@@ -45,10 +45,10 @@ export class SettingsPageComponent {
   readonly activeTab = signal<
     | 'business-roles'
     | 'review'
-    // | 'review-stage-config'
+    | 'review-stage-config'
     | 'notifications'
     | 'evidence'
-    // | 'email-template'
+    | 'email-template'
     | 'integrations'
   >('business-roles');
 
@@ -74,7 +74,7 @@ export class SettingsPageComponent {
   protected readonly tabs = [
     // { id: 'review' as const, label: 'Review Cycles' },
     { id: 'business-roles' as const, label: 'Business Roles' },
-    // { id: 'email-template' as const, label: 'Email Template' },
+    { id: 'email-template' as const, label: 'Email Template' },
     // { id: 'review-stage-config' as const, label: 'Review Stage Config' },
     // { id: 'notifications' as const, label: 'Notifications' },
     // { id: 'evidence' as const, label: 'Evidence' },

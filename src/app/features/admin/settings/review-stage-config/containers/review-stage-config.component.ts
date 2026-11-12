@@ -134,7 +134,7 @@ export class ReviewStageConfigComponent implements OnInit {
         },
       });
   }
-
+// Approve all the pending reviews 
   private approvePendingDisablePreviews(): Observable<unknown> {
     const userId = this.authStateService.getCurrentUserId();
 
@@ -166,20 +166,20 @@ export class ReviewStageConfigComponent implements OnInit {
   }
 
   protected confirmApprovalChanges(): void {
-    this.approvePendingDisablePreviews()
-      .pipe(take(1))
-      .subscribe({
-        next: () => {
-          this.toast.success('Pending approvals processed successfully.');
-          this.approvalChangesDialogVisible.set(false);
+    // this.approvePendingDisablePreviews()
+    //   .pipe(take(1))
+    //   .subscribe({
+    //     next: () => {
+    //       this.toast.success('Pending approvals processed successfully.');
+    //       this.approvalChangesDialogVisible.set(false);
 
-          // TODO: Save stage active states after the complete workflow succeeds.
-        },
-        error: (error) => {
-          console.error('Failed to process pending approvals:', error);
-          this.toast.error('Failed to process pending approvals.');
-        },
-      });
+    //       // TODO: Save stage active states after the complete workflow succeeds.
+    //     },
+    //     error: (error) => {
+    //       console.error('Failed to process pending approvals:', error);
+    //       this.toast.error('Failed to process pending approvals.');
+    //     },
+    //   });
   }
 
   resetStageStates(): void {

@@ -27,7 +27,7 @@ export class EmailTemplateComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
   // quill
   readonly quillModules = {
-    toolbar: [['bold', 'italic', 'underline'], [{ list: 'ordered' }, { list: 'bullet' }], ['link']],
+    toolbar: [['bold', 'italic', 'underline'], [{ list: 'ordered' }, { list: 'bullet' }]],
   };
   private quillInstance: Quill | null = null;
   readonly bodyHtml = signal('');
@@ -84,30 +84,75 @@ export class EmailTemplateComponent implements OnInit {
         keyword.keyword.toLowerCase().includes(search),
     );
   });
-  onEditorCreated(quill: Quill): void {
-    this.quillInstance = quill;
-  }
-  onBodyContentChanged(event: { html: string | null; editor: Quill }): void {
-    this.bodyHtml.set(event.html ?? '');
-    this.updateKeywordDropdown(event.editor);
+  readonly isSaving = signal(false);
+  private static readonly MENTION_LOOKBACK = 100;
+  private keywordUpdateFrame: number | null = null;
+  private detachQuillListeners: (() => void) | null = null;
+
+  constructor() {
+    this.destroyRef.onDestroy(() => {
+      this.detachQuillListeners?.();
+      if (this.keywordUpdateFrame !== null) {
+        cancelAnimationFrame(this.keywordUpdateFrame);
+      }
+      this.quillInstance = null;
+    });
   }
 
-  onBodySelectionChanged(event: { editor: Quill }): void {
-    this.updateKeywordDropdown(event.editor);
+  onEditorCreated(quill: Quill): void {
+    this.detachQuillListeners?.();
+    this.quillInstance = quill;
+
+    // Single listener for typing and caret moves; the body value itself is synced via ngModel.
+    const handler = (eventName: string, _arg: unknown, _old: unknown, source: string): void => {
+      if (eventName === 'text-change' && source === 'api') {
+        return;
+      }
+      this.scheduleKeywordUpdate(quill);
+    };
+    quill.on('editor-change', handler);
+    this.detachQuillListeners = () => quill.off('editor-change', handler);
+  }
+
+  // Coalesce text-change + selection-change of one keystroke into one update per frame.
+  private scheduleKeywordUpdate(quill: Quill): void {
+    if (this.keywordUpdateFrame !== null) {
+      return;
+    }
+    this.keywordUpdateFrame = requestAnimationFrame(() => {
+      this.keywordUpdateFrame = null;
+      this.updateKeywordDropdown(quill);
+    });
+  }
+
+  private getMentionMatch(quill: Quill, index: number): RegExpMatchArray | null {
+    const start = Math.max(0, index - EmailTemplateComponent.MENTION_LOOKBACK);
+    return quill.getText(start, index - start).match(/@([a-zA-Z0-9_]*)$/);
+  }
+
+  private hideKeywordDropdown(): void {
+    this.showKeywordDropdown.set(false);
+    this.keywordSearchText.set('');
   }
 
   private updateKeywordDropdown(quill: Quill): void {
-    const selection = quill.getSelection();
-
-    if (!selection) {
-      this.showKeywordDropdown.set(false);
-      this.keywordSearchText.set('');
+    if (this.quillInstance !== quill) {
       return;
     }
 
-    const textBeforeCursor = quill.getText(0, selection.index);
+    if (!quill.hasFocus()) {
+      this.hideKeywordDropdown();
+      return;
+    }
 
-    const match = textBeforeCursor.match(/@([a-zA-Z0-9_]*)$/);
+    const selection = quill.getSelection();
+
+    if (!selection) {
+      this.hideKeywordDropdown();
+      return;
+    }
+
+    const match = this.getMentionMatch(quill, selection.index);
 
     if (!match) {
       this.showKeywordDropdown.set(false);
@@ -155,9 +200,7 @@ export class EmailTemplateComponent implements OnInit {
       return;
     }
 
-    const textBeforeCursor = quill.getText(0, selection.index);
-
-    const match = textBeforeCursor.match(/@([a-zA-Z0-9_]*)$/);
+    const match = this.getMentionMatch(quill, selection.index);
     if (!match) {
       return;
     }
@@ -187,26 +230,15 @@ export class EmailTemplateComponent implements OnInit {
   private loadTemplates(): void {
     this.isTemplatesLoading.set(true);
 
-    console.log('[EmailTemplate] Loading started');
-
     this.templateService
       .getAllEmailNotificationTemplates()
       .pipe(
         takeUntilDestroyed(this.destroyRef),
-        finalize(() => {
-          console.log('[EmailTemplate] Finalize executed');
-
-          this.isTemplatesLoading.set(false);
-
-          console.log('[EmailTemplate] Loading state:', this.isTemplatesLoading());
-        }),
+        finalize(() => this.isTemplatesLoading.set(false)),
       )
       .subscribe({
         next: (response) => {
           const templates = response.data ?? [];
-
-          console.log('[EmailTemplate] Response:', response);
-          console.log('[EmailTemplate] Template count:', templates.length);
 
           this.templates.set(templates);
 
@@ -269,7 +301,7 @@ export class EmailTemplateComponent implements OnInit {
   saveTemplate(): void {
     const template = this.selectedTemplate();
 
-    if (!template) {
+    if (!template || this.isSaving()) {
       return;
     }
 
@@ -285,7 +317,14 @@ export class EmailTemplateComponent implements OnInit {
       updatedBy: String(this.authStateService.getCurrentUserId()),
     };
 
-    this.templateService.saveEmailNotificationTemplate(payload).subscribe({
+    this.isSaving.set(true);
+    this.templateService
+      .saveEmailNotificationTemplate(payload)
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        finalize(() => this.isSaving.set(false)),
+      )
+      .subscribe({
       next: () => {
         this.toast.success('Email template saved successfully');
       },

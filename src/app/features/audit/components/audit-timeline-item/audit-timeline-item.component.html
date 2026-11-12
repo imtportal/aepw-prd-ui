@@ -21,7 +21,7 @@
     <div class="flex flex-wrap items-center gap-2 text-sm">
       <span class="font-bold text-foreground">{{ item().changedBy }}</span>
       <span class="text-muted-foreground font-medium">
-        {{ item().eventAction === 'created' ? 'Created' : 'Modified' }} <span class="font-semibold text-foreground">{{
+        {{ item().eventAction === 'created' ? (item().moduleName === 'Evidence' && (item().fieldName === 'File' || item().fieldName === 'File Name') ? 'Uploaded' : 'Created') : 'Modified' }} <span class="font-semibold text-foreground">{{
           item().fieldName }}</span> of
       </span>
       @if (item().recordTitle) {

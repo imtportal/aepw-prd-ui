@@ -217,7 +217,8 @@ export class AuditPageComponent implements OnInit {
     return mod === AuditModuleType.ImpactMaster
         || mod === AuditModuleType.ReviewLifecycle
         || mod === AuditModuleType.ReviewApproval
-        || mod === AuditModuleType.Restatement;
+        || mod === AuditModuleType.Restatement
+        || mod === AuditModuleType.Evidence;
   });
 
   // Project selection is mandatory for Review Lifecycle, Review Approval, and Restatement
@@ -228,21 +229,23 @@ export class AuditPageComponent implements OnInit {
         || mod === AuditModuleType.Restatement;
   });
 
-  // Show Metric dropdown for Review Lifecycle (4), Review Approval (5), Restatement (6)
+  // Show Metric dropdown for Review Lifecycle (4), Review Approval (5), Restatement (6), Evidence (7)
   readonly isMetricFilterApplicable = computed(() => {
     const mod = Number(this.selectedModule());
     return mod === AuditModuleType.ReviewLifecycle
         || mod === AuditModuleType.ReviewApproval
-        || mod === AuditModuleType.Restatement;
+        || mod === AuditModuleType.Restatement
+        || mod === AuditModuleType.Evidence;
   });
 
-  // Show Program dropdown for Project Master (3), Review Lifecycle (4), Review Approval (5), Restatement (6)
+  // Show Program dropdown for Project Master (3), Review Lifecycle (4), Review Approval (5), Restatement (6), Evidence (7)
   readonly showProgramFilter = computed(() => {
     const mod = Number(this.selectedModule());
     return mod === AuditModuleType.ImpactMaster
         || mod === AuditModuleType.ReviewLifecycle
         || mod === AuditModuleType.ReviewApproval
-        || mod === AuditModuleType.Restatement;
+        || mod === AuditModuleType.Restatement
+        || mod === AuditModuleType.Evidence;
   });
 
   // Group items by Day in Descending Order (latest first)
@@ -320,6 +323,7 @@ export class AuditPageComponent implements OnInit {
     { value: AuditModuleType.ReviewLifecycle, label: 'Review Metric' },
     { value: AuditModuleType.ReviewApproval, label: 'Review Approval' },
     { value: AuditModuleType.Restatement, label: 'Restatement' },
+    { value: AuditModuleType.Evidence, label: 'Evidence' },
   ];
 
   readonly datePresetOptions: { value: DatePreset; label: string }[] = [
@@ -355,6 +359,9 @@ export class AuditPageComponent implements OnInit {
           shouldFetch = true;
         } else if (mod === 'Restatement' || mod === '6') {
           this.selectedModule.set(AuditModuleType.Restatement);
+          shouldFetch = true;
+        } else if (mod === 'Evidence' || mod === '7') {
+          this.selectedModule.set(AuditModuleType.Evidence);
           shouldFetch = true;
         }
       }

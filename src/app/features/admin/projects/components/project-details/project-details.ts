@@ -13,11 +13,13 @@ import { FormatAmountPipe } from '../../../../../shared/pipes/format-amount.pipe
 export class ProjectDetailsComponent implements OnInit {
   
   readonly impactMasterId = input.required<number | null>();
+  public readonly dataCollectionFolderUrl = input<string | null | undefined>('');
   protected readonly projectDetails =  signal<ImpactMasterDetailDto | null>(null);
   protected readonly impactSvc = inject(ProjectDetailsService);
 
   ngOnChanges() {
     this.getImpactMasterDetails();
+    // alert()
   }
 
   ngOnInit() {

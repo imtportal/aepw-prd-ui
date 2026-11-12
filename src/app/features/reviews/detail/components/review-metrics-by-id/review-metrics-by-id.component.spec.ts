@@ -5,7 +5,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { ActivatedRoute, convertToParamMap, Router } from '@angular/router';
 import { BehaviorSubject, of, Subject } from 'rxjs';
 import { vi } from 'vitest';
-import { AuthStateService } from '../../../../../core/auth';
+import { AuthorizationService, AuthStateService } from '../../../../../core/auth';
 import { LookupService } from '../../../../../core/services/lookup-service';
 import { ToastService } from '../../../../../shared/ui/toast/toast.service';
 import { ReviewService } from '../../../services/review.service';
@@ -199,7 +199,8 @@ describe('ReviewMetricsByIdComponent metric deep links', () => {
         } },
         { provide: Router, useValue: { url: '/reviews/1509/60?from=queue', navigate } },
         { provide: LookupService, useValue: {} },
-        { provide: AuthStateService, useValue: { hasPageAccess } },
+        { provide: AuthStateService, useValue: { hasPageAccess, getCurrentUserId: () => 7 } },
+        { provide: AuthorizationService, useValue: { getActionAccess: () => of({ data: [] }) } },
         { provide: ToastService, useValue: { error: toastError, warning: toastWarning, success: vi.fn() } },
         { provide: ReviewService, useValue: {
           getValorisationTypes: () => of([]),
@@ -646,5 +647,165 @@ describe('ReviewMetricsByIdComponent metric deep links', () => {
     await render();
 
     expect(scrollIntoView).not.toHaveBeenCalled();
+  });
+
+  describe('UI state persistence across Evidence Review navigation', () => {
+    const storageKey = (reviewId = 42, stageId = '') => `aepw.reviewMetricsUiState.${reviewId}.${stageId}`;
+    const uiReview = {
+      reviewId: '42',
+      categories: [
+        { code: 'MW', name: 'Waste' },
+        { code: 'CV', name: 'Value' },
+      ],
+      topMetrics: [
+        {
+          metricId: 10, metricCode: 'MW1', categoryCode: 'MW', currentStage: '3',
+          l1Metrics: [{ metricId: 11, metricCode: 'MW1.1' }],
+        },
+        {
+          metricId: 1, metricCode: 'CV1', categoryCode: 'CV', currentStage: '3',
+          l1Metrics: [
+            { metricId: 2, metricCode: 'CV1.1' },
+            { metricId: 3, metricCode: 'CV1.2' },
+          ],
+        },
+      ],
+    } as ReviewMetricsPageData;
+
+    const ui = () => fixture.componentInstance as unknown as {
+      activeCategoryCode: () => string;
+      setActiveCategory: (code: string) => void;
+      toggleTopMetric: (code: string) => void;
+      toggleSubMetric: (code: string) => void;
+      isTopMetricExpanded: (code: string) => boolean;
+      isL1Expanded: (code: string) => boolean;
+    };
+
+    beforeEach(() => {
+      sessionStorage.clear();
+      queryParams.next(convertToParamMap({}));
+      fixture.componentRef.setInput('detailsExpanded', true);
+    });
+
+    afterEach(() => sessionStorage.clear());
+
+    it('saves the category and expanded metrics before opening evidence review', async () => {
+      reviews.next(uiReview);
+      await render();
+      ui().setActiveCategory('CV');
+      ui().toggleTopMetric('CV1');
+      ui().toggleTopMetric('MW1');
+      ui().toggleTopMetric('MW1');
+      ui().toggleSubMetric('CV1.2');
+
+      fixture.componentInstance.viewEvidence({ evidenceId: 12 } as EvidenceDto);
+
+      expect(JSON.parse(sessionStorage.getItem(storageKey())!)).toEqual({
+        category: 'CV',
+        top: ['CV1'],
+        l1: ['CV1.2'],
+      });
+    });
+
+    it('does not save state without evidence review access', () => {
+      hasPageAccess.mockReturnValue(false);
+
+      fixture.componentInstance.viewEvidence({ evidenceId: 12 } as EvidenceDto);
+
+      expect(sessionStorage.getItem(storageKey())).toBeNull();
+    });
+
+    it('restores the saved state once the metrics are loaded', async () => {
+      sessionStorage.setItem(storageKey(), JSON.stringify({ category: 'CV', top: ['CV1'], l1: ['CV1.2'] }));
+      await render();
+      expect(sessionStorage.getItem(storageKey())).not.toBeNull();
+
+      reviews.next(uiReview);
+      await render();
+
+      expect(ui().activeCategoryCode()).toBe('CV');
+      expect(ui().isTopMetricExpanded('CV1')).toBe(true);
+      expect(ui().isL1Expanded('CV1.2')).toBe(true);
+      expect(ui().isL1Expanded('CV1.1')).toBe(false);
+      expect(ui().isTopMetricExpanded('MW1')).toBe(false);
+      expect(sessionStorage.getItem(storageKey())).toBeNull();
+    });
+
+    it('does not restore again after the saved state has been consumed', async () => {
+      sessionStorage.setItem(storageKey(), JSON.stringify({ category: 'CV', top: ['CV1'], l1: [] }));
+      reviews.next(uiReview);
+      await render();
+      ui().toggleTopMetric('CV1');
+
+      reviews.next({ ...uiReview });
+      await render();
+
+      expect(ui().isTopMetricExpanded('CV1')).toBe(false);
+    });
+
+    it.each(['not json', '"text"', '{"category":5,"top":"x","l1":[1,null]}', '[]'])(
+      'safely ignores invalid saved state: %s',
+      async (raw) => {
+        sessionStorage.setItem(storageKey(), raw);
+        reviews.next(uiReview);
+        await render();
+
+        expect(ui().activeCategoryCode()).toBe('MW');
+        expect(ui().isTopMetricExpanded('CV1')).toBe(false);
+        expect(ui().isL1Expanded('CV1.1')).toBe(false);
+      },
+    );
+
+    it('ignores saved categories and metrics that no longer exist', async () => {
+      sessionStorage.setItem(
+        storageKey(),
+        JSON.stringify({ category: 'XX', top: ['CV1', 'GONE'], l1: ['CV1.1', 'GONE.1'] }),
+      );
+      reviews.next(uiReview);
+      await render();
+
+      expect(ui().activeCategoryCode()).toBe('MW');
+      expect(ui().isTopMetricExpanded('CV1')).toBe(true);
+      expect(ui().isTopMetricExpanded('GONE')).toBe(false);
+      expect(ui().isL1Expanded('CV1.1')).toBe(true);
+      expect(ui().isL1Expanded('GONE.1')).toBe(false);
+    });
+
+    it.each([storageKey(43), storageKey(42, '60')])(
+      'does not restore state saved for another review or stage: %s',
+      async (otherKey) => {
+        sessionStorage.setItem(otherKey, JSON.stringify({ category: 'CV', top: ['CV1'], l1: ['CV1.1'] }));
+        reviews.next(uiReview);
+        await render();
+
+        expect(ui().activeCategoryCode()).toBe('MW');
+        expect(ui().isTopMetricExpanded('CV1')).toBe(false);
+        expect(sessionStorage.getItem(otherKey)).not.toBeNull();
+      },
+    );
+
+    it('uses the stage id in the storage key', async () => {
+      fixture.componentRef.setInput('stageId', 60);
+      reviews.next(uiReview);
+      await render();
+      ui().setActiveCategory('CV');
+
+      fixture.componentInstance.viewEvidence({ evidenceId: 12 } as EvidenceDto);
+
+      expect(sessionStorage.getItem(storageKey(42, '60'))).not.toBeNull();
+      expect(sessionStorage.getItem(storageKey())).toBeNull();
+    });
+
+    it('lets the tlm deep link take priority over the saved state', async () => {
+      sessionStorage.setItem(storageKey(), JSON.stringify({ category: 'MW', top: ['MW1'], l1: ['MW1.1'] }));
+      queryParams.next(convertToParamMap({ tlm: 'CV1.2' }));
+      reviews.next(uiReview);
+      await render();
+
+      expect(ui().activeCategoryCode()).toBe('CV');
+      expect(ui().isL1Expanded('CV1.2')).toBe(true);
+      expect(ui().isTopMetricExpanded('MW1')).toBe(false);
+      expect(ui().isL1Expanded('MW1.1')).toBe(false);
+    });
   });
 });

@@ -1,4 +1,4 @@
-import { Component, ElementRef, inject, input, output, signal, viewChild } from '@angular/core';
+import { Component, effect, ElementRef, inject, input, output, signal, viewChild } from '@angular/core';
 import {
   LucideAngularModule, LucideIconProvider, LUCIDE_ICONS,
   Plus, Upload, X, FileText,
@@ -7,6 +7,7 @@ import { MetricEvidenceType } from '../../../../admin/models/metric.model';
 import { MetricService } from '../../../../admin/services/metric.service';
 import { take } from 'rxjs';
 import { FormsModule } from '@angular/forms';
+import { FormatAmountPipe } from '../../../../../shared/pipes/format-amount.pipe';
 
 const EVIDENCE_TYPES = [
   'Collection Report',
@@ -24,7 +25,7 @@ const EVIDENCE_TYPES = [
 @Component({
   selector: 'app-add-evidence-dropdown',
   standalone: true,
-  imports: [FormsModule, LucideAngularModule],
+  imports: [FormsModule, LucideAngularModule, FormatAmountPipe],
   providers: [
     { provide: LUCIDE_ICONS, multi: true,
       useValue: new LucideIconProvider({ Plus, Upload, X, FileText }) },
@@ -41,7 +42,7 @@ export class AddEvidenceDropdownComponent {
   protected readonly modalOpen    = signal(false);
   protected readonly isDragging   = signal(false);
 
-  public evidenceUploadMaxFileSize = input<string>("20 MB");
+  public evidenceUploadMaxFileSize = input<string>("40 MB");
 
   protected selectedType = ('');
   protected readonly selectedFiles = signal<File[]>([]);
@@ -52,7 +53,17 @@ export class AddEvidenceDropdownComponent {
   public readonly evidenceTypeList = signal<MetricEvidenceType[]>([]);
 
   readonly filesSelected = output<{ type: string; files: FileList, evidenceType: string }>();
+  protected fileSizeExceeded = signal(false);
+  protected totalFileSize = signal(0);
 
+  constructor() {
+    effect(() => {
+      const selectedFiles = this.selectedFiles();
+
+      this.checkFileSize(selectedFiles); 
+    });
+
+  }
   protected openModal(): void {
     this.selectedType = ('');
     this.selectedFiles.set([]);
@@ -113,6 +124,17 @@ export class AddEvidenceDropdownComponent {
     this.selectedFiles.update(selected => [...selected, ...Array.from(files)]);
   }
 
+  protected removeFile(index: number): void {
+    this.selectedFiles.update(selected => 
+      selected.filter((_, i) => i !== index)
+    );
+  }
+
+  protected getFileSizeMB(sizeInBytes: number): string {
+    const sizeInMB = sizeInBytes / (1024 * 1024);
+    return sizeInMB.toFixed(2);
+  }
+
   protected onUpload(): void {
     const files = this.selectedFiles();
     if (!files.length) return;
@@ -129,5 +151,25 @@ export class AddEvidenceDropdownComponent {
   protected get fileLabel(): string {
     const f = this.selectedFiles();
     return f.length === 1 ? f[0].name : `${f.length} files selected`;
+  }
+
+  private checkFileSize(selectedFiles: File[]): void {
+    let totalFileSize = 0;
+    let fileSizeExceeded = false;
+    for (const file of selectedFiles) {
+      // convert to MB
+      totalFileSize += file.size; 
+      const fileSizeInMB = file.size / (1024 * 1024);
+      if (fileSizeInMB > parseFloat(this.evidenceUploadMaxFileSize().replace(' MB', ''))) {
+        fileSizeExceeded = true;
+        // return;
+      }
+    } 
+    const totalSizeInMB = totalFileSize / (1024 * 1024);
+      
+      this.totalFileSize.set(totalSizeInMB);
+
+    this.fileSizeExceeded.set(fileSizeExceeded); 
+
   }
 }

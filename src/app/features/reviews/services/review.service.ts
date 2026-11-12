@@ -26,6 +26,8 @@ import {
   StartEndRestatementDto,
   UpdateReviewMetricFRCommentDto,
   UpdateReviewApprovalAssigneeRequest,
+  ReviewEvidenceStatusDto,
+  ZeroRawValueBaselineCheckDTO,
 } from '../models/review.model';
 import {
   ApiResponse,
@@ -516,6 +518,18 @@ export class ReviewService {
     );
   }
 
+  getReviewEvidenceStatuses(
+    reviewId: number | string,
+    userId: number,
+  ): Observable<ReviewEvidenceStatusDto[]> {
+    const headers = new HttpHeaders().set('userId', String(userId));
+    return this.http
+      .get<
+        ApiResponse<ReviewEvidenceStatusDto[]>
+      >(`${this.apiUrl}/${reviewId}/evidences/refresh`, { headers })
+      .pipe(map((res) => res.data || []));
+  }
+
   deleteMetricEvidence(itemId: string, userId: number) {
     const headers = new HttpHeaders().set('userId', String(userId));
 
@@ -636,6 +650,12 @@ export class ReviewService {
         ApiResponse<ReviewMetricCodeForAdminL4ApprovalRejectionDto[]>
       >(this.apiUrl + '/GetReviewMetricCodesForAdminOrL4Approval/' + topicName + '/' + periodCode, { headers })
       .pipe(map((res) => res.data || []));
+  }
+
+  checkZeroRawValueBaseline(reviewId: number | string) {
+    return this.http.get<ApiResponse<ZeroRawValueBaselineCheckDTO[]>>(
+      this.apiUrl + '/CheckZeroRawValueBaseline/' + reviewId
+    );
   }
 
   generateExcelAndSendNotification(

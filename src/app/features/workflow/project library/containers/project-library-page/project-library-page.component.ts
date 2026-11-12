@@ -51,9 +51,11 @@ import {
 import { createAdminProjectsUiStore } from '../../../../admin/store/admin-projects-ui.store';
 import { PagedRequest } from '../../../../../core/models/api-response.model';
 import {
+  EMPTY,
   catchError,
   debounceTime,
   distinctUntilChanged,
+  filter,
   finalize,
   forkJoin,
   map,
@@ -75,9 +77,10 @@ import {
 } from '../../../../../core/models/lookup-model';
 import { LookupService } from '../../../../../core/services/lookup-service';
 import { PageLoadingService } from '../../../../../core/services/page-loading.service';
-import { Router } from '@angular/router';
+import { Router, NavigationStart } from '@angular/router';
 import { ButtonComponent } from '../../../../../shared/ui/button/button.component';
 import { ImpactMasterService } from '../../services/project-library-new.service';
+import { ProjectLibraryCacheService } from '../../services/project-library-cache.service';
 import { AuthorizationService, AuthStateService } from '../../../../../core/auth';
 import { ToastService } from '../../../../../shared/ui/toast/toast.service';
 import { DialogComponent } from '../../../../../shared/ui/dialog/dialog.component';
@@ -156,6 +159,7 @@ export class ProjectLibraryPageComponent implements OnInit {
   private readonly toast = inject(ToastService);
   readonly isMyProjects = signal(false);
   private readonly impactMasterService = inject(ImpactMasterService);
+  private readonly cacheService = inject(ProjectLibraryCacheService);
   private readonly destroyRef = inject(DestroyRef);
   readonly metricSvc = inject(MetricService);
   readonly store = createAdminProjectsUiStore();
@@ -193,6 +197,8 @@ export class ProjectLibraryPageComponent implements OnInit {
   readonly projectManagers = signal<ProjectManagerLookup[]>([]);
   // project - server-side typeahead
   readonly selectedImpactMasterId = signal<string | null>(null);
+  readonly selectedImpactMasterTitle = signal<string | null>(null);
+  readonly selectedImpactMasterPin = signal<string | null>(null);
   readonly impactMasterSearch$ = new Subject<string>();
   // ACTIONS --------------------------------------------------------
 
@@ -226,6 +232,7 @@ export class ProjectLibraryPageComponent implements OnInit {
   );
   // Funding recipient - server-side typeahead
   readonly selectedFundingRecipientId = signal<string | null>(null);
+  readonly selectedFundingRecipientName = signal<string | null>(null);
   readonly fundingRecipientSearch$ = new Subject<string>();
   readonly fundingRecipients$: Observable<FundingRecipientLookup[]> =
     this.fundingRecipientSearch$.pipe(
@@ -334,9 +341,63 @@ export class ProjectLibraryPageComponent implements OnInit {
     this.loadActionAccess();
     this.loading.set(true);
     this.loadLookups();
+    
+    // Listen to router navigation events to clear cache only when navigating away from project context
+    this.router.events
+      .pipe(
+        filter((event) => event instanceof NavigationStart),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe((event: any) => {
+        // Check if navigating to a route outside the project context
+        const targetUrl = event.url;
+        const isProjectRoute = 
+          targetUrl.includes('/admin/projects') || 
+          targetUrl.includes('/workflow/project-library');
+        
+        // Only clear cache if navigating away from project context
+        if (!isProjectRoute) {
+          this.cacheService.clearFilterState();
+        }
+      });
+    
+    // Restore filter state from cache
+    const cachedState = this.cacheService.getFilterState();
+    if (cachedState) {
+      this.searchQuery.set(cachedState.searchQuery || '');
+      this.selectedProgramId.set(cachedState.selectedProgramId || null);
+      this.selectedRecordTypeId.set(cachedState.selectedRecordTypeId || null);
+      this.selectedStatusId.set(cachedState.selectedStatusId || null);
+      this.selectedL1UserId.set(cachedState.selectedL1UserId || null);
+      this.selectedImpactMasterId.set(cachedState.selectedImpactMasterId || null);
+      this.selectedImpactMasterTitle.set(cachedState.selectedImpactMasterTitle || null);
+      this.selectedImpactMasterPin.set(cachedState.selectedImpactMasterPin || null);
+      this.selectedFundingRecipientId.set(cachedState.selectedFundingRecipientId || null);
+      this.selectedFundingRecipientName.set(cachedState.selectedFundingRecipientName || null);
+      this.selectedMetricCategories.set(cachedState.selectedMetricCategories || []);
+      this.isMyProjects.set(cachedState.isMyProjects || false);
+      this._currentPage.set(cachedState.currentPage || 0);
+      this._pageSize.set(cachedState.pageSize || 10);
+      
+      // If there's a cached impact master, trigger search to load its data
+      // Use PIN or ID as search term to find the exact match
+      if (cachedState.selectedImpactMasterId) {
+        const searchTerm = cachedState.selectedImpactMasterPin || cachedState.selectedImpactMasterTitle;
+        if (searchTerm) {
+          this.impactMasterSearchTerm.set(searchTerm);
+          // Trigger search with a slight delay to ensure observables are ready
+          setTimeout(() => {
+            this.impactMasterSearch$.next(searchTerm);
+          }, 100);
+        }
+      }
+    }
+    
     this.refreshImpactMasters();
     this.loadImpactMasterFilterOptions();
   }
+
+
   private loadActionAccess(): void {
     const userId = this.authStateService.getCurrentUserId();
 
@@ -427,10 +488,12 @@ export class ProjectLibraryPageComponent implements OnInit {
           this.totalPages.set(pagedData.totalPages);
 
           this._allImpactMasters.set(
-            pagedData.items.map((p: any) => ({
-              ...p,
-              metricCategoryList: p.metricCategories ? p.metricCategories.split(',') : [],
-            })),
+            pagedData.items
+              .filter((p: any) => p.statusName?.toLowerCase() !== 'draft')
+              .map((p: any) => ({
+                ...p,
+                metricCategoryList: p.metricCategories ? p.metricCategories.split(',') : [],
+              })),
           );
         },
         error: (err) => console.error(err),
@@ -527,14 +590,14 @@ export class ProjectLibraryPageComponent implements OnInit {
   onSearchChange(q: string): void {
     this.searchQuery.set(q);
     this._currentPage.set(0);
-
+    this.saveFilterStateToCache();
     this.refreshImpactMasters();
   }
 
   onPageChange(params: PagedRequest): void {
     this._currentPage.set(params.page);
     this._pageSize.set(params.pageSize);
-
+    this.saveFilterStateToCache();
     this.refreshImpactMasters();
   }
   // No longer needed - using Observable directly with async pipe
@@ -547,12 +610,25 @@ export class ProjectLibraryPageComponent implements OnInit {
     }
 
     this._currentPage.set(0);
+    this.saveFilterStateToCache();
     this.refreshImpactMasters();
+  }
+
+  onImpactMasterChange(item: any): void {
+    if (item) {
+      this.selectedImpactMasterTitle.set(item.title || null);
+      this.selectedImpactMasterPin.set(item.pin || null);
+      this.saveFilterStateToCache();
+    } else {
+      this.selectedImpactMasterTitle.set(null);
+      this.selectedImpactMasterPin.set(null);
+    }
   }
 
   onProgramFilterChange(value: string | null): void {
     this.selectedProgramId.set(value);
     this._currentPage.set(0);
+    this.saveFilterStateToCache();
     this.refreshImpactMasters();
     this.loadImpactMasterFilterOptions();
   }
@@ -560,6 +636,7 @@ export class ProjectLibraryPageComponent implements OnInit {
   onRecordTypeFilterChange(value: string | null): void {
     this.selectedRecordTypeId.set(value);
     this._currentPage.set(0);
+    this.saveFilterStateToCache();
     this.refreshImpactMasters();
     this.loadImpactMasterFilterOptions();
   }
@@ -567,11 +644,13 @@ export class ProjectLibraryPageComponent implements OnInit {
   onStatusFilterChange(value: string | null): void {
     this.selectedStatusId.set(value);
     this._currentPage.set(0);
+    this.saveFilterStateToCache();
     this.refreshImpactMasters();
     this.loadImpactMasterFilterOptions();
   }
   onFundingRecipientFilterChange(value: string | null): void {
     this.selectedFundingRecipientId.set(value);
+    this.saveFilterStateToCache();
 
     if (!value) {
       this._currentPage.set(0);
@@ -589,6 +668,7 @@ export class ProjectLibraryPageComponent implements OnInit {
     this.selectedL1UserId.set(checked ? String(this.currentLoggedInUserId) : null);
 
     this._currentPage.set(0);
+    this.saveFilterStateToCache();
     this.refreshImpactMasters();
   }
   applyFilters(): void {
@@ -596,7 +676,26 @@ export class ProjectLibraryPageComponent implements OnInit {
     this.refreshImpactMasters();
   }
 
-  clearFilters(): void {
+  private saveFilterStateToCache(): void {
+    this.cacheService.saveFilterState({
+      searchQuery: this.searchQuery(),
+      selectedProgramId: this.selectedProgramId(),
+      selectedRecordTypeId: this.selectedRecordTypeId(),
+      selectedStatusId: this.selectedStatusId(),
+      selectedL1UserId: this.selectedL1UserId(),
+      selectedImpactMasterId: this.selectedImpactMasterId(),
+      selectedImpactMasterPin: this.selectedImpactMasterPin(),
+      selectedImpactMasterTitle: this.selectedImpactMasterTitle(),
+      selectedFundingRecipientId: this.selectedFundingRecipientId(),
+      selectedFundingRecipientName: this.selectedFundingRecipientName(),
+      selectedMetricCategories: this.selectedMetricCategories(),
+      isMyProjects: this.isMyProjects(),
+      currentPage: this._currentPage(),
+      pageSize: this._pageSize(),
+    });
+  }
+
+    clearFilters(): void {
     this.searchQuery.set('');
     this.impactMasterSearchTerm.set('');
 
@@ -616,11 +715,15 @@ export class ProjectLibraryPageComponent implements OnInit {
 
     this._currentPage.set(0);
 
+    // Clear cache when filters are cleared
+    this.cacheService.clearFilterState();
+    
     this.refreshImpactMasters();
     this.loadImpactMasterFilterOptions();
   }
   onPmFilterChange(value: string | null): void {
     this.selectedL1UserId.set(value);
+    this.saveFilterStateToCache();
 
     if (!value) {
       this._currentPage.set(0);
@@ -816,7 +919,6 @@ export class ProjectLibraryPageComponent implements OnInit {
     Other: 'bg-[hsl(var(--aepw-dark-grey)/0.12)] text-[hsl(var(--aepw-dark-grey))]',
   };
   protected readonly statusColors: Record<string, string> = {
-    Draft: 'bg-[hsl(var(--aepw-yellow)/0.12)] text-[hsl(var(--aepw-yellow))]',
     'Active with reporting': 'bg-[hsl(var(--aepw-green)/0.12)] text-[hsl(var(--aepw-green))]',
 
     'Active with no reporting': 'bg-[hsl(var(--aepw-blue)/0.12)] text-[hsl(var(--aepw-blue))]',

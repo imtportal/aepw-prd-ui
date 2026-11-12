@@ -581,6 +581,13 @@ export class EvidenceReviewComponent implements OnInit, HasUnsavedChanges {
         },
       });
   }
+  isReportingRequired(value: boolean | number | string | null | undefined): boolean {
+    return (
+      String(value ?? '')
+        .trim()
+        .toLowerCase() !== 'not required'
+    );
+  }
   isWithinReporting(value: boolean | number | string | null | undefined): boolean {
     if (typeof value === 'boolean') {
       return value;

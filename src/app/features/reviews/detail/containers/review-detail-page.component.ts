@@ -21,7 +21,7 @@ import { ReviewService } from '../../services/review.service';
 import { EvidenceService } from '../../../evidence/services/evidence.service';
 import { AuditService } from '../../../audit/services/audit.service';
 import { AIProcessingService } from '../../../ai-processing/services/ai-processing.service';
-import { MetricRow, RecallTopLevelMetricInput, ReviewCommentDto, ReviewDetailDto, ReviewDetailPageActionKey, ReviewDto, ReviewItem, ReviewPageRole, StartEndRestatementDto, UpdateReviewMetricsValuesDto } from '../../models/review.model';
+import { MetricRow, RecallTopLevelMetricInput, ReviewCommentDto, ReviewDetailDto, ReviewDetailPageActionKey, ReviewDto, ReviewItem, ReviewPageRole, StartEndRestatementDto, UpdateReviewMetricsValuesDto, ZeroRawValueBaselineCheckDTO } from '../../models/review.model';
 import { ReviewDetailTabData, ApprovalStepId } from '../review-detail.types';
 import { ReviewHeaderComponent } from '../components/review-header/review-header.component';
 import { CategorySummaryBarComponent } from '../components/category-summary-bar/category-summary-bar.component';
@@ -150,6 +150,8 @@ export class ReviewDetailPageComponent {
   });
 
   protected showRestatementButton = signal<boolean>(true); 
+  protected zeroRawValueBaselineCheck = signal<{ [ metricCode: string ]: ZeroRawValueBaselineCheckDTO }>({});
+
   constructor() {
     effect(() => {
       // setInterval(() => {
@@ -184,7 +186,9 @@ export class ReviewDetailPageComponent {
           }
           
           // ("review.atleastonemetricassigned: " + review.atLeastOneMetricAssigned)
+        this.checkZeroRawValueBaseline();
         });
+
 
         // const userId = this.getUserId();
         if (userId) {
@@ -718,6 +722,23 @@ export class ReviewDetailPageComponent {
     
     
     this.baselineRawValueForMetricIds_RS = $event;
+  }
+
+  checkZeroRawValueBaseline() {
+    const reviewId = this.reviewDetail()?.reviewId;
+    if (reviewId) {
+      this.svc.checkZeroRawValueBaseline(reviewId)
+        .pipe(take(1))
+        .subscribe((res) => {
+          console.log("ZeroRawValueBaselineCheck", res.data || []);
+          const data = res.data || [];
+          const mapped: { [ metricCode: string ]: ZeroRawValueBaselineCheckDTO } = {};
+          for (const item of data){
+            mapped[item.metricCode] = item;
+          }
+          this.zeroRawValueBaselineCheck.set(mapped);
+        });
+    }
   }
   
 }

@@ -98,11 +98,17 @@ export class DashboardPageComponent {
 
   selectedCategory = signal<string>('ALL');
 
-  periodCode = computed(() => `${this.selectedYear()}-${this.selectedPeriod()
+  // periodCode = computed(() => `${this.selectedYear()}-${this.selectedPeriod()
 
-    }`
+  //   }`
 
-  );
+  // );
+  periodCode = computed(() => {
+  const year = this.selectedYears()[0];
+  const period = this.selectedPeriods()[0];
+
+  return year && period ? `${year}-${period}` : '';
+});
 
 
   periodStartDate = signal<string>('');
@@ -751,18 +757,18 @@ export class DashboardPageComponent {
   private formatNumber(value: number): string {
   if (Math.abs(value) >= 1_000_000) {
     return `${(value / 1_000_000).toLocaleString('en-US', {
-      maximumFractionDigits: 2
+      maximumFractionDigits: 3
     })}M`;
   }
 
   if (Math.abs(value) >= 1_000) {
     return `${(value / 1_000).toLocaleString('en-US', {
-      maximumFractionDigits: 2
+      maximumFractionDigits: 3
     })}K`;
   }
 
   return value.toLocaleString('en-US', {
-    maximumFractionDigits: 2
+    maximumFractionDigits: 3
   });
 }
 
@@ -820,70 +826,141 @@ export class DashboardPageComponent {
 
 
 
+  // mapPeriodCodeDates(): void {
+  //   const period = this.periodCode();
+
+  //   const [yearString, periodType] = period.split('-');
+  //   const year = Number(yearString);
+
+  //   if (!year || !periodType) {
+  //     this.periodStartDate.set('');
+  //     this.periodEndDate.set('');
+  //     return;
+  //   }
+
+  //   let startMonth: number;
+  //   let endMonth: number;
+
+  //   switch (periodType) {
+  //     case 'Q1':
+  //       startMonth = 0;
+  //       endMonth = 2;
+  //       break;
+
+  //     case 'Q2':
+  //       startMonth = 3;
+  //       endMonth = 5;
+  //       break;
+
+  //     case 'Q3':
+  //       startMonth = 6;
+  //       endMonth = 8;
+  //       break;
+
+  //     case 'Q4':
+  //       startMonth = 9;
+  //       endMonth = 11;
+  //       break;
+
+  //     case 'A':
+  //       startMonth = 0;
+  //       endMonth = 11;
+  //       break;
+
+  //     default:
+  //       this.periodStartDate.set('');
+  //       this.periodEndDate.set('');
+  //       return;
+  //   }
+
+  //   const startDate = new Date(year, startMonth, 1);
+
+  //   // Day 0 of the next month gives the last day of the current month
+  //   const endDate = new Date(year, endMonth + 1, 0);
+
+  //   const formatDate = (date: Date): string => {
+  //     const yyyy = date.getFullYear();
+  //     const mm = String(date.getMonth() + 1).padStart(2, '0');
+  //     const dd = String(date.getDate()).padStart(2, '0');
+
+  //     // return `${yyyy}-${mm}-${dd}T00:00:00`;
+  //     return `${yyyy}-${mm}-${dd}`;
+  //   };
+
+  //   this.periodStartDate.set(formatDate(startDate));
+  //   this.periodEndDate.set(formatDate(endDate));
+
+  //   console.log('Mapped Period Code to Dates:', {
+  //     period,
+  //     startDate: this.periodStartDate(),
+  //     endDate: this.periodEndDate()
+  //   });
+
+  //   debugger;
+  // }
+
   mapPeriodCodeDates(): void {
-    const period = this.periodCode();
+  const years = this.selectedYears()
+    .map(Number)
+    .filter(year => Number.isInteger(year) && year > 0)
+    .sort((a, b) => a - b);
 
-    const [yearString, periodType] = period.split('-');
-    const year = Number(yearString);
+  const selectedPeriods = this.selectedPeriods();
+  const quarterOrder = { Q1: 1, Q2: 2, Q3: 3, Q4: 4 } as const;
 
-    if (!year || !periodType) {
-      this.periodStartDate.set('');
-      this.periodEndDate.set('');
-      return;
-    }
+  const quarters = selectedPeriods
+    .filter(
+      (period): period is keyof typeof quarterOrder =>
+        period === 'Q1' ||
+        period === 'Q2' ||
+        period === 'Q3' ||
+        period === 'Q4'
+    )
+    .sort((a, b) => quarterOrder[a] - quarterOrder[b]);
 
-    let startMonth: number;
-    let endMonth: number;
-
-    switch (periodType) {
-      case 'Q1':
-        startMonth = 0;
-        endMonth = 2;
-        break;
-
-      case 'Q2':
-        startMonth = 3;
-        endMonth = 5;
-        break;
-
-      case 'Q3':
-        startMonth = 6;
-        endMonth = 8;
-        break;
-
-      case 'Q4':
-        startMonth = 9;
-        endMonth = 11;
-        break;
-
-      case 'A':
-        startMonth = 0;
-        endMonth = 11;
-        break;
-
-      default:
-        this.periodStartDate.set('');
-        this.periodEndDate.set('');
-        return;
-    }
-
-    const startDate = new Date(year, startMonth, 1);
-
-    // Day 0 of the next month gives the last day of the current month
-    const endDate = new Date(year, endMonth + 1, 0);
-
-    const formatDate = (date: Date): string => {
-      const yyyy = date.getFullYear();
-      const mm = String(date.getMonth() + 1).padStart(2, '0');
-      const dd = String(date.getDate()).padStart(2, '0');
-
-      // return `${yyyy}-${mm}-${dd}T00:00:00`;
-      return `${yyyy}-${mm}-${dd}`;
-    };
-
-    this.periodStartDate.set(formatDate(startDate));
-    this.periodEndDate.set(formatDate(endDate));
+  if (years.length === 0 || (selectedPeriods.length === 0 && quarters.length === 0)) {
+    this.periodStartDate.set('');
+    this.periodEndDate.set('');
+    return;
   }
+
+  // Annual is selected exclusively by onPeriodChange().
+  const isAnnual = selectedPeriods.includes('A');
+
+  if (!isAnnual && quarters.length === 0) {
+    this.periodStartDate.set('');
+    this.periodEndDate.set('');
+    return;
+  }
+
+  const startYear = years[0];
+  const endYear = years[years.length - 1];
+
+  const startMonth = isAnnual ? 0 : (quarterOrder[quarters[0]] - 1) * 3;
+  const endMonth = isAnnual ? 11 : quarterOrder[quarters[quarters.length - 1]] * 3 - 1;
+
+  const startDate = new Date(startYear, startMonth, 1);
+  const endDate = new Date(endYear, endMonth + 1, 0);
+
+  const formatDate = (date: Date): string => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+
+    return `${year}-${month}-${day}`;
+  };
+
+  this.periodStartDate.set(formatDate(startDate));
+  this.periodEndDate.set(formatDate(endDate));
+
+      console.log('Mapped Period Code to Dates:', {
+      // period,
+      startDate: this.periodStartDate(),
+      endDate: this.periodEndDate()
+    });
+
+    debugger;
+}
   // ----------------------------------Search and filter----------------------------------------------
   onGlobalSearchClick() { }
 

@@ -134,7 +134,7 @@ formatValue(value: string | number | null | undefined): string {
 
 private formatNumber(value: number): string {
   return new Intl.NumberFormat('en-US', {
-    maximumFractionDigits: 2
+    maximumFractionDigits: 3
   }).format(value);
 }
 

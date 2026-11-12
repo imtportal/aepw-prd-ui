@@ -55,16 +55,19 @@ import {
   ReviewMetricsByIdSourceNames,
 } from './review-metrics-by-id.types';
 import { ReviewService } from '../../../services/review.service';
+import { EvidenceReviewService } from '../../../services/evidence-review.service';
 import { FormsModule } from '@angular/forms';
 import {
   EvidenceDto,
   ReviewApprovalProgressDto,
+  ReviewEvidenceStatusDto,
   ReviewDto,
   RecallTopLevelMetricInput,
   StartEndRestatementDto,
   ReviewMetricApproveRejectDto,
   UpdateReviewMetricFRCommentDto,
   UpdateReviewMetricsValuesDto,
+  ZeroRawValueBaselineCheckDTO,
 } from '../../../models/review.model';
 import {
   EMPTY,
@@ -90,6 +93,7 @@ import { LookupService } from '../../../../../core/services/lookup-service';
 import { AppUserLookup } from '../../../../../core/models/lookup-model';
 import { DialogComponent } from '../../../../../shared/ui/dialog/dialog.component';
 import { ModalComponent } from '../../../../../shared/ui/modal/modal.component';
+import { TooltipModule } from 'primeng/tooltip';
 import { MetricEvidenceType } from '../../../../admin/models/metric.model';
 import { FormatAmountPipe } from '../../../../../shared/pipes/format-amount.pipe';
 import { FileSizeAsString } from '../../../../../shared/pipes/file-size-as-string.pipe';
@@ -109,6 +113,7 @@ import { ActionAccess } from '../../../../../core/auth/models/authorization.mode
     NgSelectComponent,
     DialogComponent,
     ModalComponent,
+    TooltipModule,
     FormatAmountPipe,
     FileSizeAsString,
   ],
@@ -165,6 +170,9 @@ export class ReviewMetricsByIdComponent {
   public sourcePage = input<ReviewMetricsByIdSourceNames>(
     this.reviewMetricsByIdSourceNames.ReviewDetail,
   );
+  
+  public zeroRawValueBaselineCheck = input<{ [ metricCode: string ]: ZeroRawValueBaselineCheckDTO }>({});
+
   readonly reviewId = input.required<string | number>();
   readonly stageId = input.required<number | null>();
   readonly refreshReviewMetricsData = input.required<boolean>();
@@ -177,6 +185,7 @@ export class ReviewMetricsByIdComponent {
 
   private readonly metricsSvc = inject(ReviewMetricsByIdService);
   protected readonly reviewSvc = inject(ReviewService);
+  protected readonly evidenceReviewService = inject(EvidenceReviewService);
   protected readonly toastService = inject(ToastService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
@@ -186,6 +195,7 @@ export class ReviewMetricsByIdComponent {
   });
   private readonly pendingMetricScroll = signal<string | null>(null);
   private focusedMetricKey: string | null = null;
+  private uiStateRestored = false;
 
   // public evidenceTypeList = signal<MetricEvidenceType[]>([]);
 
@@ -216,6 +226,8 @@ export class ReviewMetricsByIdComponent {
 
   protected baselineConfirmationModalOpen = signal<boolean>(false);
   protected updatingVT = signal<{ [metricCode: string]: boolean }>({});
+  protected readonly evidenceConfidenceScores = signal<Record<number, number>>({});
+  protected readonly evidenceConfidenceTooltip = '<div>AI confidence scores are categorized as follows:</div><ul style="margin:0.25rem 0 0;padding-left:1.25rem"><li style="color:#f87171"><strong>Red (&lt;61%):</strong> <span style="color:#fff">Low confidence – Flagged for manual review by the CPM.</span></li><li style="color:#fbbf24"><strong>Amber (61%–80%):</strong> <span style="color:#fff">Moderate confidence.</span></li><li style="color:#4ade80"><strong>Green (81%–100%):</strong> <span style="color:#fff">High confidence.</span></li></ul>';
   protected readonly categoryTabs = computed<ReviewMetricsCategorySummary[]>(
     () => this.reviewData()?.categories ?? [],
   );
@@ -240,6 +252,7 @@ export class ReviewMetricsByIdComponent {
   // );
 
   public showRecallButton = input<boolean>(false);
+  public showRecallAfterClosedButton = input<boolean>(false);
   public showRestatementButton = input<boolean>(false);
 
   public showViewProgressButton = input<boolean>(false);
@@ -324,7 +337,10 @@ export class ReviewMetricsByIdComponent {
     effect(() => {
       const metricCode = this.queryParams().get('tlm')?.trim() ?? '';
       const review = this.reviewData();
-      untracked(() => this.focusRequestedMetric(metricCode, review));
+      untracked(() => {
+        this.restoreUiState(metricCode, review);
+        this.focusRequestedMetric(metricCode, review);
+      });
 
       this.updateTotalVisibleMetricsForCategory();
     });
@@ -410,6 +426,75 @@ export class ReviewMetricsByIdComponent {
 
       onCleanup(() => sub.unsubscribe());
     });
+  }
+
+  private get uiStateStorageKey(): string {
+    return `aepw.reviewMetricsUiState.${this.normalizedReviewId()}.${this.stageId() ?? ''}`;
+  }
+
+  // Persists the expansion/category state so it survives navigating to Evidence Review.
+  private saveUiState(): void {
+    try {
+      const state = {
+        category: this.activeCategoryCode(),
+        top: [...this.expandedTopMetrics()].filter(([, expanded]) => expanded).map(([code]) => code),
+        l1: [...this.expandedSubMetrics()],
+      };
+      sessionStorage.setItem(this.uiStateStorageKey, JSON.stringify(state));
+    } catch {
+      // Storage unavailable; the page simply starts with its default state.
+    }
+  }
+
+  // One-shot restore, applied once the metrics for this review are loaded.
+  private restoreUiState(deepLinkMetricCode: string, review: ReviewMetricsPageData | null): void {
+    if (this.uiStateRestored || !review || review.reviewId !== this.normalizedReviewId()) {
+      return;
+    }
+    this.uiStateRestored = true;
+
+    const key = this.uiStateStorageKey;
+    let saved: { category?: unknown; top?: unknown; l1?: unknown } | null = null;
+    try {
+      const raw = sessionStorage.getItem(key);
+      sessionStorage.removeItem(key);
+      saved = raw ? JSON.parse(raw) : null;
+    } catch {
+      return;
+    }
+
+    if (deepLinkMetricCode || !saved || typeof saved !== 'object') {
+      return;
+    }
+
+    const toCodes = (value: unknown): string[] =>
+      Array.isArray(value) ? value.filter((code): code is string => typeof code === 'string') : [];
+    const savedTop = new Set(toCodes(saved.top));
+    const savedL1 = new Set(toCodes(saved.l1));
+
+    if (
+      typeof saved.category === 'string' &&
+      review.categories.some((category) => category.code === saved.category)
+    ) {
+      this.activeCategoryCode.set(saved.category);
+    }
+
+    const topMetrics = review.topMetrics ?? [];
+    this.expandedTopMetrics.set(
+      new Map(
+        topMetrics
+          .filter((metric) => savedTop.has(metric.metricCode))
+          .map((metric) => [metric.metricCode, true] as const),
+      ),
+    );
+    this.expandedSubMetrics.set(
+      new Set(
+        topMetrics
+          .flatMap((metric) => metric.l1Metrics ?? [])
+          .map((child) => child.metricCode)
+          .filter((code) => savedL1.has(code)),
+      ),
+    );
   }
 
   private focusRequestedMetric(metricCode: string, review: ReviewMetricsPageData | null): void {
@@ -806,17 +891,19 @@ export class ReviewMetricsByIdComponent {
 
   protected riskAdjustedValue(metric: ReviewMetricDto): string {
     const reported = Number(metric.rawValue);
+    const baseline = Number(metric.baseline ?? 0);
     const riskPercent = Number(metric.riskOriginal ?? 0);
     if (
       metric.rawValue === null ||
       metric.rawValue === undefined ||
-      // !Number.isFinite(reported) ||
+      !Number.isFinite(reported) ||
+      !Number.isFinite(baseline) ||
       !Number.isFinite(riskPercent)
     ) {
       return '—';
     }
 
-    return this.formatNumber((reported * riskPercent) / 100);
+    return this.formatNumber(((reported - baseline) * riskPercent) / 100);
   }
 
   protected displayValue(metric: ReviewMetricsSubMetric): string {
@@ -833,6 +920,57 @@ export class ReviewMetricsByIdComponent {
     }
 
     return 'text-muted-foreground';
+  }
+
+  protected getEvidenceConfidenceClass(evidenceId: number): string {
+    const cached = this.evidenceConfidenceScores()[evidenceId];
+    if (cached !== undefined) {
+      return this.getColorClassByConfidence(cached);
+    }
+
+    const userId = this.getUserId();
+    if (!userId) {
+      return '';
+    }
+
+    this.loadEvidenceConfidenceScore(evidenceId, userId);
+
+    return '';
+  }
+
+  private loadEvidenceConfidenceScore(evidenceId: number, userId: number): void {
+    this.evidenceReviewService
+      .getEvidenceReviewById(evidenceId, userId)
+      .pipe(take(1))
+      .subscribe({
+        next: (response) => {
+          const confidenceScore =
+            response.headerData?.extractionSummary?.avgConfidenceScore ?? 0;
+          this.evidenceConfidenceScores.update((scores) => ({
+            ...scores,
+            [evidenceId]: confidenceScore,
+          }));
+        },
+        error: (err) => console.error('Failed to load evidence confidence score:', err),
+      });
+  }
+
+  protected getColorClassByConfidence(confidenceScore: number): string {
+    const confidencePercentage = confidenceScore * 100;
+
+    // if(confidencePercentage <= 0) {
+    //   return 'bg-white-100';
+    // }
+
+    if (confidencePercentage >= 81 && confidencePercentage <= 100) {
+      return 'bg-green-100';
+    }
+
+    if (confidencePercentage >= 61 && confidencePercentage < 81) {
+      return 'bg-amber-100';
+    }
+
+    return 'bg-red-100';
   }
 
   protected trackByCategory(_index: number, category: { code: string }): string {
@@ -1586,17 +1724,98 @@ export class ReviewMetricsByIdComponent {
     }
   }
 
+  protected readonly refreshingEvidenceStatuses = signal(false);
+
+  protected refreshEvidenceStatuses(): void {
+    if (this.refreshingEvidenceStatuses()) {
+      return;
+    }
+
+    const userId = this.getUserId();
+    if (!userId) {
+      this.toastService.error('User ID not found. Please log in again.');
+      return;
+    }
+
+    this.refreshingEvidenceStatuses.set(true);
+    this.reviewSvc
+      .getReviewEvidenceStatuses(this.normalizedReviewId(), userId)
+      .pipe(
+        take(1),
+        finalize(() => this.refreshingEvidenceStatuses.set(false)),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe({
+        next: (statuses) => {
+          this.applyEvidenceStatuses(statuses);
+          this.refreshEvidenceConfidenceScores(statuses, userId);
+          this.toastService.success('Evidence statuses refreshed.');
+        },
+        error: () => this.toastService.error('Failed to refresh evidence status. Please try again.'),
+      });
+  }
+
+  // Confidence scores are cached per evidence; reload the cached ones so the
+  // Evidenced Value background colour follows the refreshed data.
+  private refreshEvidenceConfidenceScores(
+    statuses: ReviewEvidenceStatusDto[],
+    userId: number,
+  ): void {
+    const cached = this.evidenceConfidenceScores();
+    for (const { evidenceId } of statuses) {
+      if (cached[evidenceId] !== undefined) {
+        this.loadEvidenceConfidenceScore(evidenceId, userId);
+      }
+    }
+  }
+
+  private applyEvidenceStatuses(statuses: ReviewEvidenceStatusDto[]): void {
+    const reviewData = this.reviewData();
+    if (!reviewData || statuses.length === 0) {
+      return;
+    }
+
+    const statusByEvidenceId = new Map(statuses.map((s) => [s.evidenceId, s]));
+
+    const topMetrics = (reviewData.topMetrics ?? []).map((topMetric) => ({
+      ...topMetric,
+      l1Metrics: (topMetric.l1Metrics ?? []).map((l1Metric) => ({
+        ...l1Metric,
+        evidences: l1Metric.evidences?.map((evidence) => {
+          const latest = statusByEvidenceId.get(evidence.evidenceId);
+          return latest
+            ? {
+                ...evidence,
+                status: latest.status,
+                statusDisplayValue: latest.statusDisplayValue,
+                statusBadgeColor: latest.statusBadgeColor,
+                statusTextColor: latest.statusTextColor,
+                evidencedValue: latest.evidencedValue ?? undefined,
+              }
+            : evidence;
+        }),
+      })),
+    }));
+
+    this.reviewData.set({ ...reviewData, topMetrics });
+  }
+
   viewEvidence(evidence: EvidenceDto): void {
     if (!this.authState.hasPageAccess('EVIDENCEREVIEW')) {
       this.toastService.error('You do not have access to Evidence Review Page');
       return;
     }
 
+    this.saveUiState();
     this.router.navigate(['/reviews/evidence-review'], {
       queryParams: {
         evidenceId: evidence.evidenceId,
         returnUrl: this.router.url,
       },
+      fragment: undefined,
+    }).then(() => {
+      // Scroll to top of the page
+      window.scrollTo(0, 0);
     });
 
     // if (!evidence.fileUriView) {
@@ -1831,6 +2050,12 @@ export class ReviewMetricsByIdComponent {
       expanded: this.detailsExpanded(),
     });
   }
+
+
+  recallActionAfterClosed(topMetric: ReviewMetricsTopMetric) {
+
+  }
+
 
   recallAction(topMetric: ReviewMetricsTopMetric) {
     if (this.recallStagesLoading() || this.recallModalOpen()) {

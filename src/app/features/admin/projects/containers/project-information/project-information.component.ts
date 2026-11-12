@@ -601,7 +601,7 @@ export class ProjectInformationComponent implements OnInit, HasUnsavedChanges {
       this.isEditMode.set(true);
       console.log(impactMasterId);
       this.impactMasterId.set(impactMasterId);
-      this.loadReviewIds(impactMasterId);
+      // this.loadReviewIds(impactMasterId); // commnet out cause we are loading review ids in loadInitialData() function
       this.loadLookups(impactMasterId);
       this.loadProject(impactMasterId);
     } else {

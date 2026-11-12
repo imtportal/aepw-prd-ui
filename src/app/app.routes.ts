@@ -22,6 +22,12 @@ export const routes: Routes = [
       //     ),
       // },
       {
+        path: 'unauthorized',
+        data: { title: 'Access Denied' },
+        loadComponent: () =>
+          import('./core/pages/unauthorized.component').then((m) => m.UnauthorizedComponent),
+      },
+      {
         path: 'reviews',
         loadChildren: () =>
           import('./features/reviews/reviews.routes').then((m) => m.reviewsRoutes),

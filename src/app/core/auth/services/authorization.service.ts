@@ -3,17 +3,14 @@ import { HttpClient } from '@angular/common/http';
 import { catchError, map, Observable, tap, throwError } from 'rxjs';
 
 import { ApiResponse } from '../../models/api-response.model';
-import { ActionAccess, LoginContext } from '../models/authorization.model';
+import { ActionAccess, LoginContext, PageAccess } from '../models/authorization.model';
 import { environment } from '../../../../environments/environment';
 import { checkTrailingSlash } from '../../../shared/utils/checkTrailingSlash';
-import { AuthStateService } from '../state/auth.state';
 
 @Injectable({
   providedIn: 'root',
 })
 export class AuthorizationService {
-  private readonly authStateService = inject(AuthStateService);
-  private userId = this.authStateService.getCurrentUserId();
   private readonly http = inject(HttpClient);
   private readonly apiUrl = checkTrailingSlash(environment.apiBaseUrl) + 'authorization';
 
@@ -35,6 +32,20 @@ export class AuthorizationService {
       }),
     );
   }
+
+  /** Always hits the backend so revoked permissions take effect on the next navigation. */
+  getPageAccess(pageKey: string, userId: number): Observable<ApiResponse<PageAccess | null>> {
+    const url = `${this.apiUrl}/user/${userId}/page/${encodeURIComponent(pageKey)}/access`;
+
+    return this.http.get<ApiResponse<PageAccess | null>>(url).pipe(
+      catchError((error) => {
+        console.error('[Authorization] Page access API failed:', error);
+
+        return throwError(() => error);
+      }),
+    );
+  }
+
   getActionAccess(pageKey: string, userId: number): Observable<ApiResponse<ActionAccess[]>> {
     const url = `${this.apiUrl}/user/${userId}/page/${pageKey}/actions`;
 
