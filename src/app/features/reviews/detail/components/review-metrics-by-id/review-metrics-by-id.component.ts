@@ -68,6 +68,7 @@ import {
   UpdateReviewMetricFRCommentDto,
   UpdateReviewMetricsValuesDto,
   ZeroRawValueBaselineCheckDTO,
+  WeightedConfidenceScorePercentDTO,
 } from '../../../models/review.model';
 import {
   EMPTY,
@@ -331,6 +332,9 @@ export class ReviewMetricsByIdComponent {
   private readonly recallConfirmationAction = new Subject<void>();
   private recallConfirmationSubscription = new Subscription();
 
+  protected weightedConfidencePercent = signal<{ [metricCode: string]: WeightedConfidenceScorePercentDTO }>( {} );
+  protected weightedConfidencePercentLoading = signal<boolean>(false);
+
   constructor() {
     this.destroyRef.onDestroy(() => this.recallConfirmationSubscription.unsubscribe());
 
@@ -398,6 +402,25 @@ export class ReviewMetricsByIdComponent {
       const refreshReviewMetricsData = this.refreshReviewMetricsData();
       this.refreshReviewData();
     });
+
+    effect(() => {
+      const normalizedReviewId = this.normalizedReviewId()
+
+      this.weightedConfidencePercentLoading.set(true);
+      this.reviewSvc.getWeightedConfidencePercent(+normalizedReviewId)
+      .pipe(take(1))
+      .subscribe(weightedConfidenceList => {
+        const weightedConfidencePercent: { [metricCode: string]: WeightedConfidenceScorePercentDTO; } = {};
+        for (const conf of weightedConfidenceList) {
+          weightedConfidencePercent[conf.metricCode] = conf;
+        }
+
+        this.weightedConfidencePercent.set(weightedConfidencePercent);
+        this.weightedConfidencePercentLoading.set(false);
+      }, () => {
+        this.weightedConfidencePercentLoading.set(false);
+      })
+    })
 
     effect((onCleanup) => {
       const userId = this.getUserId() || 0;
@@ -581,7 +604,7 @@ export class ReviewMetricsByIdComponent {
 
   ////////////////////////////////////////////////////////////////////////
   protected categoryPendingCount = signal<{
-    [categoryCode: string]: { totalCount: number; doneCount: number };
+    [categoryCode: string]: { totalCount: number; doneCount: number; someRejected?: boolean };
   }>({});
 
   onEditAssigneeUser(row: ReviewApprovalProgressDto): void {
@@ -2180,7 +2203,7 @@ export class ReviewMetricsByIdComponent {
   calculateCategoryPendingCounts() {
     // this.categoryPendingCount.set({});
     const categoryPendingCount = {} as {
-      [categoryCode: string]: { totalCount: number; doneCount: number };
+      [categoryCode: string]: { totalCount: number; doneCount: number; someRejected?: boolean };
     };
     const reviewData = this.reviewData();
 
@@ -2242,7 +2265,9 @@ export class ReviewMetricsByIdComponent {
         totalCount: (categoryPendingCount[metric.categoryCode]?.totalCount || 0) + 1,
         doneCount:
           (categoryPendingCount[metric.categoryCode]?.doneCount || 0) +
-          (metric.status?.toLowerCase() == 'approved' ? 1 : 0),
+          ((metric.status?.toLowerCase() == 'approved' || metric.status?.toLowerCase() == 'rejected') ? 1 : 0),
+
+        someRejected: (categoryPendingCount[metric.categoryCode]?.someRejected || false) || (metric.status?.toLowerCase() == 'rejected'),
       };
     }
 

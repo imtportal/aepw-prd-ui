@@ -90,9 +90,18 @@ export class ImpactMasterService {
 
   //////////////////////////////////////////////////////////////////////////////////////////
   // Get ImpactMaster details by ImpactMaster id
-  getImpactMasterById(ImpactMasterId: string): Observable<ApiResponse<ImpactMasterDetailModel>> {
+  getImpactMasterById(
+    ImpactMasterId: string,
+    userId?: string | number,
+  ): Observable<ApiResponse<ImpactMasterDetailModel>> {
+    const params: Record<string, string> = {};
+
+    if (userId != null) {
+      params['userId'] = userId.toString();
+    }
+
     return this.http
-      .get<ApiResponse<ImpactMasterDetailModel>>(`${this.apiUrl}/${ImpactMasterId}`)
+      .get<ApiResponse<ImpactMasterDetailModel>>(`${this.apiUrl}/${ImpactMasterId}`, { params })
       .pipe(
         tap((response) => {
           console.log('[ImpactMasterService] Get ImpactMaster By Id Success:', response);

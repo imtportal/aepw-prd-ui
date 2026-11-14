@@ -113,8 +113,15 @@
                 <span
                   class="font-mono text-sm"
                   [class]="
-                    categoryPendingCount()[category.code].doneCount >=
-                    categoryPendingCount()[category.code].totalCount
+                    (
+                      (
+                        categoryPendingCount()[category.code].doneCount 
+                        >=
+                        categoryPendingCount()[category.code].totalCount
+                      )
+                      && 
+                      !categoryPendingCount()[category.code].someRejected
+                    )
                       ? 'text-[hsl(var(--aepw-green))]'
                       : 'text-[hsl(var(--destructive))]'
                   "
@@ -1027,11 +1034,8 @@
                               class="font-semibold text-foreground"
                               [class.opacity-50]="updatingRawValue()[subMetric.metricCode]"
                             >
-                              {{ subMetric.evidencedPer }}
-                              <!-- {{ subMetric.riskOriginal }} 
-                                @if (subMetric?.riskOriginal != undefined && subMetric?.riskOriginal != null) {
-                                  %
-                                } -->
+                                
+
                             </span>
 
                             <span class="text-muted-foreground/50 mx-0.5">|</span>
@@ -1042,6 +1046,18 @@
                               class="font-semibold text-foreground"
                               [class.opacity-50]="updatingRawValue()[subMetric.metricCode]"
                             >
+                              @if (weightedConfidencePercentLoading()) {
+                                <lucide-icon
+                                  name="rotate-cw"
+                                  [size]="14"
+                                  [class.animate-spin]="refreshingEvidenceStatuses()"
+                                />
+                              }
+                              @else  {
+                                @if (weightedConfidencePercent() && weightedConfidencePercent()[subMetric.metricCode]) {
+                                  {{ weightedConfidencePercent()[subMetric.metricCode].weightedConfidencePercent || 0 | formatAmount }}%
+                                }
+                              }
                               <!-- {{ subMetric.riskOriginal }} 
                                 @if (subMetric?.riskOriginal != undefined && subMetric?.riskOriginal != null) {{
                                   %
@@ -1153,7 +1169,10 @@
                                       {{ evidence.statusDisplayValue }}
                                     </span>
                                   </td>
-                                  <td class="px-3 py-2">{{ evidence.evidenceTypeDescription }}</td>
+                                  <td class="px-3 py-2">{{ evidence.evidenceTypeDescription }}
+
+                                    ({{ evidence.confidencePercent }})
+                                  </td>
                                   <!-- <td class="px-3 py-2">{{ evidence.siteTag }}</td> -->
                                   <td class="px-3 py-2">
                                     {{ evidence.uploadedUtc | date: 'dd-MMM-yyyy hh:mm a' }}
@@ -1384,9 +1403,9 @@
 <ui-dialog [(visible)]="metricActionConfirmationVisible" (closed)="cancelMetricActionConfirmation()" [header]="metricActionConfirmation() === 'approved' ? 'Approve Metric' : 'Reject Metric'" styleClass="max-w-lg">
     <div class="flex flex-col gap-5 p-5">
         @let pendingMetricName = getPendingMetricName() || ""; @if (pendingMetricName && zeroRawValueBaselineCheck()[pendingMetricName]?.promptMessage) {
-        <p class="text-sm text-muted-foreground">{{ zeroRawValueBaselineCheck()[pendingMetricName]?.promptMessage }}</p>
+        <p class="text-sm font-medium">{{ zeroRawValueBaselineCheck()[pendingMetricName]?.promptMessage }}</p>
         }
-        <p class="text-sm text-muted-foreground">
+        <p class="text-sm font-medium">
             Are you sure you want to {{ metricActionConfirmation() === 'approved' ? 'approve' : 'reject' }} this metric?
         </p>
         <div class="space-y-1 rounded-md bg-muted/30 px-3 py-2 text-sm">

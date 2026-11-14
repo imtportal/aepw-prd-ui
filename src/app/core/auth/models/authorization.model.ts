@@ -1,6 +1,7 @@
 export interface LoginContext {
   userDetails: UserDetails;
   pageAccess: PageAccess[];
+  systemRoleName?: string;
   // actionPermissions: ActionPermission[];
 }
 

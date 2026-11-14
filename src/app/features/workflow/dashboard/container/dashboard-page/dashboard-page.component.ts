@@ -757,17 +757,20 @@ export class DashboardPageComponent {
   private formatNumber(value: number): string {
   if (Math.abs(value) >= 1_000_000) {
     return `${(value / 1_000_000).toLocaleString('en-US', {
+      minimumFractionDigits: 3,
       maximumFractionDigits: 3
     })}M`;
   }
 
   if (Math.abs(value) >= 1_000) {
     return `${(value / 1_000).toLocaleString('en-US', {
+      minimumFractionDigits: 3,
       maximumFractionDigits: 3
     })}K`;
   }
 
   return value.toLocaleString('en-US', {
+    minimumFractionDigits: 3,
     maximumFractionDigits: 3
   });
 }

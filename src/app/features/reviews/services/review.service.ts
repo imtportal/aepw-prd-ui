@@ -28,6 +28,7 @@ import {
   UpdateReviewApprovalAssigneeRequest,
   ReviewEvidenceStatusDto,
   ZeroRawValueBaselineCheckDTO,
+  WeightedConfidenceScorePercentDTO,
 } from '../models/review.model';
 import {
   ApiResponse,
@@ -745,5 +746,14 @@ export class ReviewService {
       .set('metricId', String(metricId))
       .set('userId', String(userId));
     return this.http.put<any>(this.apiUrl + '/UpdateReportedLimitAcknowledgedBy', {}, { headers });
+  }
+
+  getWeightedConfidencePercent(reviewId: number) {
+    return this.http.get<ApiResponse<WeightedConfidenceScorePercentDTO[]>>(
+      `${this.apiUrl}/GetWeightedConfidencePercent/${reviewId}`,
+      
+    ).pipe(
+      map((res) => res.data || [])
+    );
   }
 }

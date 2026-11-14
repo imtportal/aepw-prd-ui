@@ -177,14 +177,26 @@ export class impactFormPage implements OnInit, HasUnsavedChanges {
   protected readonly canEditCorporate = computed(() =>
     this.actionAccess().some((action) => action.key === 'EDITCRP' && action.value),
   );
+  ///////////////////////////////////////
   protected readonly canSaveRecord = computed(() => {
+    if (this.isEditMode()) {
+      if (this.isProject()) {
+        return this.canEditProject() && this.projectDetail()?.canSaveProject === true;
+      }
+
+      return this.canEditCorporate() && this.projectDetail()?.canSaveProject === true;
+    }
+
+    return this.isProject() ? this.canAddProject() : this.canAddCorporate();
+  });
+  protected readonly canShowSaveAsDraft = computed(() => {
     if (this.isEditMode()) {
       return this.isProject() ? this.canEditProject() : this.canEditCorporate();
     }
 
     return this.isProject() ? this.canAddProject() : this.canAddCorporate();
   });
-
+  ///////////////////////////////////
   protected readonly canAssignProjectApprover = computed(() =>
     this.actionAccess().some((action) => action.key === 'ASSIGNPRJAPPROVER' && action.value),
   );
@@ -734,7 +746,10 @@ export class impactFormPage implements OnInit, HasUnsavedChanges {
     console.log(this.isEditMode());
     this.impactMasterId.set(impactMasterId);
     forkJoin({
-      detail: this.impactMasterService.getImpactMasterById(impactMasterId),
+      detail: this.impactMasterService.getImpactMasterById(
+        impactMasterId,
+        this.authStateService.getCurrentUserId()!,
+      ),
       metrics: this.impactMasterService.getMetricsForImpactMaster(impactMasterId),
     })
       .pipe(takeUntilDestroyed(this.destroyRef))

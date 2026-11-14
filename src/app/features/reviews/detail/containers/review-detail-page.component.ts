@@ -186,7 +186,7 @@ export class ReviewDetailPageComponent {
           }
           
           // ("review.atleastonemetricassigned: " + review.atLeastOneMetricAssigned)
-        this.checkZeroRawValueBaseline();
+          this.checkZeroRawValueBaseline();
         });
 
 

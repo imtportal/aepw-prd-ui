@@ -331,6 +331,8 @@ export interface EvidenceDto {
   evidencedValue?: string;
 
   statusTextColor?: string;
+  confidenceScore?: number;
+  confidencePercent?: number;
   statusBadgeColor?: string;
 }
 
@@ -345,6 +347,8 @@ export interface ReviewEvidenceStatusDto {
   contribution: number;
   evidenceTypeCode: string | null;
   evidenceTypeDescription: string | null;
+  confidenceScore?: number;
+  confidencePercent?: number;
   evidencedValue: string | null;
 }
 
@@ -409,6 +413,12 @@ export interface ReviewDto {
   reviewMetrics: ReviewMetricDto[];
 
   atLeastOneMetricAssigned?: boolean;
+}
+
+export interface WeightedConfidenceScorePercentDTO {
+  metricCode: string;
+  weightedConfidenceScore: number;
+  weightedConfidencePercent: number;
 }
 
 export interface ReviewDto {

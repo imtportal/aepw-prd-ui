@@ -5,20 +5,12 @@
       <ui-button (clicked)="onBack()" variant="outline">Back</ui-button>
     </div>
     <div class="flex items-center gap-2">
-      @if (canSaveRecord()) {
-        @if (canSaveAsDraft()) {
-          <ui-button
-            (clicked)="saveAsDraft()"
-            styleClass="rounded-md bg-[hsl(var(--aepw-blue))] px-4 py-2 text-sm font-medium text-white hover:opacity-90"
-          >
-            Save as Draft
-          </ui-button>
-        }
+      @if (canShowSaveAsDraft() && canSaveAsDraft()) {
+        <ui-button (clicked)="saveAsDraft()"> Save as Draft </ui-button>
+      }
 
-        <ui-button
-          (clicked)="onSave()"
-          styleClass="rounded-md bg-[hsl(var(--aepw-blue))] px-4 py-2 text-sm font-medium text-white hover:opacity-90"
-        >
+      @if (canSaveRecord()) {
+        <ui-button (clicked)="onSave()">
           {{ saveButtonText() }}
         </ui-button>
       }
@@ -294,7 +286,7 @@
         <!-- CPM/Corporate Submitter -->
         <div class="space-y-2">
           <label class="text-sm font-medium">
-            {{ isProject() ? 'Contract Performance Manager' : 'Corporate Submitter' }}
+            {{ isProject() ? 'Contract Performance Manager' : 'Corporate Data Provider' }}
 
             <span class="text-destructive">*</span>
           </label>

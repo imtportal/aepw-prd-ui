@@ -1,5 +1,5 @@
 <aside
-  class=" inset-y-0 left-0 z-50 flex h-screen flex-col relative bg-sidebar border-r border-sidebar-border transition-[width,transform] duration-300 ease-in-out w-64 md:sticky md:top-0 md:z-auto md:translate-x-0 overflow-x-visible"
+  class="inset-y-0 left-0 z-50 flex h-screen flex-col relative bg-sidebar border-r border-sidebar-border transition-[width,transform] duration-300 ease-in-out w-64 md:sticky md:top-0 md:z-auto md:translate-x-0 overflow-x-visible"
   [class.-translate-x-full]="!isOpen()"
   [class.translate-x-0]="isOpen()"
   [class.md:w-16]="isCollapsed()"
@@ -95,7 +95,7 @@
       }
     </div>
     <!-- Reporting -->
-     <div>
+    <div>
       @if (mainNav().length && !isCollapsed()) {
         <p
           class="px-4 mb-1 text-sidebar-foreground/50 font-heading text-[11px] uppercase tracking-widest"
@@ -154,29 +154,50 @@
 
   <div class="px-3 py-3 border-t border-sidebar-border space-y-2">
     @if (!isCollapsed()) {
-      <div class="flex items-center gap-2.5">
+      <div class="flex items-center gap-4 min-w-0">
+        <!-- Profile Avatar -->
         <div
-          class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-sidebar-accent text-xs font-bold text-sidebar-accent-foreground"
+          class="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-sidebar-accent text-xl font-bold text-sidebar-accent-foreground"
         >
           @if (profilePictureBlob()) {
             <img
               [src]="profilePictureBlobUrl()"
               alt="Profile Picture"
-              class="h-8 w-8 rounded-full object-cover"
+              class="h-full w-full rounded-full object-cover"
             />
           } @else {
             {{ auth.initials() }}
           }
         </div>
 
-        <div class="flex flex-col min-w-0">
-          <span class="text-xs font-medium text-sidebar-foreground truncate">
+        <!-- Vertical Divider -->
+        <div class="h-20 w-px shrink-0 bg-white/40"></div>
+
+        <!-- User Details -->
+        <div class="flex min-w-0 flex-col gap-2">
+          <!-- Name -->
+          <span class="truncate text-xs font-bold text-sidebar-foreground">
             {{ authState.user()?.displayName }}
           </span>
 
-          <span class="text-[10px] text-sidebar-foreground/60 truncate">
+          <!-- Email -->
+          <span class="truncate text-xs text-sidebar-foreground/70">
             {{ authState.user()?.email }}
           </span>
+
+          <!-- System Role -->
+          @if (authState.systemRoleName()) {
+            <div
+              class="inline-flex w-fit max-w-full items-center gap-1 rounded-full bg-sidebar-accent px-2 py-0.5 text-[10px] font-medium text-sidebar-accent-foreground"
+              [title]="authState.systemRoleName() ?? ''"
+            >
+              <lucide-icon name="shield-user" [size]="10" />
+
+              <span class="truncate">
+                {{ authState.systemRoleName() }}
+              </span>
+            </div>
+          }
         </div>
       </div>
 

@@ -28,6 +28,12 @@ export const routes: Routes = [
           import('./core/pages/unauthorized.component').then((m) => m.UnauthorizedComponent),
       },
       {
+        path: 'server-timeout',
+        data: { title: 'Server Timeout' },
+        loadComponent: () =>
+          import('./core/pages/server-timeout.component').then((m) => m.ServerTimeoutComponent),
+      },
+      {
         path: 'reviews',
         loadChildren: () =>
           import('./features/reviews/reviews.routes').then((m) => m.reviewsRoutes),

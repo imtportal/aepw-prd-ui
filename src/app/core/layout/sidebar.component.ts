@@ -20,6 +20,7 @@ import {
   LogOut,
   X,
   ListTodo,
+  ShieldUser,
   ChevronLeft,
   ChevronRight,
   Blocks,
@@ -171,6 +172,7 @@ const SIDEBAR_ICONS = {
   LogOut,
   X,
   ListTodo,
+  ShieldUser,
   ChevronLeft,
   ChevronRight,
   Blocks,
@@ -189,7 +191,7 @@ const SIDEBAR_ICONS = {
 export class SidebarComponent {
   readonly activeUrl = input.required<string>();
   protected profilePictureBlob: WritableSignal<Blob | null> = signal(null);
-
+  protected readonly ShieldUser = ShieldUser;
   protected profilePictureBlobUrl = signal('');
 
   readonly isOpen = input<boolean>(false);
@@ -216,11 +218,7 @@ export class SidebarComponent {
   );
 
   protected readonly adminNav = computed(() =>
-    ADMIN_NAV.filter(
-      (item) =>
-        !item.pageKey ||
-        this.authState.hasPageAccess(item.pageKey),
-    ),
+    ADMIN_NAV.filter((item) => !item.pageKey || this.authState.hasPageAccess(item.pageKey)),
   );
 
   protected readonly reportingNaV = computed(() =>

@@ -11,6 +11,7 @@ import {
 })
 export class AuthStateService {
   readonly user = signal<UserDetails | null>(null);
+  readonly systemRoleName = signal<string>('');
 
   readonly pageAccess = signal<PageAccess[]>([]);
   readonly pageAccessMap = computed(() => new Map(this.pageAccess().map((x) => [x.key, x.value])));
@@ -26,6 +27,7 @@ export class AuthStateService {
     // console.log('[AuthState] Action Permissions count:', context.actionPermissions.length);
 
     this.user.set(context.userDetails);
+    this.systemRoleName.set(context.systemRoleName ?? '');
     this.pageAccess.set(context.pageAccess);
     // this.actionPermissions.set(context.actionPermissions);
 
@@ -50,6 +52,7 @@ export class AuthStateService {
     console.log('[AuthState] Restored page access count:', context.pageAccess.length);
     // Don't call initialize() here to avoid double-logging and re-saving
     this.user.set(context.userDetails);
+    this.systemRoleName.set(context.systemRoleName ?? '');
     this.pageAccess.set(context.pageAccess);
     // this.actionPermissions.set(context.actionPermissions);
   }
@@ -59,6 +62,7 @@ export class AuthStateService {
     sessionStorage.removeItem('loginContext');
 
     this.user.set(null);
+    this.systemRoleName.set('');
     this.pageAccess.set([]);
     // this.actionPermissions.set([]);
     console.log('[AuthState] Authorization state cleared');

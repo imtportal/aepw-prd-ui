@@ -98,6 +98,7 @@ export interface ImpactMasterDetailModel {
   updatedOnUTC: string | null;
 
   cities: ImpactMasterCityRequest[];
+  canSaveProject: boolean;
 }
 
 export interface ImpactMasterFundingRecipientModel {
