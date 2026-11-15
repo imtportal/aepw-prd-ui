@@ -179,6 +179,7 @@ export interface GetImpactMastersRequest {
   categoryId?: string | null;
 
   metricCategories?: string | null;
+  isForProjectLibrary?: number | 0;
 }
 // Save ImpactMaster request
 export interface CreateImpactMasterRequest {

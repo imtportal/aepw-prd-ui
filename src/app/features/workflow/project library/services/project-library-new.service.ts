@@ -73,6 +73,9 @@ export class ImpactMasterService {
       params = params.set('categoryId', request.categoryId);
     }
 
+    params = params.set('isForProjectLibrary', 1);
+
+
     return this.http
       .get<ApiResponse<PagedResponse<ImpactMasterListModel>>>(this.apiUrl, {
         params,

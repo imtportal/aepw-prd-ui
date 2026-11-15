@@ -489,7 +489,6 @@ export class ProjectLibraryPageComponent implements OnInit {
 
           this._allImpactMasters.set(
             pagedData.items
-              .filter((p: any) => p.statusName?.toLowerCase() !== 'draft')
               .map((p: any) => ({
                 ...p,
                 metricCategoryList: p.metricCategories ? p.metricCategories.split(',') : [],
