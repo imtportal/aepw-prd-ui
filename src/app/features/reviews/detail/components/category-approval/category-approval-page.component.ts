@@ -23,6 +23,7 @@ import { NotificationMessageDto } from '../../../../../core/models/notification.
 import { ReviewStageLookup } from '../../../../../core/models/lookup-model';
 import { ReviewDetailPageFromSource } from '../../containers/review-detail.model';
 import { CategoryApprovalPageActionKey, CategoryApprovalPageKey } from './category-approval.model';
+import { FormatAmountPipe } from '../../../../../shared/pipes/format-amount.pipe';
 
 
 function parseNumeric(val: string): number {
@@ -38,7 +39,7 @@ function formatNum(n: number): string {
   selector: 'app-category-approval-page',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, LucideAngularModule, BadgeComponent, ModalComponent, BreadcrumbComponent, BreadcrumbItemComponent],
+  imports: [FormsModule, LucideAngularModule, BadgeComponent, ModalComponent, BreadcrumbComponent, BreadcrumbItemComponent, FormatAmountPipe],
   providers: [
     { provide: LUCIDE_ICONS, multi: true,
       useValue: new LucideIconProvider({ SendHorizontal, ChevronDown, ChevronRight, LoaderCircle, Ban }) },

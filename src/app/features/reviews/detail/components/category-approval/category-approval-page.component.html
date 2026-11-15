@@ -75,7 +75,7 @@
           <div class="flex items-center gap-3">
             @if (selectedCount() > 0) {
               <span class="text-xs font-medium text-muted-foreground"
-                >{{ selectedCount() }} selected</span
+                >{{ selectedCount() | formatAmount : true}} selected</span
               >
             }
             <div class="flex items-center gap-2">
@@ -175,19 +175,19 @@
             <div class="mt-1 grid grid-cols-2 divide-x divide-border">
               <div class="pr-4">
                 <p class="text-[11px] text-muted-foreground">Reported</p>
-                <p class="truncate text-xl font-bold text-foreground">{{ metric.rawValue }}</p>
+                <p class="truncate text-xl font-bold text-foreground">{{ metric.rawValue | formatAmount }}</p>
                 <p class="text-[11px] text-muted-foreground">{{ metric.unit }}</p>
               </div>
               <div class="pl-4">
                 <p class="text-[11px] text-[hsl(var(--aepw-blue))]">Risk adjusted</p>
                 <p class="truncate text-xl font-bold text-[hsl(var(--aepw-blue))]">
-                  {{ metric.adjustedValue }}
+                  {{ metric.adjustedValue | formatAmount }}
                 </p>
                 <p class="text-[11px] text-muted-foreground">{{ metric.unit }}</p>
               </div>
             </div>
             <p class="mt-1 text-[11px] text-muted-foreground">
-              Evidenced {{ metric.evidenced }}
+              Evidenced {{ metric.evidenced | formatAmount}}
               <!-- TODO: replace with real value  -->
             </p>
           </div>
@@ -277,16 +277,16 @@
                     <span class="px-3 py-1.5 text-[hsl(var(--aepw-blue))] ">
                       Risk Adjusted:
                       <span class="font-semibold">{{
-                        row.adjustedValue != undefined ? row.adjustedValue : '—'
+                        row.adjustedValue != undefined ? (row.adjustedValue | formatAmount) : '—'
                       }}</span>
                     </span>
                     <span class="px-3 py-1.5 text-muted-foreground">
-                      Evidenced: <span class="font-semibold text-foreground">{{ row.evidenced }}</span>
+                      Evidenced: <span class="font-semibold text-foreground">{{ row.evidenced | formatAmount }}</span>
                     </span>
                     <span class="px-3 py-1.5 text-muted-foreground">
                       Reported:
                       <span class="font-semibold text-foreground">{{
-                        row.rawValue != undefined ? row.rawValue : '—'
+                        row.rawValue != undefined ? (row.rawValue | formatAmount) : '—'
                       }}</span>
                     </span>
                   </div>

@@ -5,7 +5,7 @@ import { Pipe, PipeTransform } from '@angular/core';
   standalone: true,
 })
 export class FormatAmountPipe implements PipeTransform {
-  transform(value: number | string | null | undefined): string {
+  transform(value: number | string | null | undefined, eliminateDecimals: boolean = false): string {
     if (String(value) == "" || value == undefined || value == null) {
       return "";
     }
@@ -13,8 +13,8 @@ export class FormatAmountPipe implements PipeTransform {
     
     return Number.isFinite(numberValue)
       ? numberValue.toLocaleString('en-US', {
-          minimumFractionDigits: 3,
-          maximumFractionDigits: 3,
+          minimumFractionDigits: eliminateDecimals ? 0 : 3,
+          maximumFractionDigits: eliminateDecimals ? 0 : 3,
         })
       : String(value);
   }

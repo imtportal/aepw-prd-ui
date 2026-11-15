@@ -419,6 +419,7 @@ export interface WeightedConfidenceScorePercentDTO {
   metricCode: string;
   weightedConfidenceScore: number;
   weightedConfidencePercent: number;
+  evidencedPercent: number;
 }
 
 export interface ReviewDto {

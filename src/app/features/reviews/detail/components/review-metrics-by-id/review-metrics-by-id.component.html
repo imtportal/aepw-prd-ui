@@ -1030,6 +1030,13 @@
 
                             <span class="text-xs font-bold text-foreground"> Evidenced % </span>
 
+                             @if (weightedConfidencePercent() && weightedConfidencePercent()[subMetric.metricCode]) {
+                               <span class="font-semibold text-foreground">
+
+                                 {{ weightedConfidencePercent()[subMetric.metricCode].evidencedPercent || 0 | formatAmount }}%
+                                </span>
+                              }
+
                             <span
                               class="font-semibold text-foreground"
                               [class.opacity-50]="updatingRawValue()[subMetric.metricCode]"
