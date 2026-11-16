@@ -26,11 +26,23 @@
           <!-- <option [ngValue]="null">
             All
           </option> -->
-          @for (stage of reviewStages(); track stage.code) {
-            <option [value]="stage.code">
-              {{ stage.name }}
+          @if (loadingLookups()) {
+            <option [ngValue]="null" selected disabled>
+              Loading stages...
             </option>
           }
+          @else {
+            @for (stage of reviewStages(); track stage.code) {
+              <option [value]="stage.code">
+                {{ stage.name }}
+              </option>
+            }
+            @empty {
+              <option [ngValue]="null" selected disabled>
+                No stages with pending tasks
+              </option>
+            }
+          }  
         </select>
 
         
@@ -121,6 +133,22 @@
             </ui-card-content>
           </ui-card>
         }
+      }
+
+      @if (!loadingLookups() && !reviewStages()?.length) {
+        <ui-card>
+          <ui-card-content styleClass="p-0">
+            <ui-data-table
+              [noRecordsFoundText]="'No Pending tasks'"
+              [columns]="tableColumns"
+              [data]="pageData()"
+              [total]="pageTotal()"
+              [loading]="loading()"
+              [rowTemplate]="reviewTaskRow"
+              (pageChange)="onPageChange($event)"
+            />
+          </ui-card-content>
+        </ui-card>
       }
 
     }

@@ -6,7 +6,7 @@ import { Ban, Hourglass, LUCIDE_ICONS, LucideAngularModule, LucideIconProvider }
 import { CommonModule } from '@angular/common';
 import { UserService } from '../../../../admin/services/user.service';
 import { AdUserService } from '../../../../admin/users/services/user-service';
-import { take } from 'rxjs';
+import { take, timer, Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-comment-thread',
@@ -118,12 +118,23 @@ export class CommentThreadComponent {
 
     });
   }
+  private keyPressSub = new Subscription();
   onKeyPress($event: KeyboardEvent): void {
     if ($event.key === 'Escape' && !($event.shiftKey || $event.ctrlKey || $event.altKey)) {
       $event.preventDefault();
       this.showHideSuggestionBox(false);
     }
-  
+
+    // console.log("caret position", ($event.target as HTMLInputElement).selectionStart)
+    this.keyPressSub.unsubscribe();
+    this.keyPressSub = timer(100).subscribe(() => {
+      // const textToTheLeft = ($event.target as HTMLInputElement).value[(($event.target as HTMLInputElement).selectionStart || 0) - 1]
+      // this.showSuggestionBox.set(textToTheLeft == "@");
+      
+
+      ($event.target as HTMLInputElement).value.includes("@") ? this.showHideSuggestionBox(true) : this.showHideSuggestionBox(false);
+      this.keyPressSub.unsubscribe();
+    })
     // console.log('onKeyPress', $event);
     // if ($event.key === 'Enter' && !($event.shiftKey || $event.ctrlKey || $event.altKey)) {
     //   $event.preventDefault();
