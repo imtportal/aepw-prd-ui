@@ -268,11 +268,11 @@ export class DashboardPageComponent {
     }
 
     const userId = this.currentUserSvc.loggedInUser?.userId || 0; //TODO: replace with real value
-    console.log({decision, metricRiskResponseJSON});
+    // console.log({decision, metricRiskResponseJSON});
     
     this.submittingApprovalDecision.set(true);
     this.reviewSvc.saveRiskAdjustmentAction(+id, metricRiskResponseJSON, +(userId)).subscribe(reviewId => {
-      console.log('Save risk adjustment action response (reviewId):', reviewId);
+      // console.log('Save risk adjustment action response (reviewId):', reviewId);
       this.submittingApprovalDecision.set(false);
 
       if (+reviewId) {
@@ -341,7 +341,7 @@ export class DashboardPageComponent {
   }
 
   protected downLoadExcelUpload(upload: ReviewExcelUploadDto): void {
-    console.log("downloading: ", upload)
+    // console.log("downloading: ", upload)
 
     if (!upload.blobUri?.trim()) {
       return;
@@ -572,7 +572,7 @@ export class DashboardPageComponent {
   }
 
   protected rowClicked(review: ReviewListDto) {
-    console.log('rowClicked', review);  
+    // console.log('rowClicked', review);  
     if (!review.stageDisplayValue?.trim()) {
       return;
     }

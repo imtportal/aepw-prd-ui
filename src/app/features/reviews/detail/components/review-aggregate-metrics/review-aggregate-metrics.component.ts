@@ -249,7 +249,7 @@ export class ReviewAggregateMetricsComponent {
           return this.lookupService.getUsers(searchTerm).pipe(
             map((response) => response.data ?? []),
             catchError((error) => {
-              console.error('[Stage Assignee User Typeahead]', error);
+              // console.error('[Stage Assignee User Typeahead]', error);
               return of<AppUserLookup[]>([]);
             }),
           );
@@ -899,7 +899,7 @@ export class ReviewAggregateMetricsComponent {
   }
 
   filesSelected($event: any, metricId: number, metricCode: string): void {
-    console.log({ $event });
+    // console.log({ $event });
     const fileName = $event.files[0]?.name;
     const updateLoader = (code: string, fileName: string | null) => {
       this.uploadingEvidenceForMetricCode.update((existing) => {

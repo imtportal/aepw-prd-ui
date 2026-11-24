@@ -86,12 +86,12 @@ export class ReviewStageConfigComponent implements OnInit {
       .pipe(take(1))
       .subscribe({
         next: (res) => {
-          console.log('Review stage API response:', res);
-          console.log('Stage options:', this.reviewStages());
-          console.log('Loading:', this.loadingReviewStages());
+          // console.log('Review stage API response:', res);
+          // console.log('Stage options:', this.reviewStages());
+          // console.log('Loading:', this.loadingReviewStages());
         },
         error: (error) => {
-          console.error('Failed to load review stages:', error);
+          // console.error('Failed to load review stages:', error);
           this.toast.error('Failed to load review stages.');
         },
       });
@@ -129,35 +129,10 @@ export class ReviewStageConfigComponent implements OnInit {
           this.approvalChangesDialogVisible.set(true);
         },
         error: (error) => {
-          console.error('Failed to fetch review approval changes:', error);
+          // console.error('Failed to fetch review approval changes:', error);
           this.toast.error('Failed to fetch review approval changes.');
         },
       });
-  }
-// Approve all the pending reviews 
-  private approvePendingDisablePreviews(): Observable<unknown> {
-    const userId = this.authStateService.getCurrentUserId();
-
-    if (userId === null) {
-      this.toast.error('Unable to identify the current user.');
-      return throwError(() => new Error('Current user ID is unavailable.'));
-    }
-
-    const input: ReviewMetricApproveRejectDto[] = this.disablePreview().flatMap((stage) =>
-      stage.changes.map((change) => ({
-        ReviewId: change.reviewId,
-        MetricCode: change.metricCode,
-        Decision: 'Approved',
-        Comment: 'Automatically approved because the review stage was disabled in System Settings.',
-        StageCode: String(stage.stageCode),
-      })),
-    );
-
-    if (input.length === 0) {
-      return of(null);
-    }
-
-    return this.reviewService.takeReviewMetricActionForTopLevel(input, userId);
   }
 
   /////////////////////////////////////////////////////////////////////////////////////////////
@@ -166,20 +141,55 @@ export class ReviewStageConfigComponent implements OnInit {
   }
 
   protected confirmApprovalChanges(): void {
-    // this.approvePendingDisablePreviews()
-    //   .pipe(take(1))
-    //   .subscribe({
-    //     next: () => {
-    //       this.toast.success('Pending approvals processed successfully.');
-    //       this.approvalChangesDialogVisible.set(false);
+    const changedStages = this.reviewStageService.getChangedStageRequests();
 
-    //       // TODO: Save stage active states after the complete workflow succeeds.
-    //     },
-    //     error: (error) => {
-    //       console.error('Failed to process pending approvals:', error);
-    //       this.toast.error('Failed to process pending approvals.');
-    //     },
-    //   });
+    if (changedStages.length === 0) {
+      this.toast.error('No review stage changes detected.');
+      return;
+    }
+
+    const userId = this.authStateService.getCurrentUserId();
+
+    if (userId === null || userId <= 0) {
+      this.toast.error('Unable to identify the current user.');
+      return;
+    }
+
+    this.reviewStageService
+      .applyReviewStageChanges(changedStages, userId)
+      .pipe(take(1))
+      .subscribe({
+        next: ({ enableResult, disableResult }) => {
+          const enableFailed = enableResult !== null && !enableResult.success;
+
+          const disableFailed = disableResult !== null && !disableResult.success;
+
+          if (enableFailed || disableFailed) {
+            const failedMessages: string[] = [];
+
+            if (enableFailed) {
+              failedMessages.push(enableResult.message || 'Failed to enable review stage(s).');
+            }
+
+            if (disableFailed) {
+              failedMessages.push(disableResult.message || 'Failed to disable review stage(s).');
+            }
+
+
+            this.toast.error(failedMessages.join(' '));
+          } else {
+            this.toast.success('Review stages updated successfully.');
+          }
+
+          // Refresh even on partial failure because one API may have succeeded.
+          this.approvalChangesDialogVisible.set(false);
+          this.refreshReviewStages();
+        },
+        error: (error) => {
+          // Defensive fallback. Individual API errors are handled in the service.
+          this.toast.error('Failed to update review stages.');
+        },
+      });
   }
 
   resetStageStates(): void {

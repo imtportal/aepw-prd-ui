@@ -112,7 +112,7 @@ export class CategoryApprovalPageComponent {
       const allTopMetrics = this.topMetrics();
 
       const selectedItems: { title: string; parentCode: string; pin: string }[] = [];
-      console.log('Updating selected count, allTopMetrics:', allTopMetrics);
+      // console.log('Updating selected count, allTopMetrics:', allTopMetrics);
       let count = 0;
       for (const metric of allTopMetrics) { 
         for (const project of (metric.projects || [])) {
@@ -229,7 +229,7 @@ export class CategoryApprovalPageComponent {
       });
 
     }
-    console.log({ reviewMetricApproveRejectDto })
+    // console.log({ reviewMetricApproveRejectDto })
 
     const userId = this.getUserId();
     this.reviewSvc.takeReviewMetricActionForTopLevel(reviewMetricApproveRejectDto, (userId || 0))
@@ -243,7 +243,9 @@ export class CategoryApprovalPageComponent {
         ReviewIds: '',
         ReviewMetrics: JSON.stringify(reviewMetricApproveRejectDto)
       }
-      this.notificationSvc.publishNotification(request).pipe(take(1)).subscribe(res => console.log("Published notification to service bus, response: ", res));
+      this.notificationSvc.publishNotification(request).pipe(take(1)).subscribe(res => {
+          // console.log("Published notification to service bus, response: ", res);
+        });
 
 
       this.approvalRejectionInProgress.set(false);
@@ -361,7 +363,7 @@ export class CategoryApprovalPageComponent {
       });
 
     }
-    console.log({ reviewMetricApproveRejectDto })
+    // console.log({ reviewMetricApproveRejectDto })
 
     const userId = this.getUserId();
     this.reviewSvc.takeReviewMetricActionForTopLevel(reviewMetricApproveRejectDto, (userId || 0))

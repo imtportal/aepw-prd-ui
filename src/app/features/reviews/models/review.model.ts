@@ -334,6 +334,8 @@ export interface EvidenceDto {
   confidenceScore?: number;
   confidencePercent?: number;
   statusBadgeColor?: string;
+
+  selected?: boolean; // UI Only
 }
 
 export interface ReviewEvidenceStatusDto {

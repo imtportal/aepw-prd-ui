@@ -71,7 +71,7 @@ export class ReportingPageService {
 
         let params = new HttpParams();
 
-        console.log("request", request)
+        // console.log("request", request)
 
         params = this.appendArrayParams(
             params,
@@ -163,10 +163,10 @@ export class ReportingPageService {
             )
             .pipe(
                 map((res: { data: ReportFilterIndependentOptions }) => {
-                    console.log(
-                        'ReportFilterIndependentOptions:',
-                        res.data,
-                    );
+                    // console.log(
+                        // 'ReportFilterIndependentOptions:',
+                        // res.data,
+                    // );
 
                     return res.data;
                 }),

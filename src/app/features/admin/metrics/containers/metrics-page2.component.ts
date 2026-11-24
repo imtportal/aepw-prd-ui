@@ -178,7 +178,7 @@ export class MetricsPageComponent implements OnInit, HasUnsavedChanges {
     const userId = this.authStateService.getCurrentUserId();
 
     if (!userId) {
-      console.error('[Authorization] Current user ID not available.');
+      // console.error('[Authorization] Current user ID not available.');
       return;
     }
 
@@ -189,10 +189,10 @@ export class MetricsPageComponent implements OnInit, HasUnsavedChanges {
         next: (response) => {
           this.actionAccess.set(response.data ?? []);
 
-          console.log('[Authorization] User Management action access:', response.data);
+          // console.log('[Authorization] User Management action access:', response.data);
         },
         error: (error) => {
-          console.error('[Authorization] Failed to load User Management action access:', error);
+          // console.error('[Authorization] Failed to load User Management action access:', error);
 
           this.actionAccess.set([]);
         },
@@ -207,7 +207,7 @@ export class MetricsPageComponent implements OnInit, HasUnsavedChanges {
       .pipe(
         map((response) => response.data ?? []),
         catchError((error) => {
-          console.error(`[Business Role Users] Failed to load ${roleCode}`, error);
+          // console.error(`[Business Role Users] Failed to load ${roleCode}`, error);
 
           return of<BusinessRoleUserLookup[]>([]);
         }),
@@ -320,17 +320,17 @@ export class MetricsPageComponent implements OnInit, HasUnsavedChanges {
     }
     const request = this.buildSaveRequest();
 
-    console.group('Saving Metric Configuration');
-    console.log('Category Forms');
-    console.table(request.metricCategories);
-    console.log('Metric Forms');
-    console.table(request.metrics);
-    console.log('Complete Payload');
-    console.log(JSON.stringify(request, null, 2));
-    console.groupEnd();
+    // console.group('Saving Metric Configuration');
+    // console.log('Category Forms');
+    // console.table(request.metricCategories);
+    // console.log('Metric Forms');
+    // console.table(request.metrics);
+    // console.log('Complete Payload');
+    // console.log(JSON.stringify(request, null, 2));
+    // console.groupEnd();
     this.metricService.saveMetricConfiguration(request).subscribe({
       next: (response) => {
-        console.log('Save Success', response);
+        // console.log('Save Success', response);
         // Everything currently in the forms has now been persisted.
         this.categoryForms.forEach((form) => {
           form.markAsPristine();
@@ -345,7 +345,7 @@ export class MetricsPageComponent implements OnInit, HasUnsavedChanges {
       },
       error: (error) => {
         this.toast.error('Failed to Metric configuration');
-        console.error('Save Failed', error);
+        // console.error('Save Failed', error);
       },
     });
   }
@@ -354,10 +354,10 @@ export class MetricsPageComponent implements OnInit, HasUnsavedChanges {
     // console.log(this.selectedCategory());
     // console.log(this.selectedCategoryForm()?.getRawValue());
     // console.log('L4 Approver', this.selectedCategoryForm()?.get('l4ApproverUserId')?.value);
-    console.group('Sidebar Save');
+    // console.group('Sidebar Save');
 
     if (this.sidebarMode() === 'category') {
-      console.log('Category Form', this.selectedCategoryForm()?.getRawValue());
+      // console.log('Category Form', this.selectedCategoryForm()?.getRawValue());
       // const formValue = this.selectedCategoryForm()?.getRawValue();
 
       // const category = this.selectedCategory();
@@ -368,7 +368,7 @@ export class MetricsPageComponent implements OnInit, HasUnsavedChanges {
     }
 
     if (this.sidebarMode() === 'metric') {
-      console.log('Metric Form', this.selectedMetricForm()?.getRawValue());
+      // console.log('Metric Form', this.selectedMetricForm()?.getRawValue());
       if (this.sidebarMode() === 'metric') {
         const formValue = this.selectedMetricForm()?.getRawValue();
 
@@ -380,7 +380,7 @@ export class MetricsPageComponent implements OnInit, HasUnsavedChanges {
         // }
       }
 
-      console.groupEnd();
+      // console.groupEnd();
 
       this.closeSidebar();
     }
@@ -432,7 +432,7 @@ export class MetricsPageComponent implements OnInit, HasUnsavedChanges {
       },
 
       error: (error) => {
-        console.error(error);
+        // console.error(error);
 
         this.loading.set(false);
       },
@@ -477,7 +477,7 @@ export class MetricsPageComponent implements OnInit, HasUnsavedChanges {
       },
 
       error: (error) => {
-        console.error('Error loading lookups', error);
+        // console.error('Error loading lookups', error);
       },
     });
   }
@@ -626,8 +626,8 @@ export class MetricsPageComponent implements OnInit, HasUnsavedChanges {
       if (this.canICPRequired() && metricForm.get('isICPRequired')?.value) {
         icpApproverControl?.enable({ emitEvent: false });
       } else {
-        console.log('-----------------------');
-        console.log(this.canICPRequired());
+        // console.log('-----------------------');
+        // console.log(this.canICPRequired());
         icpApproverControl?.disable({ emitEvent: false });
       }
       // Description / Guiding Notes

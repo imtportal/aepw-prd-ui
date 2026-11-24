@@ -27,11 +27,11 @@ export class AdUserService {
 
     return this.http.get<ApiResponse<AzureAdUserLookupModel[]>>(this.apiUrl, { params }).pipe(
       tap((response) => {
-        console.log('[UserService] Search Users Success:', response);
+        // console.log('[UserService] Search Users Success:', response);
       }),
 
       catchError((error) => {
-        console.error('[UserService] Search Users Error:', error);
+        // console.error('[UserService] Search Users Error:', error);
 
         return throwError(() => error);
       }),
@@ -65,10 +65,10 @@ export class AdUserService {
       })
       .pipe(
         tap((response) => {
-          console.log('[UserService] Get Users Success:', response);
+          // console.log('[UserService] Get Users Success:', response);
         }),
         catchError((error) => {
-          console.error('[UserService] Get Users Error:', error);
+          // console.error('[UserService] Get Users Error:', error);
           return throwError(() => error);
         }),
       );
@@ -76,10 +76,10 @@ export class AdUserService {
   createUser(request: AppUserSaveModel): Observable<ApiResponse<{ userId: number }>> {
     return this.http.post<ApiResponse<{ userId: number }>>(this.apiUrl, request).pipe(
       tap((response) => {
-        console.log('[UserService] Create User Success:', response);
+        // console.log('[UserService] Create User Success:', response);
       }),
       catchError((error) => {
-        console.error('[UserService] Create User Error:', error);
+        // console.error('[UserService] Create User Error:', error);
         return throwError(() => error);
       }),
     );
@@ -87,10 +87,10 @@ export class AdUserService {
   getUserById(userId: string | number): Observable<ApiResponse<AppUserDetailModel>> {
     return this.http.get<ApiResponse<AppUserDetailModel>>(`${this.apiUrl}/${userId}`).pipe(
       tap((response) => {
-        console.log('[UserService] Get User By Id Success:', response);
+        // console.log('[UserService] Get User By Id Success:', response);
       }),
       catchError((error) => {
-        console.error('[UserService] Get User By Id Error:', error);
+        // console.error('[UserService] Get User By Id Error:', error);
         return throwError(() => error);
       }),
     );
@@ -98,10 +98,10 @@ export class AdUserService {
   updateUser(request: UpdateUserRequest): Observable<ApiResponse<UpdateUserResponse>> {
     return this.http.put<ApiResponse<UpdateUserResponse>>(`${this.apiUrl}`, request).pipe(
       tap((response) => {
-        console.log('[UserService] Update User Success:', response);
+        // console.log('[UserService] Update User Success:', response);
       }),
       catchError((error) => {
-        console.error('[UserService] Update User Error:', error);
+        // console.error('[UserService] Update User Error:', error);
         return throwError(() => error);
       }),
     );
@@ -111,10 +111,10 @@ export class AdUserService {
       .delete<ApiResponse<DeleteUserResponseModel>>(this.apiUrl, { body: request })
       .pipe(
         tap((response) => {
-          console.log('[UserService] Delete User Success:', response);
+          // console.log('[UserService] Delete User Success:', response);
         }),
         catchError((error) => {
-          console.error('[UserService] Delete User Error:', error);
+          // console.error('[UserService] Delete User Error:', error);
           return throwError(() => error);
         }),
       );
@@ -122,10 +122,10 @@ export class AdUserService {
   getRoleSummary(): Observable<ApiResponse<UserRoleSummaryModel[]>> {
     return this.http.get<ApiResponse<UserRoleSummaryModel[]>>(`${this.apiUrl}/role-summary`).pipe(
       tap((response) => {
-        console.log('[UserService] Get Role Summary Success:', response);
+        // console.log('[UserService] Get Role Summary Success:', response);
       }),
       catchError((error) => {
-        console.error('[UserService] Get Role Summary Error:', error);
+        // console.error('[UserService] Get Role Summary Error:', error);
         return throwError(() => error);
       }),
     );

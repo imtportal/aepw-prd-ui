@@ -13,6 +13,16 @@ export const workFlowRoutes: Routes = [
   },
 
   {
+    path: 'reviewStage',
+    canActivate: [authGuard],
+    data: { pageKey: 'REVIEWSTAGE', title: 'Review Stage' },
+    loadComponent: () =>
+      import('./Task/containers/review-stage/review-stage.component').then(
+        (m) => m.ReviewStageComponent,
+      ),
+  },
+
+  {
     path: 'dashboard',
     canActivate: [authGuard],
     data: { pageKey: 'DASHBOARD', title: 'Dashboard' },
@@ -29,5 +39,5 @@ export const workFlowRoutes: Routes = [
       import('./project library/containers/project-library-page/project-library-page.component').then(
         (m) => m.ProjectLibraryPageComponent,
       ),
-  }
+  },
 ];

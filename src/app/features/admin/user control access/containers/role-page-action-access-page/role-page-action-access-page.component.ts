@@ -173,7 +173,7 @@ export class RolePageActionAccessPageComponent {
       },
       error: (error) => {
         this.saving.set(false);
-        console.error('[RolePageActionAccessPage] Save failed:', error);
+        // console.error('[RolePageActionAccessPage] Save failed:', error);
         this.toastService.error('Failed to save page action access');
       },
     });

@@ -1,3 +1,5 @@
+import { ApiResponse } from '../../../models/project.model';
+
 export interface ReviewStageApprovalChangeRequest {
   StageCode: number;
   IsActive: boolean;
@@ -31,6 +33,7 @@ export interface ReviewApprovalChangesPreviewDto {
   disablePreview: ReviewStageApprovalChanges[];
   enablePreview: ReviewStageApprovalChanges[];
 }
+
 export interface ReviewStageOption {
   label: string;
   reviewStageId: number;
@@ -38,7 +41,18 @@ export interface ReviewStageOption {
   isActive: boolean;
 }
 
-export interface ReviewStageApprovalChangeRequest {
-  StageCode: number;
-  IsActive: boolean;
+export interface ReviewStageActionRequest {
+  stageCodesJson: string;
+  userId: number;
+}
+
+export interface ReviewStageEnableResultDto {
+  success: boolean;
+  insertedCount: number;
+  message: string;
+}
+
+export interface ReviewStageActionResult {
+  enableResult: ApiResponse<ReviewStageEnableResultDto | null> | null;
+  disableResult: ApiResponse<number | null> | null;
 }

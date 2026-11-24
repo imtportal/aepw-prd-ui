@@ -215,7 +215,7 @@ export class ProjectsPageComponent implements OnInit {
       return this.lookupService.getImpactMasters(term.trim()).pipe(
         map((response) => response.data ?? []),
         catchError((error) => {
-          console.error('[ImpactMaster Typeahead]', error);
+          // console.error('[ImpactMaster Typeahead]', error);
           // Return empty array instead of EMPTY to keep the stream alive
           return of<ImpactMasterLookup[]>([]);
         }),
@@ -238,7 +238,7 @@ export class ProjectsPageComponent implements OnInit {
         return this.lookupService.getFundingRecipients().pipe(
           map((response) => response.data ?? []),
           catchError((error) => {
-            console.error('[FundingRecipient Typeahead]', error);
+            // console.error('[FundingRecipient Typeahead]', error);
             return of<FundingRecipientLookup[]>([]);
           }),
         );
@@ -360,7 +360,7 @@ export class ProjectsPageComponent implements OnInit {
     const userId = this.authStateService.getCurrentUserId();
 
     if (!userId) {
-      console.error('[Authorization] Current user ID not available.');
+      // console.error('[Authorization] Current user ID not available.');
       return;
     }
 
@@ -371,10 +371,10 @@ export class ProjectsPageComponent implements OnInit {
         next: (response) => {
           this.actionAccess.set(response.data ?? []);
 
-          console.log('[Authorization] User Management action access:', response.data);
+          // console.log('[Authorization] User Management action access:', response.data);
         },
         error: (error) => {
-          console.error('[Authorization] Failed to load User Management action access:', error);
+          // console.error('[Authorization] Failed to load User Management action access:', error);
 
           this.actionAccess.set([]);
         },
@@ -390,10 +390,10 @@ export class ProjectsPageComponent implements OnInit {
       .subscribe({
         next: (result) => {
           this.impactMasterFilterOptions.set(result);
-          console.log('ImpactMasterFilterOptionsDto:', result);
+          // console.log('ImpactMasterFilterOptionsDto:', result);
         },
         error: (error) => {
-          console.error('Failed to load impact master filter options', error);
+          // console.error('Failed to load impact master filter options', error);
         },
       });
   }
@@ -411,7 +411,7 @@ export class ProjectsPageComponent implements OnInit {
         this.metricCategories.set(result.metricCategories.data ?? []);
       },
       error: (error) => {
-        console.error('Failed to load lookups', error);
+        // console.error('Failed to load lookups', error);
       },
     });
   }
@@ -452,12 +452,14 @@ export class ProjectsPageComponent implements OnInit {
             })),
           );
         },
-        error: (err) => console.error(err),
+        error: (err) => {
+          // console.error(err);
+        },
       });
   }
   //////////////////////////////////////////////////////////////////////
   toggleCreateMenu(): void {
-    console.log('inisde toggle menu');
+    // console.log('inisde toggle menu');
     this.showCreateMenu.update((v) => !v);
   }
   createImpact(recordType: RecordTypeLookup): void {
@@ -669,7 +671,7 @@ export class ProjectsPageComponent implements OnInit {
           }
 
           if (data.hasPendingReviews) {
-            console.error('Record cannot be deleted. Pending reviews:', data.pendingReviewIds);
+            // console.error('Record cannot be deleted. Pending reviews:', data.pendingReviewIds);
             this.toast.error(`Record cannot be deleted. Pending reviews: ${data.pendingReviewIds}`);
 
             // Show your toast/dialog here
@@ -696,14 +698,14 @@ export class ProjectsPageComponent implements OnInit {
           }
 
           if (error.status === 404) {
-            console.error('[ProjectsPageComponent] Record not found:', error.error?.message);
+            // console.error('[ProjectsPageComponent] Record not found:', error.error?.message);
             this.toast.error(error.error?.message ?? 'Record not found or already deleted.');
             // Show API error message in toast
             return;
           }
           this.toast.error(error.error?.message ?? 'Failed to delete Record. Please try again.');
 
-          console.error('[ProjectsPageComponent] Delete ImpactMaster Error:', error);
+          // console.error('[ProjectsPageComponent] Delete ImpactMaster Error:', error);
         },
       });
   }
@@ -726,8 +728,8 @@ export class ProjectsPageComponent implements OnInit {
       .subscribe({
         next: (response) => {
           const copiedImpactMasterId = response.data?.impactMasterId;
-          console.log('in copy handler');
-          console.log(copiedImpactMasterId);
+          // console.log('in copy handler');
+          // console.log(copiedImpactMasterId);
           if (!copiedImpactMasterId) {
             this.toast.error('Duplicate Record could not be created.');
             return;
@@ -742,7 +744,7 @@ export class ProjectsPageComponent implements OnInit {
         error: (error) => {
           this.toast.error(error.error?.message ?? 'Failed to create duplicate. Please try again.');
 
-          console.error('[ProjectsPageComponent] Copy ImpactMaster Error:', error);
+          // console.error('[ProjectsPageComponent] Copy ImpactMaster Error:', error);
         },
       });
   }

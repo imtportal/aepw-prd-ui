@@ -194,7 +194,7 @@ export class ReviewDetailPageComponent {
         if (userId) {
           this.authSvc.getActionAccess('REVIEWDETAIL', userId).pipe(take(1)).subscribe(res => {
             const permissions = res.data;
-            console.log({ permissions })
+            // console.log({ permissions })
 
             const reviewDetailPermissions = this.reviewDetailPermissions();
             for (const action of permissions) {
@@ -413,7 +413,7 @@ export class ReviewDetailPageComponent {
  
   protected onDrag($event: any) {
 
-    console.log("On Drag", $event)
+    // console.log("On Drag", $event)
   }
 
   protected uploadClickWithoutFileCounter = 0;
@@ -525,7 +525,7 @@ export class ReviewDetailPageComponent {
 
         const baselineRawValueUpdateInput: UpdateReviewMetricsValuesDto[] = Array.from(this.baselineRawValueForMetricIds_RS.values());
 
-        console.log({ baselineRawValueUpdateInput });
+        // console.log({ baselineRawValueUpdateInput });
         if (userId) {
           this.svc.updateBaselineOrRawValueForMetric(String(this.numericId()), baselineRawValueUpdateInput, userId)
           .pipe(
@@ -612,6 +612,7 @@ export class ReviewDetailPageComponent {
       "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
     ];
 
+    date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
     const day = date.getUTCDate().toString().padStart(2, '0');
     const month = monthNames[date.getMonth()];
     const years = date.getFullYear().toString().substring(2, 4);
@@ -625,8 +626,8 @@ export class ReviewDetailPageComponent {
     const result: ReviewCommentDto[] = [];
 
     for (const comment of comments) {
-      comment.createdOnUtc = new Date(comment.createdOnUtc).toLocaleString() + " UTC";
-      comment.createdOnUtc = this.formatTime(new Date(comment.createdOnUtc));
+      // comment.createdOnUtc = new Date(this.formatISO(comment.createdOnUtc)).toLocaleString();
+      comment.createdOnUtc = this.formatTime(new Date((comment.createdOnUtc)));
 
       result.push(comment);
     }
@@ -730,7 +731,7 @@ export class ReviewDetailPageComponent {
       this.svc.checkZeroRawValueBaseline(reviewId)
         .pipe(take(1))
         .subscribe((res) => {
-          console.log("ZeroRawValueBaselineCheck", res.data || []);
+          // console.log("ZeroRawValueBaselineCheck", res.data || []);
           const data = res.data || [];
           const mapped: { [ metricCode: string ]: ZeroRawValueBaselineCheckDTO } = {};
           for (const item of data){

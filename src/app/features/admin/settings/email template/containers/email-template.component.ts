@@ -249,7 +249,7 @@ export class EmailTemplateComponent implements OnInit {
           }
         },
         error: (error) => {
-          console.error('[EmailTemplate] Request failed:', error);
+          // console.error('[EmailTemplate] Request failed:', error);
         },
       });
   }
@@ -263,7 +263,7 @@ export class EmailTemplateComponent implements OnInit {
           this.keywords.set(response.data ?? []);
         },
         error: (error) => {
-          console.error('Failed to load interpolation keywords', error);
+          // console.error('Failed to load interpolation keywords', error);
         },
       });
   }
@@ -329,7 +329,7 @@ export class EmailTemplateComponent implements OnInit {
         this.toast.success('Email template saved successfully');
       },
       error: (error) => {
-        console.error('Failed to save email notification template', error);
+        // console.error('Failed to save email notification template', error);
         this.toast.error(
           error.error?.message ?? 'Failed to save email template. Please try again.',
         );

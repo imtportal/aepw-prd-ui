@@ -1,10 +1,6 @@
 import { computed, Injectable, signal } from '@angular/core';
 
-import {
-  LoginContext,
-  PageAccess,
-  UserDetails,
-} from '../models/authorization.model';
+import { LoginContext, PageAccess, UserDetails } from '../models/authorization.model';
 
 @Injectable({
   providedIn: 'root',
@@ -21,9 +17,9 @@ export class AuthStateService {
   // readonly actionPermissions = signal<ActionPermission[]>([]);
 
   initialize(context: LoginContext): void {
-    console.log('[AuthState] initialize() called');
-    console.log('[AuthState] User:', context.userDetails);
-    console.log('[AuthState] Page Access count:', context.pageAccess.length);
+    // console.log('[AuthState] initialize() called');
+    // console.log('[AuthState] User:', context.userDetails);
+    // console.log('[AuthState] Page Access count:', context.pageAccess.length);
     // console.log('[AuthState] Action Permissions count:', context.actionPermissions.length);
 
     this.user.set(context.userDetails);
@@ -31,41 +27,48 @@ export class AuthStateService {
     this.pageAccess.set(context.pageAccess);
     // this.actionPermissions.set(context.actionPermissions);
 
-    console.log('[AuthState] Saving LoginContext to sessionStorage');
+    // console.log('[AuthState] Saving LoginContext to sessionStorage');
     sessionStorage.setItem('loginContext', JSON.stringify(context));
-    console.log('[AuthState] LoginContext saved successfully');
+    // console.log('[AuthState] LoginContext saved successfully');
   }
 
-  restore(): void {
-    console.log('[AuthState] restore() called');
+  restore(expectedOid: string): boolean {
+    // console.log('[AuthState] restore() called');
     const json = sessionStorage.getItem('loginContext');
 
     if (!json) {
-      console.log('[AuthState] No stored LoginContext found in sessionStorage');
-      return;
+      // console.log('[AuthState] No stored LoginContext found in sessionStorage');
+      return false;
     }
 
-    console.log('[AuthState] Restoring LoginContext from sessionStorage');
-    const context = JSON.parse(json) as LoginContext;
+    try {
+      const context = JSON.parse(json) as LoginContext;
 
-    console.log('[AuthState] Restored user:', context.userDetails);
-    console.log('[AuthState] Restored page access count:', context.pageAccess.length);
-    // Don't call initialize() here to avoid double-logging and re-saving
-    this.user.set(context.userDetails);
-    this.systemRoleName.set(context.systemRoleName ?? '');
-    this.pageAccess.set(context.pageAccess);
-    // this.actionPermissions.set(context.actionPermissions);
+      if (context.azureAdObjectId?.toLowerCase() !== expectedOid.toLowerCase()) {
+        this.clear();
+        return false;
+      }
+
+      this.user.set(context.userDetails);
+      this.systemRoleName.set(context.systemRoleName ?? '');
+      this.pageAccess.set(context.pageAccess);
+
+      return true;
+    } catch {
+      this.clear();
+      return false;
+    }
   }
 
   clear(): void {
-    console.log('[AuthState] clear() called');
+    // console.log('[AuthState] clear() called');
     sessionStorage.removeItem('loginContext');
 
     this.user.set(null);
     this.systemRoleName.set('');
     this.pageAccess.set([]);
     // this.actionPermissions.set([]);
-    console.log('[AuthState] Authorization state cleared');
+    // console.log('[AuthState] Authorization state cleared');
   }
 
   hasPageAccess(pageKey: string): boolean {

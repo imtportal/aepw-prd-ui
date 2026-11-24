@@ -195,7 +195,7 @@ export class AuditPageComponent implements OnInit {
           return items;
         }),
         catchError((err) => {
-          console.error('[AuditPageComponent] Project Typeahead Error:', err);
+          // console.error('[AuditPageComponent] Project Typeahead Error:', err);
           return of<ImpactMasterLookup[]>(initProj ? [initProj] : []);
         }),
       );
@@ -432,7 +432,9 @@ export class AuditPageComponent implements OnInit {
           }));
           this.programOptions.set(options);
         },
-        error: (err) => console.error('[AuditPageComponent] Program lookup error:', err),
+        error: (err) => {
+          // console.error('[AuditPageComponent] Program lookup error:', err);
+        },
       });
 
     // 300ms Debounce stream for Keyword Search
@@ -608,7 +610,7 @@ export class AuditPageComponent implements OnInit {
           this.metricsLoading.set(false);
         },
         error: (err) => {
-          console.warn('[AuditPageComponent] getAllMetrics error, falling back:', err);
+          // console.warn('[AuditPageComponent] getAllMetrics error, falling back:', err);
           this.fallbackToProjectMetrics(projectId);
         },
       });

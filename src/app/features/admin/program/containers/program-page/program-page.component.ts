@@ -72,14 +72,14 @@ export class ProgramPageComponent implements OnInit {
   protected readonly canAddProgram = computed(() => {
     const result = this.actionAccess().some((action) => action.key === 'ADD' && action.value);
 
-    console.log('ADD button access:', result);
+    // console.log('ADD button access:', result);
 
     return result;
   });
   protected readonly canEditProgram = computed(() => {
     const result = this.actionAccess().some((action) => action.key === 'EDIT' && action.value);
 
-    console.log('EDIT button access:', result);
+    // console.log('EDIT button access:', result);
 
     return result;
   });
@@ -157,7 +157,7 @@ export class ProgramPageComponent implements OnInit {
           return this.lookupService.getPrograms(searchTerm).pipe(
             map((response) => response.data ?? []),
             catchError((error) => {
-              console.error('[Program Typeahead]', error);
+              // console.error('[Program Typeahead]', error);
               return of<ProgramLookup[]>([]);
             }),
           );
@@ -195,13 +195,13 @@ export class ProgramPageComponent implements OnInit {
       .pipe(
         takeUntilDestroyed(this.destroyRef),
         finalize(() => {
-          console.log('Finalize called');
+          // console.log('Finalize called');
           this.loading.set(false);
         }),
       )
       .subscribe({
         next: (response) => {
-          console.log('Response', response);
+          // console.log('Response', response);
           const pagedData = response.data;
 
           this.totalRecords.set(pagedData.totalRecords);
@@ -210,7 +210,9 @@ export class ProgramPageComponent implements OnInit {
 
           this._allPrograms.set(pagedData.items);
         },
-        error: (err) => console.error(err),
+        error: (err) => {
+          // console.error(err);
+        },
       });
   }
 
@@ -218,7 +220,7 @@ export class ProgramPageComponent implements OnInit {
     const userId = this.authStateService.getCurrentUserId();
 
     if (!userId) {
-      console.error('[Authorization] Current user ID not available.');
+      // console.error('[Authorization] Current user ID not available.');
       return;
     }
 
@@ -229,10 +231,10 @@ export class ProgramPageComponent implements OnInit {
         next: (response) => {
           this.actionAccess.set(response.data ?? []);
 
-          console.log('[Authorization] User Management action access:', response.data);
+          // console.log('[Authorization] User Management action access:', response.data);
         },
         error: (error) => {
-          console.error('[Authorization] Failed to load User Management action access:', error);
+          // console.error('[Authorization] Failed to load User Management action access:', error);
 
           this.actionAccess.set([]);
         },
@@ -242,7 +244,7 @@ export class ProgramPageComponent implements OnInit {
     if (!this.canEditProgram()) {
       return;
     }
-    console.log('on edit program clicked');
+    // console.log('on edit program clicked');
     this.router.navigate(['/admin/programs', programId]);
   }
   onAddProgram() {
@@ -272,7 +274,7 @@ export class ProgramPageComponent implements OnInit {
     this.refreshPrograms();
   }
   onSearch(event: any): void {
-    console.log('SEARCH EVENT', event.term);
+    // console.log('SEARCH EVENT', event.term);
   }
   protected readonly statusColors: Record<string, string> = {
     Active: 'bg-[hsl(var(--aepw-green)/0.12)] text-[hsl(var(--aepw-green))]',

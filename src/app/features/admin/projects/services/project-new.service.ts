@@ -79,10 +79,10 @@ export class ImpactMasterService {
       })
       .pipe(
         tap((response) => {
-          console.log('[ImpactMasterService] Get All ImpactMasters Success:', response);
+          // console.log('[ImpactMasterService] Get All ImpactMasters Success:', response);
         }),
         catchError((error) => {
-          console.error('[ImpactMasterService] Get All ImpactMasters Error:', error);
+          // console.error('[ImpactMasterService] Get All ImpactMasters Error:', error);
           return throwError(() => error);
         }),
       );
@@ -104,10 +104,10 @@ export class ImpactMasterService {
       .get<ApiResponse<ImpactMasterDetailModel>>(`${this.apiUrl}/${ImpactMasterId}`, { params })
       .pipe(
         tap((response) => {
-          console.log('[ImpactMasterService] Get ImpactMaster By Id Success:', response);
+          // console.log('[ImpactMasterService] Get ImpactMaster By Id Success:', response);
         }),
         catchError((error) => {
-          console.error('[ImpactMasterService] Get ImpactMaster By Id Error:', error);
+          // console.error('[ImpactMasterService] Get ImpactMaster By Id Error:', error);
           return throwError(() => error);
         }),
       );
@@ -130,10 +130,10 @@ export class ImpactMasterService {
 
     return this.http.get<ApiResponse<number[]>>(`${this.apiUrl}/GetReviewIds`, { params }).pipe(
       tap((response) => {
-        console.log('[ImpactMasterService] Get Review IDs Success:', response);
+        // console.log('[ImpactMasterService] Get Review IDs Success:', response);
       }),
       catchError((error) => {
-        console.error('[ImpactMasterService] Get Review IDs Error:', error);
+        // console.error('[ImpactMasterService] Get Review IDs Error:', error);
         return throwError(() => error);
       }),
     );
@@ -145,14 +145,14 @@ export class ImpactMasterService {
   ): Observable<ApiResponse<CreateImpactMasterResponse>> {
     return this.http.post<ApiResponse<CreateImpactMasterResponse>>(this.apiUrl, request).pipe(
       tap((response) => {
-        console.log('[ImpactMasterService] Save ImpactMaster Success:', response);
+        // console.log('[ImpactMasterService] Save ImpactMaster Success:', response);
       }),
       catchError((error) => {
-        console.error('[ImpactMasterService] ❌ ERROR RECEIVED');
-        console.error('[ImpactMasterService] Status:', error.status);
-        console.error('[ImpactMasterService] Error body:', error.error);
-        console.error('[ImpactMasterService] Message:', error.error?.message);
-        console.error('[ImpactMasterService] ErrorCode:', error.error?.errorCode);
+        // console.error('[ImpactMasterService] ❌ ERROR RECEIVED');
+        // console.error('[ImpactMasterService] Status:', error.status);
+        // console.error('[ImpactMasterService] Error body:', error.error);
+        // console.error('[ImpactMasterService] Message:', error.error?.message);
+        // console.error('[ImpactMasterService] ErrorCode:', error.error?.errorCode);
         return throwError(() => error);
       }),
     );
@@ -165,10 +165,10 @@ export class ImpactMasterService {
   ): Observable<ApiResponse<boolean>> {
     return this.http.put<ApiResponse<boolean>>(`${this.apiUrl}/${impactMetricId}`, request).pipe(
       tap((response) => {
-        console.log('[ImpactMasterService] Update ImpactMaster Success:', response);
+        // console.log('[ImpactMasterService] Update ImpactMaster Success:', response);
       }),
       catchError((error) => {
-        console.error('[ImpactMasterService] Update ImpactMaster Error:', error);
+        // console.error('[ImpactMasterService] Update ImpactMaster Error:', error);
         return throwError(() => error);
       }),
     );
@@ -183,10 +183,10 @@ export class ImpactMasterService {
       })
       .pipe(
         tap((response) => {
-          console.log('[ImpactMasterService] Get Metrics Success:', response);
+          // console.log('[ImpactMasterService] Get Metrics Success:', response);
         }),
         catchError((error) => {
-          console.error('[ImpactMasterService] Get Metrics Error:', error);
+          // console.error('[ImpactMasterService] Get Metrics Error:', error);
           return throwError(() => error);
         }),
       );
@@ -199,10 +199,10 @@ export class ImpactMasterService {
       .get<ApiResponse<ImpactMasterMetricModel[]>>(`${this.apiUrl}/${ImpactMasterId}/metrics`)
       .pipe(
         tap((response) => {
-          console.log('[ImpactMasterService] Get Metrics For ImpactMaster Success:', response);
+          // console.log('[ImpactMasterService] Get Metrics For ImpactMaster Success:', response);
         }),
         catchError((error) => {
-          console.error('[ImpactMasterService] Get Metrics For ImpactMaster Error:', error);
+          // console.error('[ImpactMasterService] Get Metrics For ImpactMaster Error:', error);
           return throwError(() => error);
         }),
       );
@@ -217,10 +217,10 @@ export class ImpactMasterService {
       .post<ApiResponse<boolean>>(`${this.apiUrl}/${impactMetricId}/metrics`, { ...request })
       .pipe(
         tap((response) => {
-          console.log('[ImpactMasterService] Save ImpactMaster Metrics Success:', response);
+          // console.log('[ImpactMasterService] Save ImpactMaster Metrics Success:', response);
         }),
         catchError((error) => {
-          console.error('[ImpactMasterService] Save ImpactMaster Metrics Error:', error);
+          // console.error('[ImpactMasterService] Save ImpactMaster Metrics Error:', error);
           return throwError(() => error);
         }),
       );
@@ -236,10 +236,10 @@ export class ImpactMasterService {
       })
       .pipe(
         tap((response) => {
-          console.log('[ImpactMasterService] Delete ImpactMaster Success:', response);
+          // console.log('[ImpactMasterService] Delete ImpactMaster Success:', response);
         }),
         catchError((error) => {
-          console.error('[ImpactMasterService] Delete ImpactMaster Error:', error);
+          // console.error('[ImpactMasterService] Delete ImpactMaster Error:', error);
           return throwError(() => error);
         }),
       );
@@ -253,10 +253,10 @@ export class ImpactMasterService {
       .post<ApiResponse<CopyImpactMasterResponse>>(`${this.apiUrl}/copy`, request)
       .pipe(
         tap((response) => {
-          console.log('[ImpactMasterService] Copy ImpactMaster Success:', response);
+          // console.log('[ImpactMasterService] Copy ImpactMaster Success:', response);
         }),
         catchError((error) => {
-          console.error('[ImpactMasterService] Copy ImpactMaster Error:', error);
+          // console.error('[ImpactMasterService] Copy ImpactMaster Error:', error);
           return throwError(() => error);
         }),
       );
@@ -284,7 +284,7 @@ export class ImpactMasterService {
       .get<ApiResponse<ImpactMasterFilterOptionsDto>>(`${this.apiUrl}/filter-options`, { params })
       .pipe(
         map((res: { data: any }) => {
-          console.log('ImpactMasterFilterOptionsDto:', res.data);
+          // console.log('ImpactMasterFilterOptionsDto:', res.data);
           return res.data;
         }),
       );

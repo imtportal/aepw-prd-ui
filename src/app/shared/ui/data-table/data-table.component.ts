@@ -9,6 +9,7 @@ import {
 } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 import { PagedRequest } from '../../../core/models/api-response.model';
+import { FormsModule } from '@angular/forms';
 
 export interface DataColumn {
   key: string;
@@ -29,7 +30,7 @@ const PAGE_SIZE_OPTIONS = [10, 20, 50] as const;
   selector: 'ui-data-table',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [NgTemplateOutlet],
+  imports: [NgTemplateOutlet, FormsModule],
   templateUrl: './data-table.component.html',
 })
 export class DataTableComponent<T = unknown> {
@@ -54,7 +55,7 @@ export class DataTableComponent<T = unknown> {
   protected readonly pageSizeOptions = PAGE_SIZE_OPTIONS;
 
   readonly currentPage = signal(0);
-  readonly currentPageSize = signal(10);
+  protected readonly currentPageSize = signal(10);
   // sorting
   readonly sortKey = signal<string | undefined>(undefined);
   readonly sortDir = signal<'asc' | 'desc' | undefined>(undefined);
@@ -165,7 +166,7 @@ export class DataTableComponent<T = unknown> {
 
   /** Call this from parent ngOnInit to trigger the initial load with default page size. */
   ngOnInit(): void {
-    const initial = this.initialPageSize();
+    const initial = this.initialPageSize(); 
     this.currentPageSize.set(initial);
     this.emit();
   }

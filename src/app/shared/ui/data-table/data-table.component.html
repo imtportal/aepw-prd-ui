@@ -140,7 +140,7 @@
         <span class="text-xs"> Rows per page </span>
  
         <select
-          [value]="currentPageSize()"
+          [ngModel]="currentPageSize()"
           (change)="onPageSizeChange($event)"
           class="h-7 rounded border border-input bg-background px-2 text-xs"
         >

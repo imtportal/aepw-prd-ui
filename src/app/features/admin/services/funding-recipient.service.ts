@@ -24,10 +24,10 @@ export class FundingRecipientService {
     return this.http.get<PaginatedResponse<FundingRecipient>>(this.url, { params: p }).pipe(
       tap(res => {
         this._recipients.set(res.data);
-        console.log('[FundingRecipientService] Load Paged Success:', res);
+        // console.log('[FundingRecipientService] Load Paged Success:', res);
       }),
       catchError(err => {
-        console.error('[FundingRecipientService] Load Paged Error:', err);
+        // console.error('[FundingRecipientService] Load Paged Error:', err);
         return throwError(() => err);
       }),
     );
@@ -43,10 +43,10 @@ export class FundingRecipientService {
         this._recipients.update(list =>
           list.map(r => r.fundingRecipientId === id ? { ...r, ...changes } : r),
         );
-        console.log('[FundingRecipientService] Update Recipient Success:', res);
+        // console.log('[FundingRecipientService] Update Recipient Success:', res);
       }),
       catchError(err => {
-        console.error('[FundingRecipientService] Update Recipient Error:', err);
+        // console.error('[FundingRecipientService] Update Recipient Error:', err);
         return throwError(() => err);
       }),
     );
@@ -56,10 +56,10 @@ export class FundingRecipientService {
     return this.http.post<ApiResponse<FundingRecipient>>(this.url, recipient).pipe(
       tap(res => {
         if (res.data) this._recipients.update(list => [...list, res.data]);
-        console.log('[FundingRecipientService] Add Recipient Success:', res);
+        // console.log('[FundingRecipientService] Add Recipient Success:', res);
       }),
       catchError(err => {
-        console.error('[FundingRecipientService] Add Recipient Error:', err);
+        // console.error('[FundingRecipientService] Add Recipient Error:', err);
         return throwError(() => err);
       }),
     );

@@ -27,10 +27,10 @@ export class EmailNotificationTemplateService {
       >(`${this.apiUrl}/interpolation-keywords`)
       .pipe(
         catchError((error) => {
-          console.error(
-            '[EmailNotificationTemplateService] Get Interpolation Keywords Error:',
-            error,
-          );
+          // console.error(
+            // '[EmailNotificationTemplateService] Get Interpolation Keywords Error:',
+            // error,
+          // );
           return throwError(() => error);
         }),
       );
@@ -41,10 +41,10 @@ export class EmailNotificationTemplateService {
       .get<ApiResponse<EmailNotificationTemplateResponse[]>>(`${this.apiUrl}/email-templates`)
       .pipe(
         catchError((error) => {
-          console.error(
-            '[EmailNotificationTemplateService] Get Email Notification Templates Error:',
-            error,
-          );
+          // console.error(
+            // '[EmailNotificationTemplateService] Get Email Notification Templates Error:',
+            // error,
+          // );
           return throwError(() => error);
         }),
       );
@@ -57,10 +57,10 @@ export class EmailNotificationTemplateService {
       .post<ApiResponse<EmailNotificationTemplateResponse>>(this.apiUrl, payload)
       .pipe(
         catchError((error) => {
-          console.error(
-            '[EmailNotificationTemplateService] Save Email Notification Template Error:',
-            error,
-          );
+          // console.error(
+            // '[EmailNotificationTemplateService] Save Email Notification Template Error:',
+            // error,
+          // );
           return throwError(() => error);
         }),
       );

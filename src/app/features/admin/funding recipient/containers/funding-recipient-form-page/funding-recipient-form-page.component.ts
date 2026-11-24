@@ -49,7 +49,7 @@ export class FundingRecipientFormPage implements OnInit, HasUnsavedChanges {
   protected readonly canAddFR = computed(() => {
     const result = this.actionAccess().some((action) => action.key === 'ADD' && action.value);
 
-    console.log('ADD button access:', result);
+    // console.log('ADD button access:', result);
 
     return result;
   });
@@ -57,7 +57,7 @@ export class FundingRecipientFormPage implements OnInit, HasUnsavedChanges {
   protected readonly canEditFR = computed(() => {
     const result = this.actionAccess().some((action) => action.key === 'EDIT' && action.value);
 
-    console.log('EDIT button access:', result);
+    // console.log('EDIT button access:', result);
 
     return result;
   });
@@ -67,7 +67,7 @@ export class FundingRecipientFormPage implements OnInit, HasUnsavedChanges {
   protected readonly canDeleteFR = computed(() => {
     const result = this.actionAccess().some((action) => action.key === 'DELETE' && action.value);
 
-    console.log('DELETE button access:', result);
+    // console.log('DELETE button access:', result);
 
     return result;
   });
@@ -197,7 +197,7 @@ export class FundingRecipientFormPage implements OnInit, HasUnsavedChanges {
     const userId = this.authStateService.getCurrentUserId();
 
     if (!userId) {
-      console.error('[Authorization] Current user ID not available.');
+      // console.error('[Authorization] Current user ID not available.');
       return;
     }
 
@@ -208,10 +208,10 @@ export class FundingRecipientFormPage implements OnInit, HasUnsavedChanges {
         next: (response) => {
           this.actionAccess.set(response.data ?? []);
 
-          console.log('[Authorization] FR action access:', response.data);
+          // console.log('[Authorization] FR action access:', response.data);
         },
         error: (error) => {
-          console.error('[Authorization] Failed to load FR action access:', error);
+          // console.error('[Authorization] Failed to load FR action access:', error);
 
           this.actionAccess.set([]);
         },
@@ -286,7 +286,7 @@ export class FundingRecipientFormPage implements OnInit, HasUnsavedChanges {
           this.router.navigate(['/admin/funding-recipients']);
         },
         error: (error) => {
-          console.error(error);
+          // console.error(error);
           this.toast.error(error?.error?.message ?? 'Failed to create Funding Recipient.');
         },
       });
@@ -323,14 +323,14 @@ export class FundingRecipientFormPage implements OnInit, HasUnsavedChanges {
           this.router.navigate(['/admin/funding-recipients']);
         },
         error: (error) => {
-          console.error(error);
+          // console.error(error);
           this.toast.error(error?.error?.message ?? 'Failed to update Funding Recipient.');
         },
       });
   }
   private loadFundingRecipient(fundingRecipientId: number): void {
     this.isEditMode.set(true);
-    console.log(this.isEditMode());
+    // console.log(this.isEditMode());
     this.fundingRecipientId.set(fundingRecipientId);
     forkJoin({
       detail: this.fundingRecipientService.getFundingRecipientById(fundingRecipientId),
@@ -341,7 +341,7 @@ export class FundingRecipientFormPage implements OnInit, HasUnsavedChanges {
           this.patchFundingRecipientForm(detail.data);
         },
         error: (err) => {
-          console.error(err);
+          // console.error(err);
           this.toast.error('Failed to load funding recipient.');
         },
       });
@@ -382,7 +382,7 @@ export class FundingRecipientFormPage implements OnInit, HasUnsavedChanges {
     this.fundingRecipientForm.markAsPristine();
   }
   onSave(): void {
-    console.log('ON SAVE CALLED', new Date().toISOString());
+    // console.log('ON SAVE CALLED', new Date().toISOString());
     if (this.fundingRecipientForm.invalid) {
       this.fundingRecipientForm.markAllAsTouched();
 
@@ -390,7 +390,7 @@ export class FundingRecipientFormPage implements OnInit, HasUnsavedChanges {
     }
 
     if (this.saving()) {
-      console.log('SAVE BLOCKED - ALREADY SAVING');
+      // console.log('SAVE BLOCKED - ALREADY SAVING');
       return;
     }
     if (this.isEditMode()) {

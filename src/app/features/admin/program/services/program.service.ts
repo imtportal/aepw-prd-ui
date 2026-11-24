@@ -34,10 +34,10 @@ export class ProgramService {
 
     return this.http.get<ApiResponse<PagedResponse<ProgramModel>>>(this.apiUrl, { params }).pipe(
       tap((response) => {
-        console.log('[ProgramService] Get Programs Success:', response);
+        // console.log('[ProgramService] Get Programs Success:', response);
       }),
       catchError((error) => {
-        console.error('[ProgramService] Get Programs Error:', error);
+        // console.error('[ProgramService] Get Programs Error:', error);
         return throwError(() => error);
       }),
     );
@@ -46,10 +46,10 @@ export class ProgramService {
   getProgramById(programId: string): Observable<ApiResponse<ProgramDetailModel>> {
     return this.http.get<ApiResponse<ProgramDetailModel>>(`${this.apiUrl}/${programId}`).pipe(
       tap((response) => {
-        console.log('[ProgramService] Get Program By Id Success:', response);
+        // console.log('[ProgramService] Get Program By Id Success:', response);
       }),
       catchError((error) => {
-        console.error('[ProgramService] Get Program By Id Error:', error);
+        // console.error('[ProgramService] Get Program By Id Error:', error);
         return throwError(() => error);
       }),
     );
@@ -58,10 +58,10 @@ export class ProgramService {
   createProgram(payload: InsertProgramRequest): Observable<ApiResponse<boolean>> {
     return this.http.post<ApiResponse<boolean>>(this.apiUrl, payload).pipe(
       tap((response) => {
-        console.log('[ProgramService] Insert Program Success:', response);
+        // console.log('[ProgramService] Insert Program Success:', response);
       }),
       catchError((error) => {
-        console.error('[ProgramService] Insert Program Error:', error);
+        // console.error('[ProgramService] Insert Program Error:', error);
         return throwError(() => error);
       }),
     );
@@ -70,10 +70,10 @@ export class ProgramService {
   updateProgram(payload: UpdateProgramRequest): Observable<ApiResponse<boolean>> {
     return this.http.put<ApiResponse<boolean>>(`${this.apiUrl}/${payload.programId}`, payload).pipe(
       tap((response) => {
-        console.log('[ProgramService] Update Program Success:', response);
+        // console.log('[ProgramService] Update Program Success:', response);
       }),
       catchError((error) => {
-        console.error('[ProgramService] Update Program Error:', error);
+        // console.error('[ProgramService] Update Program Error:', error);
         return throwError(() => error);
       }),
     );

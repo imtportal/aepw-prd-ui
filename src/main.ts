@@ -68,7 +68,13 @@ async function main(): Promise<void> {
   hideStartupLoader();
 }
 
-main().catch((err: unknown) => {
-  console.error('[Bootstrap] Fatal error during startup:', err);
-  showStartupError();
-});
+if (window.self === window.top) {
+  // Normal browser tab: initialise MSAL and bootstrap Angular.
+  main().catch((err: unknown) => {
+    console.error('[Bootstrap] Fatal error during startup:', err);
+    showStartupError();
+  });
+} else {
+  // MSAL hidden iframe: do not initialise or bootstrap the Angular SPA.
+  console.info('[Bootstrap] Running inside an iframe. Skipping Angular bootstrap.');
+}

@@ -1007,9 +1007,7 @@
                                 {{ subMetric.frComment }}
                               </span>
 
-                              @if (
-                            topMetric.allowAction ) {
-
+                              @if (topMetric.allowAction) {
                               <button
                                 type="button"
                                 (click)="
@@ -1095,6 +1093,8 @@
                           </div>
                         </div>
 
+                      
+                        
                         @let fileNameUploading =
                           uploadingEvidenceForMetricCode()[subMetric.metricCode];
                         @if (allowAddingEvidences()) {
@@ -1106,12 +1106,30 @@
                             [fromQueue]="true"
                           />
                         }
+
+                        @if (topMetric.allowAction && evidencesSelectForSubmetric()[subMetric.metricCode]) {
+                          <button class="flex h-6 items-center gap-1 rounded border border-border px-2 text-[10px] text-destructive-foreground transition-colors hover:border-[hsl(var(--aepw-blue)/0.4)] hover:text-[hsl(var(--aepw-blue))] bg-destructive mr-2"
+                            (click)="bulkDeleteEvidenceSubmetricCode.set(subMetric.metricCode)">
+                            <lucide-icon name="trash-2" class="h-4 w-4" />
+                            Delete Evidence{{evidencesSelectForSubmetric()[subMetric.metricCode] == 1 ? '' : 's'}}
+                          </button>
+                        }
                       </div>
 
                       <div class="overflow-x-auto rounded-md border my-2 mx-4 bg-background">
                         <table class="min-w-full text-left text-sm">
                           <thead class="bg-muted/30 text-xs uppercase text-muted-foreground">
                             <tr>
+                              @if (subMetric.evidences?.length) {
+                                <th (click)="selectAllEvidenceCheckbox.click();" class="px-3 py-2 hover:bg-muted cursor-pointer">
+                                  <input [(ngModel)]="evidenceSelectedAll()[subMetric.metricCode]"
+                                    (click)="$event.stopPropagation()"
+                                    (change)="selectUnselectAllEvidences(subMetric.metricCode, $event)"
+                                    type="checkbox" class="h-4 w-4 cursor-pointer rounded border-input"
+                                    #selectAllEvidenceCheckbox
+                                   >
+                                </th>
+                              }
                               <th class="px-3 py-2">File</th>
                               <th class="px-3 py-2">Size</th>
                               <th class="px-3 py-2">
@@ -1183,6 +1201,10 @@
                                 track evidence.evidenceId
                               ) {
                                 <tr class="border-t border-border">
+                                  <td (click)="evidenceCheckbox.click()" class="px-3 py-2 hover:bg-muted cursor-pointer">
+                                    <input [(ngModel)]="evidence.selected" (click)="$event.stopPropagation()" (change)="updateEvidenceSelectAll(subMetric)" type="checkbox" class="h-4 w-4 cursor-pointer rounded border-input" #evidenceCheckbox>
+                                 
+                                  </td>
                                   <td class="px-3 py-2 text-[hsl(var(--aepw-blue))]">
                                     {{ evidence.fileName }}
                                   </td>
@@ -1419,6 +1441,73 @@
         </button>
         <button
           (click)="cancelEvidenceDeletion()"
+          class="rounded-md border border-border bg-transparent px-3 py-1.5 text-xs font-medium hover:bg-muted/40"
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (bulkDeleteEvidenceSubmetricCode() != null) {
+  <div
+    class="fixed inset-0 z-40 bg-black/40 backdrop-blur-[1px]"
+    (click)="cancelEvidenceBulkDeletion()"
+  ></div>
+  <div
+    class="fixed left-1/2 top-1/2 z-50 w-[40rem] max-w-[92vw] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-xl border border-border bg-card shadow-2xl"
+    (click)="$event.stopPropagation()"
+  >
+    <!-- Header -->
+    <div class="flex items-center justify-between gap-3 border-b bg-muted/30 px-5 py-3.5">
+      <div class="flex min-w-0 items-center gap-2">
+        <span
+          class="bg-destructive/10 flex h-7 items-center justify-center rounded-full shrink-0 text-destructive w-7"
+        >
+          <lucide-icon name="triangle-alert" [size]="14" />
+        </span>
+        <div class="min-w-0">
+          <p class="text-sm font-semibold text-foreground">Delete Evidences Confirmation</p>
+          <!-- <p class="font-mono text-xs text-muted-foreground">{{ modalInfoMetric()?.metricCode }}</p> -->
+        </div>
+      </div>
+      <button
+        type="button"
+        (click)="cancelEvidenceBulkDeletion()"
+        class="shrink-0 rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+      >
+        <lucide-icon name="x" [size]="16" />
+      </button>
+    </div>
+
+    <!-- Body -->
+    <div class="max-h-[70vh] space-y-5 overflow-y-auto p-5">
+      <!-- Metric Description / Guiding Notes -->
+      <div class="space-y-1.5">
+        <label class="text-xs font-semibold text-muted-foreground"> </label>
+        <p class="text-sm text-foreground">
+          @if (evidencesDeletionInProgress()) {
+            Deleting evidences...
+          } @else {
+            Are you sure you want to delete these evidence item(s)?
+          }
+        </p>
+      </div>
+      <div class="flex items-center justify-end gap-2">
+        <button
+          (click)="confirmDeleteEvidences()"
+          class="flex items-center gap-1 rounded-md bg-red-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-600 disabled:opacity-40"
+          [disabled]="evidencesDeletionInProgress()"
+        >
+          @if (evidencesDeletionInProgress()) {
+            <lucide-icon name="loader-circle" class="animate-spin" [size]="14" />
+          }
+
+          Delete
+        </button>
+        <button
+          (click)="cancelEvidenceBulkDeletion()"
           class="rounded-md border border-border bg-transparent px-3 py-1.5 text-xs font-medium hover:bg-muted/40"
         >
           Cancel

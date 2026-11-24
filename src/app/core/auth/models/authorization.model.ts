@@ -1,4 +1,5 @@
 export interface LoginContext {
+  azureAdObjectId: string;
   userDetails: UserDetails;
   pageAccess: PageAccess[];
   systemRoleName?: string;
@@ -30,4 +31,3 @@ export interface PageAndActionAccessDto {
   pageAccess: PageAccess;
   actionAccess: ActionAccessDto[];
 }
-

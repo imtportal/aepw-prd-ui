@@ -9,6 +9,7 @@ import Aura from '@primeng/themes/aura';
 import { routes } from './app.routes';
 import { MessageService } from 'primeng/api';
 import { authInterceptor } from './core/auth/interceptors/auth.interceptor';
+import { errorInterceptor } from './core/auth/interceptors/error.interceptor';
 import { provideAuthInitializer } from './core/auth';
 import { loadingInterceptor } from './core/interceptors/loading.interceptor';
 import { API_PROVIDERS } from './core/api/api.providers';
@@ -63,7 +64,7 @@ export const appConfig: ApplicationConfig = {
     provideAnimations(),
     provideRouter(routes, withComponentInputBinding()),
     provideHttpClient(
-      withInterceptors([ authInterceptor, loadingInterceptor]),
+      withInterceptors([authInterceptor, errorInterceptor, loadingInterceptor]),
     ),
     provideAuthInitializer(), // Initialize auth/authorization before app starts
     providePrimeNG({

@@ -1,8 +1,10 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
-import { catchError, finalize, map, Observable, of, tap } from 'rxjs';
+import { catchError, finalize, forkJoin, map, Observable, of, tap } from 'rxjs';
 import {
   ReviewApprovalChangesPreviewDto,
+  ReviewStageActionRequest,
   ReviewStageApprovalChangeRequest,
+  ReviewStageEnableResultDto,
   ReviewStageOption,
   // ReviewPeriodOption as ReviewStageOption,
 } from '../models/review-stage-management.model';
@@ -125,7 +127,6 @@ export class ReviewStageManagementService {
       .post<ApiResponse<number>>(`${this.apiUrl}/SaveReviewStages?userId=${userId}`, input)
       .pipe(
         catchError((err) => {
-          console.error('Error saving review stages:', err);
 
           return of({
             data: 0,
@@ -149,7 +150,6 @@ export class ReviewStageManagementService {
   }
 
   public haveStageOptionsChanged = computed(() => {
-    // console.log("haveStageOptionsChanged triggered", ( new Date() ).toTimeString());
 
     const previousStageValuesFromDB: Map<string, boolean> = this.previousStageValuesFromDB
       ? this.previousStageValuesFromDB()
@@ -173,7 +173,6 @@ export class ReviewStageManagementService {
       >(`${this.apiUrl}/GetApprovalChanges`, stageChanges)
       .pipe(
         catchError((err) => {
-          console.error('Error fetching review stage approval changes:', err);
 
           return of({
             data: null,
@@ -195,5 +194,64 @@ export class ReviewStageManagementService {
         StageCode: stage.code,
         IsActive: stage.isActive,
       }));
+  }
+  ///////////////////////////////////////////////////////////////////////////////////////////
+
+  enableReviewStage(request: ReviewStageActionRequest) {
+    return this.http
+      .post<ApiResponse<ReviewStageEnableResultDto>>(`${this.apiUrl}/EnableReviewStage`, request)
+      .pipe(
+        catchError((err) =>
+          of({
+            data: null,
+            message: err?.error?.message ?? err?.message ?? 'Failed to enable review stage(s).',
+            success: false,
+          } satisfies ApiResponse<ReviewStageEnableResultDto | null>),
+        ),
+      );
+  }
+
+  disableReviewStage(request: ReviewStageActionRequest) {
+    return this.http.post<ApiResponse<number>>(`${this.apiUrl}/DisableReviewStage`, request).pipe(
+      catchError((err) =>
+        of({
+          data: null,
+          message: err?.error?.message ?? err?.message ?? 'Failed to disable review stage(s).',
+          success: false,
+        } satisfies ApiResponse<number | null>),
+      ),
+    );
+  }
+
+  applyReviewStageChanges(stageChanges: ReviewStageApprovalChangeRequest[], userId: number) {
+    const stagesToEnable = stageChanges
+      .filter((stage) => stage.IsActive)
+      .map((stage) => stage.StageCode);
+
+    const stagesToDisable = stageChanges
+      .filter((stage) => !stage.IsActive)
+      .map((stage) => stage.StageCode);
+
+    const enableRequest = stagesToEnable.length
+      ? {
+          stageCodesJson: JSON.stringify(stagesToEnable),
+          userId,
+        }
+      : null;
+
+    const disableRequest = stagesToDisable.length
+      ? {
+          stageCodesJson: JSON.stringify(stagesToDisable),
+          userId,
+        }
+      : null;
+
+    this._savingReviewStages.set(true);
+
+    return forkJoin({
+      enableResult: enableRequest ? this.enableReviewStage(enableRequest) : of(null),
+
+      disableResult: disableRequest ? this.disableReviewStage(disableRequest) : of(null),
+    }).pipe(finalize(() => this._savingReviewStages.set(false)));
   }
 }

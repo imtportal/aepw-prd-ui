@@ -121,6 +121,6 @@ export class SettingsPageComponent {
   }
 
   onSave(): void {
-    console.log('Settings saved');
+    // console.log('Settings saved');
   }
 }

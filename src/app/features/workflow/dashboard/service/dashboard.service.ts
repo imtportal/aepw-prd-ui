@@ -32,16 +32,16 @@ export class DashboardService {
         )
         .pipe(
           tap((response) => {
-            console.log(
-              '[DashboardService] Get Dashboard Portfolio Adjustment By Categories Success:',
-              response
-            );
+            // console.log(
+              // '[DashboardService] Get Dashboard Portfolio Adjustment By Categories Success:',
+              // response
+            // );
           }),
           catchError((error) => {
-            console.error(
-              '[DashboardService] Get Dashboard Portfolio Adjustment By Categories Error:',
-              error
-            );
+            // console.error(
+              // '[DashboardService] Get Dashboard Portfolio Adjustment By Categories Error:',
+              // error
+            // );
             return throwError(() => error);
           })
         );
@@ -87,16 +87,16 @@ export class DashboardService {
               )
               .pipe(
                 tap((response) => {
-                  console.log(
-                    '[DashboardService] Get Dashboard Portfolio Success:',
-                    response
-                  );
+                  // console.log(
+                    // '[DashboardService] Get Dashboard Portfolio Success:',
+                    // response
+                  // );
                 }),
                 catchError((error) => {
-                  console.error(
-                    '[DashboardService] Get Dashboard Portfolio Error:',
-                    error
-                  );
+                  // console.error(
+                    // '[DashboardService] Get Dashboard Portfolio Error:',
+                    // error
+                  // );
                   return throwError(() => error);
                 })
               );

@@ -52,6 +52,7 @@ import { ReviewTaskModel, SeniorLeadershipReviewTask } from '../../models/review
 import { DatePipe } from '@angular/common';
 import { ReviewPageRole } from '../../../../reviews/models/review.model';
 import { PeriodOption, PeriodService } from '../../../../reviews/create/services/period.service';
+import { RowsPerPageSessionStorageKey } from '../../../../../shared/constants/rows-per-page-session-storage-key.constant';
 @Component({
   selector: 'app-projects-page',
   standalone: true,
@@ -99,6 +100,7 @@ export class ReviewTasksComponent implements OnInit {
   readonly totalPages = signal(0);
   readonly pageData = computed(() => this._allReviewTasks());
   readonly pageTotal = computed(() => this.totalRecords());
+  protected readonly initialPageSize = signal<number>(10);
   // ---------------------------------------------------------------------------------------------------
   readonly reviewStages = signal<ReviewStageLookup[]>([]);
   readonly reviewPeriodCodes = signal<PeriodOption[]>([]);
@@ -171,10 +173,11 @@ export class ReviewTasksComponent implements OnInit {
   protected periodCodesHavingData = signal<string>("");
   protected readonly pendingTasksForQuartersTextPrefix = signal<string>("No pending tasks for this quarter. Tasks are available in: ");
   constructor() {
+    this.getInitialPageSize();
     effect(() => {
       const queryParamChange = this.queryParamChange();
       
-      console.log("queryParamChange triggered")
+      // console.log("queryParamChange triggered")
 
       this.updateIsSeniorLeadershipOrAdmin();
       if (queryParamChange && queryParamChange.get('status')) {
@@ -238,7 +241,7 @@ export class ReviewTasksComponent implements OnInit {
     },
     {
       key: 'title',
-      header: 'Project Title',
+      header: 'IM Name',
       headerClass: 'w-80',
       sortable: true,
     },
@@ -298,7 +301,7 @@ export class ReviewTasksComponent implements OnInit {
       },
       error: (error) => {
         this.loadingLookups.set(false);
-        console.error('Failed to load lookups', error);
+        // console.error('Failed to load lookups', error);
       },
     });
   }
@@ -370,17 +373,22 @@ export class ReviewTasksComponent implements OnInit {
         error: (err) => {
           this.loading.set(false)
           
-          console.error(err)
+          // console.error(err)
         },
       });
   }
 
   /////////////////////////////////////////////////////////////////////
+  private saveInitialPageSize(): void {
+    sessionStorage.setItem(RowsPerPageSessionStorageKey.REVIEWTASK, String(this._pageSize()));
+  }
 
   onPageChange(params: PagedRequest): void {
     this._currentPage.set(params.page);
     this._pageSize.set(params.pageSize);
 
+
+    this.saveInitialPageSize();
     this.refreshImpactMasters();
   }
   onStageChange(stageCode: number | string | null): void {
@@ -499,6 +507,10 @@ export class ReviewTasksComponent implements OnInit {
 
   }
 
+  openReviewStage(): void {
+    void this.router.navigate(['/workflow/reviewStage']);
+  }
+
   getUserId(): number | null {
     let userId: number | null = null;
     const loginContextStr = sessionStorage.getItem('loginContext');
@@ -519,5 +531,12 @@ export class ReviewTasksComponent implements OnInit {
   protected showProjectTitleTooltip = signal<number | null>(null);
   showHideProjectTitleTooltip(impactMasterId: number | null) {
     this.showProjectTitleTooltip.set(impactMasterId);
+  }
+
+  private getInitialPageSize(): void {
+    const rowsPerPageFromSession = sessionStorage.getItem(RowsPerPageSessionStorageKey.REVIEWTASK);
+    if (rowsPerPageFromSession) {
+      this.initialPageSize.set(+rowsPerPageFromSession);
+    }
   }
 }

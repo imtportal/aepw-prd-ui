@@ -33,6 +33,8 @@ import { isTenantMismatch } from '../utils/auth.utils';
  *          Angular bootstrap should NOT proceed yet.
  */
 export async function bootstrapMsal(): Promise<PublicClientApplication | null> {
+  console.log('[AUTH BOOTSTRAP] Started');
+
   // -------------------------------------------------------------------------
   // Step 1 — Create the PublicClientApplication.
   // -------------------------------------------------------------------------
@@ -44,6 +46,7 @@ export async function bootstrapMsal(): Promise<PublicClientApplication | null> {
   // -------------------------------------------------------------------------
   await msalInstance.initialize();
 
+  console.log('[AUTH BOOTSTRAP] MSAL initialized');
   // -------------------------------------------------------------------------
   // Step 3 — Process any pending redirect response.
   //
@@ -72,18 +75,21 @@ export async function bootstrapMsal(): Promise<PublicClientApplication | null> {
     // blip during the redirect), degrading the user experience.
     // Instead, log the failure and attempt to restore a cached session.
     const message = error instanceof Error ? error.message : String(error);
-    console.warn('[Auth] handleRedirectPromise failed:', message);
+    // console.warn('[Auth] handleRedirectPromise failed:', message);
 
     if (isTenantMismatch(error)) {
       // Tenant mismatch is a hard failure — the user is in the wrong
       // organisation.  Log the error clearly and fall through to login.
-      console.error(
-        '[Auth] Tenant mismatch detected.  Ensure the user belongs to the configured tenant.',
-      );
+      // console.error(
+      // '[Auth] Tenant mismatch detected.  Ensure the user belongs to the configured tenant.',
+      // );
     }
     // Fall through — attempt to use any existing cached session below.
   }
-
+  console.log('[AUTH BOOTSTRAP] Redirect result:', {
+    hasRedirectResult: !!redirectResult,
+    hasAccount: !!redirectResult?.account,
+  });
   // -------------------------------------------------------------------------
   // Step 4a — Use the account from the redirect response if available.
   // -------------------------------------------------------------------------
@@ -102,10 +108,11 @@ export async function bootstrapMsal(): Promise<PublicClientApplication | null> {
     msalInstance.getActiveAccount() ?? // Previously set active account
     msalInstance.getAllAccounts()[0] ?? // First cached account (fallback)
     null;
-
+  console.log('[AUTH BOOTSTRAP] Cached account exists:', !!activeAccount);
   if (activeAccount) {
+    console.log('[AUTH BOOTSTRAP] Restoring cached account');
     msalInstance.setActiveAccount(activeAccount);
-    console.log(activeAccount);
+    // console.log(activeAccount);
     return msalInstance;
   }
 
@@ -121,20 +128,22 @@ export async function bootstrapMsal(): Promise<PublicClientApplication | null> {
   // through to interactive login redirect.
   // -------------------------------------------------------------------------
   try {
+    console.log('[AUTH BOOTSTRAP] Attempting silent SSO');
     const silentResult = await msalInstance.ssoSilent({
       scopes: [...AUTH_SCOPES.LOGIN],
     });
-    console.log('silent result:', silentResult);
+    console.log('[AUTH BOOTSTRAP] Silent SSO succeeded:', !!silentResult.account);
     if (silentResult.account) {
       msalInstance.setActiveAccount(silentResult.account);
       return msalInstance;
     }
-  } catch {
+  } catch (error) {
     // Silent SSO failure is expected when:
     //  - No Azure AD session exists in the browser.
     //  - Third-party cookie blocking prevents the hidden iframe.
     //  - ITP (Intelligent Tracking Prevention) in Safari.
     // All of these are normal conditions — fall through to interactive login.
+    console.error('[AUTH BOOTSTRAP] Silent SSO failed:', error);
   }
 
   // -------------------------------------------------------------------------
@@ -149,6 +158,7 @@ export async function bootstrapMsal(): Promise<PublicClientApplication | null> {
   // bootstrapped yet (the page is about to navigate away).
   // -------------------------------------------------------------------------
   try {
+    console.log('[AUTH BOOTSTRAP] No recoverable session. Starting login redirect');
     await msalInstance.loginRedirect({
       scopes: [...AUTH_SCOPES.LOGIN],
       // Do not pass `prompt: 'login'` — this forces a login screen even when
@@ -159,7 +169,8 @@ export async function bootstrapMsal(): Promise<PublicClientApplication | null> {
     // loginRedirect itself can fail if called during an existing interaction
     // or if the configuration is invalid. Propagate the failure so main.ts
     // can report the startup error instead of leaving the loader indefinitely.
-    console.error('[Auth] loginRedirect failed:', error instanceof Error ? error.message : error);
+    // console.error('[Auth] loginRedirect failed:', error instanceof Error ? error.message : error);
+    console.error('[AUTH BOOTSTRAP] Login redirect failed:', error);
     throw error;
   }
 

@@ -68,7 +68,7 @@ export class FundingRecipientPageComponent implements OnInit {
   protected readonly canAddFR = computed(() => {
     const result = this.actionAccess().some((action) => action.key === 'ADD' && action.value);
 
-    console.log('ADD button access:', result);
+    // console.log('ADD button access:', result);
 
     return result;
   });
@@ -76,7 +76,7 @@ export class FundingRecipientPageComponent implements OnInit {
   protected readonly canEditFR = computed(() => {
     const result = this.actionAccess().some((action) => action.key === 'EDIT' && action.value);
 
-    console.log('EDIT button access:', result);
+    // console.log('EDIT button access:', result);
 
     return result;
   });
@@ -151,7 +151,7 @@ export class FundingRecipientPageComponent implements OnInit {
     const userId = this.authStateService.getCurrentUserId();
 
     if (!userId) {
-      console.error('[Authorization] Current user ID not available.');
+      // console.error('[Authorization] Current user ID not available.');
       return;
     }
 
@@ -162,10 +162,10 @@ export class FundingRecipientPageComponent implements OnInit {
         next: (response) => {
           this.actionAccess.set(response.data ?? []);
 
-          console.log('[Authorization] FR action access:', response.data);
+          // console.log('[Authorization] FR action access:', response.data);
         },
         error: (error) => {
-          console.error('[Authorization] Failed to load FR action access:', error);
+          // console.error('[Authorization] Failed to load FR action access:', error);
 
           this.actionAccess.set([]);
         },
@@ -177,7 +177,7 @@ export class FundingRecipientPageComponent implements OnInit {
         // No additional lookups required for this page.
       },
       error: (error) => {
-        console.error('Failed to load lookups', error);
+        // console.error('Failed to load lookups', error);
       },
     });
   }
@@ -188,7 +188,7 @@ export class FundingRecipientPageComponent implements OnInit {
       .pipe(
         map((response) => response.data ?? []),
         catchError((error) => {
-          console.error('[Funding Recipient Lookup] Failed to load funding recipients:', error);
+          // console.error('[Funding Recipient Lookup] Failed to load funding recipients:', error);
           return of<FundingRecipientLookup[]>([]);
         }),
         takeUntilDestroyed(this.destroyRef),
@@ -241,13 +241,13 @@ export class FundingRecipientPageComponent implements OnInit {
       .pipe(
         takeUntilDestroyed(this.destroyRef),
         finalize(() => {
-          console.log('Finalize called');
+          // console.log('Finalize called');
           this.loading.set(false);
         }),
       )
       .subscribe({
         next: (response) => {
-          console.log('Response', response);
+          // console.log('Response', response);
           const pagedData = response.data;
 
           this.totalRecords.set(pagedData.totalRecords);
@@ -256,7 +256,9 @@ export class FundingRecipientPageComponent implements OnInit {
 
           this._allFundingRecipients.set(pagedData.items);
         },
-        error: (err) => console.error(err),
+        error: (err) => {
+          // console.error(err);
+        },
       });
   }
   onEditFundingRecipient(fundingRecipientId: number): void {

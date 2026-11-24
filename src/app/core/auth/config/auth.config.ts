@@ -84,14 +84,14 @@ function msalLoggerCallback(level: LogLevel, message: string, containsPii: boole
 
   switch (level) {
     case LogLevel.Error:
-      console.error('[MSAL]', message);
+      // console.error('[MSAL]', message);
       break;
     case LogLevel.Warning:
-      console.warn('[MSAL]', message);
+      // console.warn('[MSAL]', message);
       break;
     case LogLevel.Info:
       // Info is only useful during development.
-      if (!environment.production) console.info('[MSAL]', message);
+      // if (!environment.production) console.info('[MSAL]', message);
       break;
     case LogLevel.Verbose:
       // Verbose output is intentionally suppressed in all environments

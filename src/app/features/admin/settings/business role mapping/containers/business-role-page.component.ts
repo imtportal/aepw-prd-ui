@@ -172,7 +172,7 @@ export class BusinessRoleComponent {
           return this.lookupService.getUsers(searchTerm).pipe(
             map((response) => response.data ?? []),
             catchError((error) => {
-              console.error('[Business Role User Typeahead]', error);
+              // console.error('[Business Role User Typeahead]', error);
               return of<AppUserLookup[]>([]);
             }),
           );
@@ -182,10 +182,10 @@ export class BusinessRoleComponent {
       .subscribe((users) => {
         this.users.set(users);
       });
-    console.log(this.translocoService.translate('COMMON.ADD'));
+    // console.log(this.translocoService.translate('COMMON.ADD'));
     setTimeout(() => {
-      console.log('Delayed Translation:', this.translocoService.getTranslation('en'));
-      console.log(this.translocoService.translate('COMMON.ADD'));
+      // console.log('Delayed Translation:', this.translocoService.getTranslation('en'));
+      // console.log(this.translocoService.translate('COMMON.ADD'));
     }, 3000);
     this.translocoService.load('en').subscribe(() => {
       this.initializeTableColumns();
@@ -237,14 +237,14 @@ export class BusinessRoleComponent {
         // this.reviewStages.set(result.reviewStages.data ?? []);
       },
       error: (error) => {
-        console.error('Failed to load lookups', error);
+        // console.error('Failed to load lookups', error);
       },
     });
   }
   constructor() {
     effect(() => {
-      console.log('Dialog Title:', this.dialogTitle());
-      console.log('Button Text:', this.submitButtonText());
+      // console.log('Dialog Title:', this.dialogTitle());
+      // console.log('Button Text:', this.submitButtonText());
     });
   }
   private loadPage(): void {
@@ -267,7 +267,7 @@ export class BusinessRoleComponent {
       });
   }
   onUserFilterChange(value: string | null): void {
-    console.log('Selected userId:', value);
+    // console.log('Selected userId:', value);
     this.selectedUserId.set(value);
 
     this.resetToFirstPage();
@@ -275,9 +275,9 @@ export class BusinessRoleComponent {
     this.loadPage();
   }
   saveBusinessRole(): void {
-    console.log('in save business role');
+    // console.log('in save business role');
     if (this.businessRoleForm.invalid) {
-      console.log('in save business role invalid');
+      // console.log('in save business role invalid');
       this.businessRoleForm.markAllAsTouched();
       return;
     }
@@ -322,7 +322,7 @@ export class BusinessRoleComponent {
             error.error?.message ??
               this.translocoService.translate('BUSINESS_ROLE.MESSAGES.MAPPING_SAVE_FAILED'),
           );
-          console.error(error);
+          // console.error(error);
         },
       });
   }
@@ -397,7 +397,7 @@ export class BusinessRoleComponent {
           this.loadPage();
         },
         error: (error) => {
-          console.error('[BusinessRoleService] Delete Business Role Mapping Error:', error);
+          // console.error('[BusinessRoleService] Delete Business Role Mapping Error:', error);
           const message = error?.error?.message ?? 'Failed to delete business role mapping.';
           this.toast.error(message);
           // this.showDeleteModal.set(true);
@@ -406,7 +406,7 @@ export class BusinessRoleComponent {
   }
   private closeDeleteDialog(): void {
     this.showDeleteModal.set(false);
-    console.log('delete signal value' + this.showDeleteModal());
+    // console.log('delete signal value' + this.showDeleteModal());
     this.selectedMapping.set(null);
   }
   editMapping(row: BusinessRoleMappingModel): void {
@@ -443,7 +443,7 @@ export class BusinessRoleComponent {
         error: (error) => {
           this.editLoading.set(false);
 
-          console.error('Failed to load business role mapping details', error);
+          // console.error('Failed to load business role mapping details', error);
           this.toast.error('Failed to load business role mapping details');
         },
       });

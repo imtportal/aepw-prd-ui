@@ -26,10 +26,10 @@ export class AIProcessingService {
     return this.http.get<PaginatedResponse<QueueItem>>(this.url, { params: p }).pipe(
       tap(res => {
         this._queue.set(res.data);
-        console.log('[AIProcessingService] Load Paged Success:', res);
+        // console.log('[AIProcessingService] Load Paged Success:', res);
       }),
       catchError(err => {
-        console.error('[AIProcessingService] Load Paged Error:', err);
+        // console.error('[AIProcessingService] Load Paged Error:', err);
         return throwError(() => err);
       }),
     );
@@ -49,10 +49,10 @@ export class AIProcessingService {
               : item,
           ),
         );
-        console.log('[AIProcessingService] Update Status Success:', res);
+        // console.log('[AIProcessingService] Update Status Success:', res);
       }),
       catchError(err => {
-        console.error('[AIProcessingService] Update Status Error:', err);
+        // console.error('[AIProcessingService] Update Status Error:', err);
         return throwError(() => err);
       }),
     );
@@ -64,10 +64,10 @@ export class AIProcessingService {
         this._queue.update(items =>
           items.map(item => item.id === id ? { ...item, status: 'queued' as ProcessingStatus } : item),
         );
-        console.log('[AIProcessingService] Reprocess Success:', res);
+        // console.log('[AIProcessingService] Reprocess Success:', res);
       }),
       catchError(err => {
-        console.error('[AIProcessingService] Reprocess Error:', err);
+        // console.error('[AIProcessingService] Reprocess Error:', err);
         return throwError(() => err);
       }),
     );
@@ -77,11 +77,11 @@ export class AIProcessingService {
     return this.http.post<ApiResponse<QueueItem[]>>(`${this.url}/enqueue`, { projectId, metricCodes }).pipe(
       tap(res => {
         if (res.data) this._queue.update(q => [...q, ...res.data]);
-        console.log('[AIProcessingService] Enqueue Success:', res);
+        // console.log('[AIProcessingService] Enqueue Success:', res);
       }),
       catchError(err => {
         this.error.set('Failed to enqueue metrics for AI processing');
-        console.error('[AIProcessingService] Enqueue Error:', err);
+        // console.error('[AIProcessingService] Enqueue Error:', err);
         return throwError(() => err);
       }),
     );

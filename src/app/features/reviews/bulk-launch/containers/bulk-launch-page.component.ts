@@ -35,6 +35,7 @@ import { AuthorizationService, LoginContext } from '../../../../core/auth';
 import { BULK_LAUNCH_STATUS_COLORS } from '../bulk-launch.constant';
 import { BulkLaunchActionKey, ReviewFilterLabels, ReviewFilterValue } from '../bulk-launch.model';
 import { PeriodService } from '../../create/services/period.service';
+import { RowsPerPageSessionStorageKey } from '../../../../shared/constants/rows-per-page-session-storage-key.constant';
 
 type BulkProjectSortKey = 'pin' | 'title' | 'l1UserName' | 'programName' | 'statusName';
 type SortDirection = 'asc' | 'desc';
@@ -265,7 +266,16 @@ export class BulkLaunchPageComponent implements HasUnsavedChanges {
   protected totalRows = signal<number>(0);
   protected pageCount = signal<number>(0);
   protected pageSizeOptions = [10, 20, 50] as const;
+
   constructor() {
+    // getting rows per page
+    const rowsPerPageFromSession = sessionStorage.getItem(RowsPerPageSessionStorageKey.BULKLAUNCH);
+
+    if (rowsPerPageFromSession && !isNaN(+rowsPerPageFromSession)) {
+      this.itemsPerPage = (+rowsPerPageFromSession);
+    }
+
+
     effect(() => {
       const selectedImpactIds = this.selectedImpactIds();
       const selectedProjects = this.reviewStatus === ReviewFilterValue.Created
@@ -306,10 +316,10 @@ export class BulkLaunchPageComponent implements HasUnsavedChanges {
     if (showLoader) {
       this.loading.set(true);
     }
-    let obs = this.projectSvc.loadBulkProjects(this.selectedQuarter, this.filterStatus(), this.searchQuery(), this.currentPage(), this.currentPage() * this.itemsPerPage(), this.itemsPerPage())
+    let obs = this.projectSvc.loadBulkProjects(this.selectedQuarter, this.filterStatus(), this.searchQuery(), this.currentPage(), this.currentPage() * this.itemsPerPage, this.itemsPerPage)
     
     if (this.reviewStatus == ReviewFilterValue.Created) {
-      obs = <any> this.projectSvc.getImpactsWithActiveReviews(this.selectedQuarter, this.currentPage(), this.currentPage() * this.itemsPerPage(), this.itemsPerPage(), this.filterStatus(), this.searchQuery()) 
+      obs = <any> this.projectSvc.getImpactsWithActiveReviews(this.selectedQuarter, this.currentPage(), this.currentPage() * this.itemsPerPage, this.itemsPerPage, this.filterStatus(), this.searchQuery()) 
     }  
              
       
@@ -341,7 +351,7 @@ export class BulkLaunchPageComponent implements HasUnsavedChanges {
       if (firstElem) {
         // this.currentPage.set(firstElem.pageNo || 0);
         this.totalRows.set(firstElem.totalRows || 0);
-        this.pageCount.set(Math.ceil((firstElem.totalRows || 0) / (firstElem.itemsPerPage || this.itemsPerPage())));
+        this.pageCount.set(Math.ceil((firstElem.totalRows || 0) / (firstElem.itemsPerPage || this.itemsPerPage)));
       }
       this.loading.set(false);
     },
@@ -517,10 +527,10 @@ export class BulkLaunchPageComponent implements HasUnsavedChanges {
 
         if (userId) {
           this.reviewSvc.generateExcelAndSendNotification(newReviews, <number> userId).pipe(take(1)).subscribe((res) => {
-            console.log('Excel generation and notification sending response', res);
+            // console.log('Excel generation and notification sending response', res);
           },
           (err) => {
-            console.log("generateExcelAndSendNotification error:", err)
+            // console.log("generateExcelAndSendNotification error:", err)
 
             const reviewIds = newReviews.map(x => x.reviewId);
             this.toastSvc.error("Internal error: the " + (reviewIds.length > 1 ? "reviews" : "review") + " could not be launched - reviews have been made Pending again");
@@ -528,7 +538,7 @@ export class BulkLaunchPageComponent implements HasUnsavedChanges {
             .pipe(take(1))
             .subscribe(res => { 
               this.loadBulkProjects();
-              console.log("Deleted review id transactions: " , reviewIds) 
+              // console.log("Deleted review id transactions: " , reviewIds) 
             });
           });
         }
@@ -643,7 +653,7 @@ export class BulkLaunchPageComponent implements HasUnsavedChanges {
       .pipe(take(1))
       .subscribe(res => {
         const permissions = res.data
-        console.log({ permissions })
+        // console.log({ permissions })
 
         const bulkLaunchActionPermissions = this.bulkLaunchActionPermissions();
         for (const action of permissions) {
@@ -732,12 +742,16 @@ export class BulkLaunchPageComponent implements HasUnsavedChanges {
     this.showSelectedImpactsTooltip.set(val);
   }
 
-  protected itemsPerPage = signal<number>(10);
+  protected itemsPerPage = <number>(10);
+  protected saveRowsPerPageToSession() {
+    sessionStorage.setItem(RowsPerPageSessionStorageKey.BULKLAUNCH, this.itemsPerPage.toString());
+  }
   onItemsPerPageChange(event: Event): void {
     const target = event.target as HTMLSelectElement;
-    this.itemsPerPage.set(Number(target.value));
+    this.itemsPerPage = (Number(target.value));
 
     this.loadBulkProjects(true);
+    this.saveRowsPerPageToSession();
   }
 
 

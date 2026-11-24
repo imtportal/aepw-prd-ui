@@ -1,3 +1,4 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { AccountInfo } from '@azure/msal-browser';
 import { AuthUser } from '../models/auth.types';
 import { INTERACTION_REQUIRED_CODES } from '../config/auth.constants';
@@ -78,6 +79,31 @@ export function isInteractionRequired(error: unknown): boolean {
   if (!error || typeof error !== 'object') return false;
   const code = (error as { errorCode?: string }).errorCode ?? '';
   return INTERACTION_REQUIRED_CODES.has(code);
+}
+
+/**
+ * Decides whether a backend 401 can be fixed by re-authenticating, using the standard
+ * ASP.NET Core JwtBearer `WWW-Authenticate` challenge:
+ *   - `Bearer`                                     → token missing        → recoverable
+ *   - `error="invalid_token"` + "expired"          → token expired        → recoverable
+ *   - any other error (invalid audience / issuer / signature, ...)        → configuration or
+ *     persistent token problem; a new login would be rejected the same way → not recoverable
+ *
+ * If the header is not readable (for example CORS does not expose it) the cause is unknown, so the
+ * 401 is treated as recoverable and the re-login cooldown prevents loops.
+ */
+export function isRecoverableUnauthorized(error: HttpErrorResponse): boolean {
+  const challenge = error.headers?.get('WWW-Authenticate');
+
+  // Without a readable authentication challenge, do not assume
+  // that this is a recoverable token failure.
+  if (!challenge) return false;
+
+  const code = /\berror="?([^",\s]+)"?/i.exec(challenge)?.[1]?.toLowerCase();
+
+  // Any explicit invalid_token challenge can trigger one forced
+  // silent refresh. The retry itself is limited to one attempt.
+  return code === 'invalid_token';
 }
 
 /**

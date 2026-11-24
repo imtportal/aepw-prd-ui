@@ -177,7 +177,7 @@ export class DashboardPageComponent {
       )
       .subscribe(term => {
 
-        console.log('Debounced Search Term:', term);
+        // console.log('Debounced Search Term:', term);
 
         this.searchTerm.set(term);
 
@@ -224,7 +224,7 @@ export class DashboardPageComponent {
   const userId = this.authStateService.getCurrentUserId();
 
   if (!userId) {
-    console.error('[Authorization] Current user ID not available.');
+    // console.error('[Authorization] Current user ID not available.');
     return;
   }
 
@@ -236,7 +236,7 @@ export class DashboardPageComponent {
         this.actionAccess.set(response.data ?? []);
       },
       error: (error) => {
-        console.error('[Authorization] Failed to load Dashboard action access:', error);
+        // console.error('[Authorization] Failed to load Dashboard action access:', error);
         this.actionAccess.set([]);
       },
     });
@@ -252,7 +252,7 @@ export class DashboardPageComponent {
       sinceInception: this.isSinceInceptionSelected()
     };
 
-    console.log('Request for Dashboard Portfolio Adjustment By Categories:', request);
+    // console.log('Request for Dashboard Portfolio Adjustment By Categories:', request);
     //   const selectedPeriodCodes = this.calculatePeriodCodes(
     //   this.selectedYears(),
     //   this.selectedPeriods()
@@ -271,25 +271,25 @@ export class DashboardPageComponent {
       .subscribe({
         next: (response) => {
 
-          console.log(
-            'Dashboard Portfolio Adjustment By Categories:',
-            response
-          );
+          // console.log(
+            // 'Dashboard Portfolio Adjustment By Categories:',
+            // response
+          // );
 
           this.metrics.set(response.data);
 
-          console.log(
-            'Metric:',
-            this.metrics()
-          );
+          // console.log(
+            // 'Metric:',
+            // this.metrics()
+          // );
         },
 
         error: (error) => {
-          console.error(
-            'Failed to load dashboard metrics:',
-            error
-
-          );
+          // console.error(
+            // 'Failed to load dashboard metrics:',
+            // error
+// 
+          // );
         }
 
 
@@ -496,7 +496,7 @@ export class DashboardPageComponent {
       // this.expandedProgramId.set(state.expandedProgramId ?? null);
 
     } catch (error) {
-      console.error('Failed to restore dashboard state:', error);
+      // console.error('Failed to restore dashboard state:', error);
       sessionStorage.removeItem(this.dashboardStateKey);
     }
   }
@@ -545,17 +545,17 @@ export class DashboardPageComponent {
 
         next: response => {
 
-          console.log(
-            'Dashboard Portfolio List:',
-            response
-          );
+          // console.log(
+            // 'Dashboard Portfolio List:',
+            // response
+          // );
 
           const data = response.data;
 
-          console.log(
-            'Dashboard Portfolio List Data:',
-            data
-          );
+          // console.log(
+            // 'Dashboard Portfolio List Data:',
+            // data
+          // );
 
           this.portfolioList.set(data);
           // this.loading.set(false);
@@ -563,10 +563,10 @@ export class DashboardPageComponent {
 
         error: error => {
 
-          console.error(
-            'Failed to load dashboard portfolio list:',
-            error
-          );
+          // console.error(
+            // 'Failed to load dashboard portfolio list:',
+            // error
+          // );
           // this.loading.set(false)
           this.portfolioList.set(null);
 
@@ -798,10 +798,10 @@ export class DashboardPageComponent {
     );
 
     if (!recordType) {
-      console.error(
-        'Record Type not found:',
-        project.recordTypeName
-      );
+      // console.error(
+        // 'Record Type not found:',
+        // project.recordTypeName
+      // );
       return;
     }
 
@@ -956,11 +956,11 @@ export class DashboardPageComponent {
   this.periodStartDate.set(formatDate(startDate));
   this.periodEndDate.set(formatDate(endDate));
 
-      console.log('Mapped Period Code to Dates:', {
+      // console.log('Mapped Period Code to Dates:', {
       // period,
-      startDate: this.periodStartDate(),
-      endDate: this.periodEndDate()
-    });
+      // startDate: this.periodStartDate(),
+      // endDate: this.periodEndDate()
+    // });
 
     debugger;
 }
@@ -1018,7 +1018,7 @@ export class DashboardPageComponent {
         // this.metricCategories.set(result.metricCategories.data ?? []);
       },
       error: (error) => {
-        console.error('Failed to load lookups', error);
+        // console.error('Failed to load lookups', error);
       },
     });
   }

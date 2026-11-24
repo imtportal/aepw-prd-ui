@@ -27,10 +27,10 @@ export class BusinessRoleService {
 
     return this.http.get<ApiResponse<BusinessRoleMappingModel[]>>(this.apiUrl, { params }).pipe(
       tap((response) => {
-        console.log('[LookupService] Get Business Role Mappings Success:', response);
+        // console.log('[LookupService] Get Business Role Mappings Success:', response);
       }),
       catchError((error) => {
-        console.error('[LookupService] Get Business Role Mappings Error:', error);
+        // console.error('[LookupService] Get Business Role Mappings Error:', error);
 
         return throwError(() => error);
       }),
@@ -43,11 +43,11 @@ export class BusinessRoleService {
       .post<ApiResponse<SaveBusinessRoleMappingResponse>>(`${this.apiUrl}`, payload)
       .pipe(
         tap((response) => {
-          console.log('[BusinessRoleService] Save Business Role Mapping Success:', response);
+          // console.log('[BusinessRoleService] Save Business Role Mapping Success:', response);
         }),
 
         catchError((error) => {
-          console.error('[BusinessRoleService] Save Business Role Mapping Error:', error);
+          // console.error('[BusinessRoleService] Save Business Role Mapping Error:', error);
 
           return throwError(() => error);
         }),
@@ -60,11 +60,11 @@ export class BusinessRoleService {
       .get<ApiResponse<BusinessRoleMappingDetailModel>>(`${this.apiUrl}/${businessRoleMappingId}`)
       .pipe(
         tap((response) => {
-          console.log('[BusinessRoleService] Get Business Role Mapping Detail Success:', response);
+          // console.log('[BusinessRoleService] Get Business Role Mapping Detail Success:', response);
         }),
 
         catchError((error) => {
-          console.error('[BusinessRoleService] Get Business Role Mapping Detail Error:', error);
+          // console.error('[BusinessRoleService] Get Business Role Mapping Detail Error:', error);
 
           return throwError(() => error);
         }),
@@ -84,10 +84,10 @@ export class BusinessRoleService {
       )
       .pipe(
         tap((response) => {
-          console.log('[BusinessRoleService] Delete Business Role Mapping Success:', response);
+          // console.log('[BusinessRoleService] Delete Business Role Mapping Success:', response);
         }),
         catchError((error) => {
-          console.error('[BusinessRoleService] Delete Business Role Mapping Error:', error);
+          // console.error('[BusinessRoleService] Delete Business Role Mapping Error:', error);
           return throwError(() => error);
         }),
       );

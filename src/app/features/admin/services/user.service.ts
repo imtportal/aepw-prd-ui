@@ -27,10 +27,10 @@ export class UserService {
     return this.http.get<PaginatedResponse<UserListDto>>(this.url, { params: p }).pipe(
       tap(res => {
         this._users.set(res.data);
-        console.log('[UserService] Load Paged Success:', res);
+        // console.log('[UserService] Load Paged Success:', res);
       }),
       catchError(err => {
-        console.error('[UserService] Load Paged Error:', err);
+        // console.error('[UserService] Load Paged Error:', err);
         return throwError(() => err);
       }),
     );
@@ -40,10 +40,10 @@ export class UserService {
     return this.http.patch<ApiResponse<boolean>>(`${this.url}/${id}/status`, { status }).pipe(
       tap(res => {
         this._users.update(list => list.map(u => u.userId.toString() === id ? { ...u, status } : u));
-        console.log('[UserService] Update Status Success:', res);
+        // console.log('[UserService] Update Status Success:', res);
       }),
       catchError(err => {
-        console.error('[UserService] Update Status Error:', err);
+        // console.error('[UserService] Update Status Error:', err);
         return throwError(() => err);
       }),
     );
@@ -53,10 +53,10 @@ export class UserService {
     return this.http.put<ApiResponse<boolean>>(`${this.url}/${id}`, changes).pipe(
       tap(res => {
         this._users.update(list => list.map(u => u.userId.toString() === id ? { ...u, ...changes } : u));
-        console.log('[UserService] Update User Success:', res);
+        // console.log('[UserService] Update User Success:', res);
       }),
       catchError(err => {
-        console.error('[UserService] Update User Error:', err);
+        // console.error('[UserService] Update User Error:', err);
         return throwError(() => err);
       }),
     );
@@ -66,10 +66,10 @@ export class UserService {
     return this.http.post<ApiResponse<UserListDto>>(this.url, user).pipe(
       tap(res => {
         if (res.data) this._users.update(list => [...list, res.data]);
-        console.log('[UserService] Add User Success:', res);
+        // console.log('[UserService] Add User Success:', res);
       }),
       catchError(err => {
-        console.error('[UserService] Add User Error:', err);
+        // console.error('[UserService] Add User Error:', err);
         return throwError(() => err);
       }),
     );

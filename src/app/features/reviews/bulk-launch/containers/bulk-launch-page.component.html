@@ -347,11 +347,11 @@
       <div class="shrink-0 flex items-center justify-between border-t bg-background px-4 py-3 text-sm">
         <div class="whitespace-nowrap text-muted-foreground">
           @if (totalRows()) {
-            {{ this.totalRows() === 0 ? 0 : this.currentPage() * this.itemsPerPage() + 1 }} 
+            {{ this.totalRows() === 0 ? 0 : this.currentPage() * this.itemsPerPage + 1 }} 
             
             &dash;
 
-            {{ (( this.itemsPerPage()) < this.totalRows()) ? ((this.currentPage() + 1) * this.itemsPerPage()) : this.totalRows() }} 
+            {{ (( this.itemsPerPage) < this.totalRows()) ? ((this.currentPage() + 1) * this.itemsPerPage) : this.totalRows() }} 
             
             of 
             
@@ -364,7 +364,7 @@
             <span class="text-xs"> Rows per page </span>
     
             <select
-              [value]="itemsPerPage()"
+              [(ngModel)]="itemsPerPage"
               (change)="onItemsPerPageChange($event)"
               class="h-7 rounded border border-input bg-background px-2 text-xs"
             >

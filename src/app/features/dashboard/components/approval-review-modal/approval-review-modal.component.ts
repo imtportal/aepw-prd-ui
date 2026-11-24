@@ -59,7 +59,7 @@ export class ApprovalReviewModalComponent {
     const previousRAResponseMap = this.previousRAResponseMap();
     const pendingStatus = this.pendingStatus();
 
-    console.log("return this.metricSvc.metrics()")
+    // console.log("return this.metricSvc.metrics()")
     debugger
     return this.metricSvc.metrics()
     // return this._changedMetrics()
@@ -67,8 +67,8 @@ export class ApprovalReviewModalComponent {
         const o = (overrides as any)[m.code];
 
         if (this.showPendingRiskAdjustments() === true) {
-          console.log({overrides, [m.code]: m.code})
-          console.log(this.riskOverrides(), r)
+          // console.log({overrides, [m.code]: m.code})
+          // console.log(this.riskOverrides(), r)
 
           return overrides && overrides[m.code]
         }

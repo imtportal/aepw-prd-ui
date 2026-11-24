@@ -81,7 +81,7 @@ export class ReviewMetricConfigPageComponent {
       const filteredMetrics = this.filteredMetrics();
       const reviewDetail = this.reviewDetail();
       
-      console.log("updating selectedCodes with filteredMetrics:", filteredMetrics);
+      // console.log("updating selectedCodes with filteredMetrics:", filteredMetrics);
 
       const includedMetricCodes = new Map<string, boolean>();
       for (const metric of (reviewDetail?.reviewMetrics || [])) {

@@ -211,11 +211,11 @@ export class UsersPageComponent {
           this.searchLoading.set(true);
 
           return this.azureUserService
-            .getUsers(1, 20, searchTerm, this.selectedFilterRoleId() ?? undefined)
+            .getUsers(1, 50, searchTerm, this.selectedFilterRoleId() ?? undefined)
             .pipe(
               map((response) => response.data?.items ?? []),
               catchError((error) => {
-                console.error('Failed to search users', error);
+                // console.error('Failed to search users', error);
                 return of<AppUserListModel[]>([]);
               }),
               finalize(() => this.searchLoading.set(false)),
@@ -243,7 +243,7 @@ export class UsersPageComponent {
           return this.azureUserService.searchUsers(searchTerm).pipe(
             map((response) => response.data ?? []),
             catchError((error) => {
-              console.error('Failed to search users', error);
+              // console.error('Failed to search users', error);
               return of<AzureAdUserLookupModel[]>([]);
             }),
             finalize(() => this.userLoading.set(false)),
@@ -253,7 +253,7 @@ export class UsersPageComponent {
       )
       .subscribe((users) => {
         this.users.set(users);
-        console.log('Azure users:', users);
+        // console.log('Azure users:', users);
       });
   }
 
@@ -261,7 +261,7 @@ export class UsersPageComponent {
     const userId = this.authStateService.getCurrentUserId();
 
     if (!userId) {
-      console.error('[Authorization] Current user ID not available.');
+      // console.error('[Authorization] Current user ID not available.');
       return;
     }
 
@@ -272,11 +272,11 @@ export class UsersPageComponent {
         next: (response) => {
           this.actionAccess.set(response.data ?? []);
 
-          console.log('[Authorization] User Management action access:', response.data);
+          // console.log('[Authorization] User Management action access:', response.data);
           this.initializeTableColumns();
         },
         error: (error) => {
-          console.error('[Authorization] Failed to load User Management action access:', error);
+          // console.error('[Authorization] Failed to load User Management action access:', error);
 
           this.actionAccess.set([]);
         },
@@ -315,7 +315,7 @@ export class UsersPageComponent {
     ];
 
     if (this.canDeleteUser()) {
-      console.log('in table column', this.canDeleteUser());
+      // console.log('in table column', this.canDeleteUser());
       this.tableColumns.push({
         key: 'actions',
         header: this.translocoService.translate('USERS.TABLE.ACTIONS'),
@@ -378,7 +378,7 @@ export class UsersPageComponent {
           }
         },
         error: (error) => {
-          console.error('[UserService] Delete User Error:', error);
+          // console.error('[UserService] Delete User Error:', error);
 
           const message =
             error?.error?.message ??
@@ -408,7 +408,7 @@ export class UsersPageComponent {
         this.systemRoles.set(result.systemRoles.data ?? []);
       },
       error: (error) => {
-        console.error('Failed to load lookups', error);
+        // console.error('Failed to load lookups', error);
       },
     });
 
@@ -420,7 +420,7 @@ export class UsersPageComponent {
           this.timeZones.set(result.data ?? []);
         },
         error: (error) => {
-          console.error('Failed to load time zones', error);
+          // console.error('Failed to load time zones', error);
         },
       });
   }
@@ -445,7 +445,7 @@ export class UsersPageComponent {
           this.loading.set(false);
         },
         error: (error) => {
-          console.error('Failed to load users', error);
+          // console.error('Failed to load users', error);
           this.loading.set(false);
         },
       });
@@ -460,17 +460,17 @@ export class UsersPageComponent {
           this.roleSummary.set(response.data ?? []);
         },
         error: (error) => {
-          console.error('Failed to load role summary', error);
+          // console.error('Failed to load role summary', error);
         },
       });
   }
   // -----------------------------------------------------
 
   onAddUser(): void {
-    console.log('in add user function');
+    // console.log('in add user function');
     if (this.userForm.invalid) {
       this.userForm.markAllAsTouched();
-      console.error('Please fill all required fields');
+      // console.error('Please fill all required fields');
       return;
     }
 
@@ -496,7 +496,7 @@ export class UsersPageComponent {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (response) => {
-          console.log('User created successfully', response);
+          // console.log('User created successfully', response);
           this.toast.success(this.translocoService.translate('USERS.MESSAGES.USER_CREATED'));
           this.showAddModal.set(false);
           this.resetAddUserForm();
@@ -596,31 +596,31 @@ export class UsersPageComponent {
       });
   }
   saveUser(): void {
-    console.log('in save user button handler');
+    // console.log('in save user button handler');
     this.userForm.markAllAsTouched();
     if (this.userForm.invalid) {
-      console.log(this.userForm.value);
-      console.log(this.userForm.getRawValue());
+      // console.log(this.userForm.value);
+      // console.log(this.userForm.getRawValue());
 
       Object.keys(this.userForm.controls).forEach((key) => {
         const control = this.userForm.get(key);
 
-        console.log({
-          control: key,
-          value: control?.value,
-          valid: control?.valid,
-          errors: control?.errors,
-          status: control?.status,
-        });
+        // console.log({
+          // control: key,
+          // value: control?.value,
+          // valid: control?.valid,
+          // errors: control?.errors,
+          // status: control?.status,
+        // });
       });
 
       return;
     }
-    console.log('form valid');
+    // console.log('form valid');
     if (this.isEditMode()) {
       this.onUpdateUser();
     } else {
-      console.log('in add condition');
+      // console.log('in add condition');
       this.onAddUser();
     }
   }

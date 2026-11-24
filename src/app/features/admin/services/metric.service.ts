@@ -28,11 +28,11 @@ export class MetricService {
   getMetricHierarchy(): Observable<ApiResponse<MetricCategory2[]>> {
     return this.http.get<ApiResponse<MetricCategory2[]>>(this.apiUrl).pipe(
       tap((response) => {
-        console.log('[MetricService] Get All Metrics data:', response);
+        // console.log('[MetricService] Get All Metrics data:', response);
       }),
 
       catchError((error) => {
-        console.error('Error fetching metric hierarchy', error);
+        // console.error('Error fetching metric hierarchy', error);
 
         return throwError(() => error);
       }),
@@ -45,10 +45,10 @@ export class MetricService {
   saveMetricConfiguration(request: MetricConfigurationSaveRequest): Observable<ApiResponse<void>> {
     return this.http.post<ApiResponse<void>>(`${this.apiUrl}/configuration`, request).pipe(
       tap((response) => {
-        console.log('[MetricService] Save Metric Configuration:', response);
+        // console.log('[MetricService] Save Metric Configuration:', response);
       }),
       catchError((error) => {
-        console.error('Error saving metric configuration', error);
+        // console.error('Error saving metric configuration', error);
         return throwError(() => error);
       }),
     );
@@ -175,7 +175,7 @@ export class MetricService {
           return { ...res, data: result };
         }),
         tap((response) => {
-          console.log('[MetricService] Get All Metrics data:', response);
+          // console.log('[MetricService] Get All Metrics data:', response);
 
           this._metricsLoading.set(false);
           this._metrics.update(() => response.data);
@@ -189,10 +189,10 @@ export class MetricService {
         this._metrics.update((list) =>
           list.map((m) => (m.code === code ? { ...m, isActive: !m.isActive } : m)),
         );
-        console.log('[MetricService] Toggle Active Success:', res);
+        // console.log('[MetricService] Toggle Active Success:', res);
       }),
       catchError((err) => {
-        console.error('[MetricService] Toggle Active Error:', err);
+        // console.error('[MetricService] Toggle Active Error:', err);
         return throwError(() => err);
       }),
     );
@@ -204,10 +204,10 @@ export class MetricService {
         this._metrics.update((list) =>
           list.map((m) => (m.code === code ? { ...m, ...changes } : m)),
         );
-        console.log('[MetricService] Update Metric Success:', res);
+        // console.log('[MetricService] Update Metric Success:', res);
       }),
       catchError((err) => {
-        console.error('[MetricService] Update Metric Error:', err);
+        // console.error('[MetricService] Update Metric Error:', err);
         return throwError(() => err);
       }),
     );

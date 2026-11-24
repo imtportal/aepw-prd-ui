@@ -8,11 +8,11 @@ export class TranslocoHttpLoader implements TranslocoLoader {
   private readonly http = inject(HttpClient);
 
   getTranslation(lang: string) {
-    console.log('Loading language:', lang);
+    // console.log('Loading language:', lang);
 
     return this.http.get<Translation>(`/i18n/${lang}.json`).pipe(
       tap((response) => {
-        console.log('Translation Response:', response);
+        // console.log('Translation Response:', response);
       }),
     );
   }

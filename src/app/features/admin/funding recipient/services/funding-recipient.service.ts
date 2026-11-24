@@ -34,10 +34,10 @@ export class FundingRecipientService {
       .get<ApiResponse<PagedResponse<FundingRecipient>>>(this.apiUrl, { params })
       .pipe(
         tap((response) => {
-          console.log('[FundingRecipientService] Get Funding Recipients Success:', response);
+          // console.log('[FundingRecipientService] Get Funding Recipients Success:', response);
         }),
         catchError((error) => {
-          console.error('[FundingRecipientService] Get Funding Recipients Error:', error);
+          // console.error('[FundingRecipientService] Get Funding Recipients Error:', error);
           return throwError(() => error);
         }),
       );
@@ -46,11 +46,11 @@ export class FundingRecipientService {
   createFundingRecipient(payload: CreateFundingRecipientRequest): Observable<ApiResponse<number>> {
     return this.http.post<ApiResponse<number>>(this.apiUrl, payload).pipe(
       tap((response) => {
-        console.log('[FundingRecipientService] Create Funding Recipient Success:', response);
+        // console.log('[FundingRecipientService] Create Funding Recipient Success:', response);
       }),
 
       catchError((error) => {
-        console.error('[FundingRecipientService] Create Funding Recipient Error:', error);
+        // console.error('[FundingRecipientService] Create Funding Recipient Error:', error);
 
         return throwError(() => error);
       }),
@@ -62,11 +62,11 @@ export class FundingRecipientService {
       .put<ApiResponse<boolean>>(`${this.apiUrl}/${payload.fundingRecipientId}`, payload)
       .pipe(
         tap((response) => {
-          console.log('[FundingRecipientService] Update Funding Recipient Success:', response);
+          // console.log('[FundingRecipientService] Update Funding Recipient Success:', response);
         }),
 
         catchError((error) => {
-          console.error('[FundingRecipientService] Update Funding Recipient Error:', error);
+          // console.error('[FundingRecipientService] Update Funding Recipient Error:', error);
 
           return throwError(() => error);
         }),
@@ -79,11 +79,11 @@ export class FundingRecipientService {
       .get<ApiResponse<FundingRecipientDetailModel>>(`${this.apiUrl}/${fundingRecipientId}`)
       .pipe(
         tap((response) => {
-          console.log('[FundingRecipientService] Get Funding Recipient By Id Success:', response);
+          // console.log('[FundingRecipientService] Get Funding Recipient By Id Success:', response);
         }),
 
         catchError((error) => {
-          console.error('[FundingRecipientService] Get Funding Recipient By Id Error:', error);
+          // console.error('[FundingRecipientService] Get Funding Recipient By Id Error:', error);
 
           return throwError(() => error);
         }),

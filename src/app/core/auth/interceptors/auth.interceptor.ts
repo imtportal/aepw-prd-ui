@@ -1,23 +1,27 @@
 import { HttpHandlerFn, HttpInterceptorFn, HttpRequest } from '@angular/common/http';
 import { inject } from '@angular/core';
-import { catchError, from, of, switchMap } from 'rxjs';
-import { PublicClientApplication } from '@azure/msal-browser';
+import { from, switchMap, throwError } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import { PUBLIC_ENDPOINTS, AUTH_SCOPES } from '../config/auth.constants';
-import { MSAL_INSTANCE } from '../config/msal.token';
+import { PUBLIC_ENDPOINTS } from '../config/auth.constants';
+import {
+  AuthenticationRequiredError,
+  AuthRecoveryService,
+} from '../services/auth-recovery.service';
 import { AuthStateService } from '../state/auth.state';
 
 // ---------------------------------------------------------------------------
 // auth.interceptor.ts — Centralized HTTP interceptor for Bearer token attachment.
 //
-// This interceptor automatically acquires an access token and attaches it as
+// This interceptor acquires an access token through AuthRecoveryService and attaches it as
 // an `Authorization: Bearer` header to all outbound requests destined for
 // the protected backend API.
 //
 // Design principles:
 //  - Single responsibility: attaches the token; nothing else.
-//  - Uses MSAL directly to avoid circular dependency with AuthService.
-//  - Token acquisition is silent-only (no interactive redirects).
+//  - A protected request is NEVER sent without a valid access token. If no token can be
+//    acquired, the request fails with AuthenticationRequiredError (and, when MSAL requires it,
+//    AuthRecoveryService has started the login/token redirect).
+//  - Requests are not replayed after a redirect.
 //  - Token is NEVER constructed or modified here — it is read-only.
 //  - Sensitive endpoints can be excluded via PUBLIC_ENDPOINTS in auth.constants.ts.
 //
@@ -36,13 +40,11 @@ import { AuthStateService } from '../state/auth.state';
  * Pipeline:
  *  1. Check if the request URL targets the API base URL.
  *  2. Check if the URL is a public (unauthenticated) endpoint.
- *  3. Acquire a silent access token via MSAL.
+ *  3. Acquire an access token via AuthRecoveryService (silent first, interactive recovery if required).
  *  4. Clone the request with the Authorization header attached.
- *  5. Forward the (possibly augmented) request to the next handler.
+ *  5. Forward the augmented request to the next handler.
  *
- * If token acquisition fails for any reason (no account, network error),
- * the request is forwarded without the token.  The backend will return 401,
- * which the error.interceptor.ts handles by triggering re-authentication.
+ * Backend 401 responses are handled by error.interceptor.ts.
  */
 export const authInterceptor: HttpInterceptorFn = (
   req: HttpRequest<unknown>,
@@ -56,34 +58,16 @@ export const authInterceptor: HttpInterceptorFn = (
     return next(req);
   }
 
-  const msal = inject(MSAL_INSTANCE);
+  const recovery = inject(AuthRecoveryService);
   const authState = inject(AuthStateService);
   const userId = authState.getCurrentUserId();
-  // -------------------------------------------------------------------------
-  // Acquire token silently using MSAL directly.
-  //
-  // This avoids circular dependency with AuthService.
-  // We use acquireTokenSilent which returns a cached token if valid,
-  // or silently renews it using the refresh token.
-  //
-  // CRITICAL: catchError is scoped to ONLY the token acquisition observable.
-  // HTTP error responses (4xx, 5xx) from next() must NOT be caught here,
-  // otherwise they will trigger a retry without the token.
-  // -------------------------------------------------------------------------
-  const tokenOrNull$ = from(acquireToken(msal)).pipe(
-    catchError(() => {
-      // Token acquisition failed — return null to proceed without a token.
-      // The backend will return 401, which must be handled by the caller.
-      return of(null);
-    }),
-  );
 
-  return tokenOrNull$.pipe(
-    switchMap((token) => {
-      if (!token) {
-        // Token acquisition returned null — forward the original request.
-        // The backend 401 response will propagate to the service's catchError.
-        return next(req);
+  // No catchError here: a failed token acquisition must stop the request, not let it
+  // reach the backend without a token.
+  return from(recovery.acquireAccessToken()).pipe(
+    switchMap((result) => {
+      if (result.status !== 'success') {
+        return throwError(() => new AuthenticationRequiredError(result));
       }
 
       // Attach the Bearer token.
@@ -92,7 +76,9 @@ export const authInterceptor: HttpInterceptorFn = (
         setHeaders: {
           // Standard OAuth 2.0 Bearer token header.
           // The backend validates this using AddMicrosoftIdentityWebApi.
-          Authorization: `Bearer ${token}`,
+          // for test shows:
+          // Authorization: `Bearer invalid-test-token`,
+          Authorization: `Bearer ${result.accessToken}`,
           ...(userId ? { 'X-User-Id': userId.toString() } : {}),
         },
       });
@@ -103,32 +89,8 @@ export const authInterceptor: HttpInterceptorFn = (
 };
 
 // ---------------------------------------------------------------------------
-// Private helpers
+// Helpers
 // ---------------------------------------------------------------------------
-
-/**
- * Acquires an access token using MSAL directly.
- * This is used by the interceptor to avoid circular dependency with AuthService.
- */
-async function acquireToken(msal: PublicClientApplication): Promise<string | null> {
-  const account = msal.getActiveAccount();
-  if (!account) {
-    return null;
-  }
-
-  try {
-    const result = await msal.acquireTokenSilent({
-      scopes: [...AUTH_SCOPES.API],
-      account,
-    });
-    return result.accessToken;
-  } catch (error) {
-    // Silent token acquisition failed. Return null and let the 401 handler
-    // trigger re-authentication if needed.
-    console.warn('[auth.interceptor] Token acquisition failed:', error);
-    return null;
-  }
-}
 
 /**
  * Returns true if the given URL should receive an Authorization header.
@@ -137,7 +99,7 @@ async function acquireToken(msal: PublicClientApplication): Promise<string | nul
  *  1. It starts with the configured API base URL.
  *  2. It is NOT listed in PUBLIC_ENDPOINTS.
  */
-function isProtectedRequest(url: string): boolean {
+export function isProtectedRequest(url: string): boolean {
   // Only attach tokens to calls targeting our own backend API.
   if (!url.startsWith(environment.apiBaseUrl)) return false;
 

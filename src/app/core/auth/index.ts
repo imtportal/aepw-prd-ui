@@ -54,8 +54,10 @@ export { MSAL_INSTANCE } from './config/msal.token';
 export { provideMsal } from './config/msal.providers';
 export { provideAuthInitializer } from './config/auth.initializer';
 
-// HTTP interceptor
+// HTTP interceptors
 export { authInterceptor } from './interceptors/auth.interceptor';
+export { errorInterceptor } from './interceptors/error.interceptor';
+export { AuthRecoveryService, AuthenticationRequiredError } from './services/auth-recovery.service';
 
 // Route guards
 // export { authGuard, authGuardChild, roleGuard } from './gaurds/auth.guard';

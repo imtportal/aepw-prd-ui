@@ -26,10 +26,10 @@ export class AuditService {
     return this.http.get<PaginatedResponse<AuditEvent>>(this.url, { params: p }).pipe(
       tap(res => {
         this._events.set(res.data);
-        console.log('[AuditService] Load Paged Success:', res);
+        // console.log('[AuditService] Load Paged Success:', res);
       }),
       catchError(err => {
-        console.error('[AuditService] Load Paged Error:', err);
+        // console.error('[AuditService] Load Paged Error:', err);
         return throwError(() => err);
       }),
     );
@@ -43,10 +43,10 @@ export class AuditService {
     return this.http.post<ApiResponse<AuditEvent>>(this.url, event).pipe(
       tap(res => {
         if (res.data) this._events.update(events => [res.data, ...events]);
-        console.log('[AuditService] Add Event Success:', res);
+        // console.log('[AuditService] Add Event Success:', res);
       }),
       catchError(err => {
-        console.error('[AuditService] Add Event Error:', err);
+        // console.error('[AuditService] Add Event Error:', err);
         return throwError(() => err);
       }),
     );

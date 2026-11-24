@@ -27,10 +27,10 @@ export class EvidenceService {
     return this.http.get<PaginatedResponse<EvidenceListDto>>(this.url, { params: p }).pipe(
       tap(res => {
         this._files.set(res.data);
-        console.log('[EvidenceService] Load Paged Success:', res);
+        // console.log('[EvidenceService] Load Paged Success:', res);
       }),
       catchError(err => {
-        console.error('[EvidenceService] Load Paged Error:', err);
+        // console.error('[EvidenceService] Load Paged Error:', err);
         return throwError(() => err);
       }),
     );
@@ -42,10 +42,10 @@ export class EvidenceService {
         this._files.update(files =>
           files.map(f => f.evidenceId === evidenceId ? { ...f, status } : f),
         );
-        console.log('[EvidenceService] Update Status Success:', res);
+        // console.log('[EvidenceService] Update Status Success:', res);
       }),
       catchError(err => {
-        console.error('[EvidenceService] Update Status Error:', err);
+        // console.error('[EvidenceService] Update Status Error:', err);
         return throwError(() => err);
       }),
     );
@@ -54,10 +54,10 @@ export class EvidenceService {
   getDetailFiles(projectId: number): Observable<ApiResponse<EvidenceDetailDto[]>> {
     return this.http.get<ApiResponse<EvidenceDetailDto[]>>(`${this.url}/detail/${projectId}`).pipe(
       tap(res => {
-        console.log('[EvidenceService] Get Detail Files Success:', res);
+        // console.log('[EvidenceService] Get Detail Files Success:', res);
       }),
       catchError(err => {
-        console.error('[EvidenceService] Get Detail Files Error:', err);
+        // console.error('[EvidenceService] Get Detail Files Error:', err);
         return throwError(() => err);
       }),
     );
@@ -67,10 +67,10 @@ export class EvidenceService {
     return this.http.post<ApiResponse<EvidenceListDto>>(this.url, file).pipe(
       tap(res => {
         if (res.data) this._files.update(files => [res.data, ...files]);
-        console.log('[EvidenceService] Add File Success:', res);
+        // console.log('[EvidenceService] Add File Success:', res);
       }),
       catchError(err => {
-        console.error('[EvidenceService] Add File Error:', err);
+        // console.error('[EvidenceService] Add File Error:', err);
         return throwError(() => err);
       }),
     );

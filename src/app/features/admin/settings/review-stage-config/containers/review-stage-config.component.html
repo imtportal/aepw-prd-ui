@@ -167,7 +167,7 @@
           </div>
 
           <span class="rounded border border-green-200 px-2 py-1 text-xs text-green-800">
-          Total Approvals: {{ totalEnableApprovals() }}
+            Total Approvals: {{ totalEnableApprovals() }}
           </span>
         </div>
 
@@ -272,9 +272,15 @@
       <button
         type="button"
         (click)="confirmApprovalChanges()"
-        class="rounded-md bg-green-700 px-4 py-2 text-sm font-medium text-white hover:bg-green-800"
+        [disabled]="savingReviewStages()"
+        class="rounded-md bg-green-700 px-4 py-2 text-sm font-medium text-white hover:bg-green-800 disabled:cursor-not-allowed disabled:opacity-50"
       >
-        Confirm Changes
+        @if (savingReviewStages()) {
+          <lucide-icon name="loader-circle" [size]="16" class="animate-spin" />
+          Processing...
+        } @else {
+          Confirm Changes
+        }
       </button>
     </div>
   </ui-dialog>

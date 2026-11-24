@@ -22,6 +22,14 @@ export const routes: Routes = [
       //     ),
       // },
       {
+        path: 'authentication-error',
+        data: { title: 'Authentication Error' },
+        loadComponent: () =>
+          import('./core/pages/authentication-error.component').then(
+            (m) => m.AuthenticationErrorComponent,
+          ),
+      },
+      {
         path: 'unauthorized',
         data: { title: 'Access Denied' },
         loadComponent: () =>
@@ -33,6 +41,7 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./core/pages/server-timeout.component').then((m) => m.ServerTimeoutComponent),
       },
+
       {
         path: 'reviews',
         loadChildren: () =>

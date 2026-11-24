@@ -49,7 +49,7 @@ export class AppShellComponent {
           try {
             sessionStorage.removeItem(CHUNK_RELOAD_ATTEMPT_KEY);
           } catch (storageError) {
-            console.error('Unable to clear the application chunk retry marker.', storageError);
+            // console.error('Unable to clear the application chunk retry marker.', storageError);
           }
           return;
         }
@@ -74,13 +74,13 @@ export class AppShellComponent {
 
     try {
       if (sessionStorage.getItem(CHUNK_RELOAD_ATTEMPT_KEY) === 'true') {
-        console.error('A lazy-loaded application chunk failed again after reloading.', error);
+        // console.error('A lazy-loaded application chunk failed again after reloading.', error);
         return;
       }
 
       sessionStorage.setItem(CHUNK_RELOAD_ATTEMPT_KEY, 'true');
     } catch (storageError) {
-      console.error('Unable to safely retry the failed application chunk load.', storageError);
+      // console.error('Unable to safely retry the failed application chunk load.', storageError);
       return;
     }
 

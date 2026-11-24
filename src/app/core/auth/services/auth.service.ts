@@ -7,7 +7,6 @@ import {
   PublicClientApplication,
 } from '@azure/msal-browser';
 
-
 import { firstValueFrom, from, mergeMap, of } from 'rxjs';
 import { MSAL_INSTANCE } from '../config/msal.token';
 import { AUTH_SCOPES } from '../config/auth.constants';
@@ -31,58 +30,28 @@ import { AuthorizationService } from './authorization.service';
 import { AuthStateService } from '../state/auth.state';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 
-// ---------------------------------------------------------------------------
-// auth.service.ts — Central façade for MSAL authentication operations.
-//
-// ┌─────────────────────────────────────────────────────────────────────────┐
-// │  RESPONSIBILITY SPLIT                                                   │
-// │                                                                         │
-// │  AuthService  (this file)                                               │
-// │    • MSAL login / logout / token acquisition                            │
-// │    • Identity state signals (oid, email, displayName, initials)        │
-// │    • Triggers backend profile load after login                          │
-// │                                                                         │
-// │  AuthorizationService  (authorization.service.ts)                       │
-// │    • API call to GET /api/authorization/me                              │
-// │                                                                         │
-// │  AuthStateService  (auth.state.ts)                                      │
-// │    • Single source of truth for authorization                           │
-// │    • Stores user details, page access, and action permissions           │
-// │    • Manages sessionStorage persistence                                 │
-// └─────────────────────────────────────────────────────────────────────────┘
-//
-// AUTHENTICATION FLOW:
-//
-//  1.  MSAL redirect login (auth.bootstrap.ts / loginRedirect).
-//  2.  handleRedirectPromise() → sets active account.
-//  3.  Angular bootstraps → AuthService constructed.
-//  4.  constructor() calls syncAccountFromMsal() → setAuthUser() + loads authorization.
-//  5.  First tries to restore AuthStateService from sessionStorage.
-//  6.  If no stored context, calls GET /api/authorization/me with Bearer token.
-//      Backend: validates JWT → extracts oid → DB lookup → returns LoginContext.
-//  7.  AuthStateService.initialize() stores the context and updates signals.
-//  8.  Guards and components read authorization via AuthStateService.
-// ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+export class MissingAzureAdObjectIdError extends Error {
+  constructor() {
+    super('Authenticated account is missing Azure AD Object ID.');
+    this.name = 'MissingAzureAdObjectIdError';
+  }
+}
 @Injectable({ providedIn: 'root' })
 export class AuthService implements OnDestroy {
   private readonly msal = inject<PublicClientApplication>(MSAL_INSTANCE);
   private readonly authorizationService = inject(AuthorizationService);
   private readonly authStateService = inject(AuthStateService);
   private readonly http = inject(HttpClient);
-
   /** Full MSAL auth state snapshot. */
   readonly state = authState;
-
   /** Current authentication lifecycle status. */
   readonly status = authStatus;
-
   /** True once the user has a valid, active MSAL session. */
   readonly isAuthenticated = isAuthenticated;
-
   /** True while MSAL is initialising or handling a redirect response. */
   readonly isInitializing = isInitializing;
-
   /**
    * The authenticated user's MSAL identity.
    * Contains oid, email, displayName, initials — NO roles or permissions.
@@ -100,6 +69,17 @@ export class AuthService implements OnDestroy {
 
   /** Last MSAL authentication error, or null. */
   readonly error = authError;
+  // adding new
+  private initializationInProgress = false;
+  private authorizationInitializationError: unknown = null;
+
+  isAuthorizationInitializationInProgress(): boolean {
+    return this.initializationInProgress;
+  }
+
+  getAuthorizationInitializationError(): unknown {
+    return this.authorizationInitializationError;
+  }
 
   /**
    * Stable user identity from the `oid` claim.
@@ -112,9 +92,8 @@ export class AuthService implements OnDestroy {
   private readonly msalEventCallbackId: string;
 
   constructor() {
-    // Subscribe to MSAL events to keep identity state in sync after
-    // redirects, token renewals, logout, and cross-tab account changes.
-    // Note: Actual initialization happens in initialize() method, not here.
+    // 4. APP_INITIALIZER calls AuthService.initialize().
+    // 5. initialize() synchronizes MSAL account state and loads authorization.
     this.msalEventCallbackId =
       this.msal.addEventCallback((event: EventMessage) => this.handleMsalEvent(event)) ?? '';
   }
@@ -127,9 +106,22 @@ export class AuthService implements OnDestroy {
    * Blocks application startup until authorization is fully loaded.
    */
   async initialize(): Promise<void> {
-    console.log('[Auth] initialize() called - starting authentication/authorization flow');
-    await this.syncAccountFromMsal();
-    console.log('[Auth] initialize() completed - ready for navigation');
+    this.initializationInProgress = true;
+
+    try {
+      await this.syncAccountFromMsal();
+    } catch (error) {
+      if (error instanceof MissingAzureAdObjectIdError) {
+        throw error;
+      }
+
+      // Preserve the failure so the route guard can classify it.
+      this.authorizationInitializationError = error;
+
+      console.error('[AUTH] Authorization initialization failed:', error);
+    } finally {
+      this.initializationInProgress = false;
+    }
   }
 
   ngOnDestroy(): void {
@@ -172,7 +164,7 @@ export class AuthService implements OnDestroy {
   async acquireAccessToken(scopes?: readonly string[]): Promise<string | null> {
     const account = this.msal.getActiveAccount();
     if (!account) {
-      console.warn('[Auth] acquireAccessToken: no active account.');
+      // console.warn('[Auth] acquireAccessToken: no active account.');
       return null;
     }
 
@@ -183,13 +175,13 @@ export class AuthService implements OnDestroy {
       return result.accessToken;
     } catch (error) {
       if (isInteractionRequired(error)) {
-        console.warn(
-          '[Auth] Silent token acquisition failed (interaction_required). ' +
-            'The request will proceed without a token; a 401 will trigger re-login.',
-        );
+        // console.warn(
+        // '[Auth] Silent token acquisition failed (interaction_required). ' +
+        // 'The request will proceed without a token; a 401 will trigger re-login.',
+        // );
         return null;
       }
-      console.error('[Auth] Token acquisition failed:', error);
+      // console.error('[Auth] Token acquisition failed:', error);
       return null;
     }
   }
@@ -239,7 +231,7 @@ export class AuthService implements OnDestroy {
    * Call this only when the current user's own permissions may have changed.
    */
   public async refreshAuthorization(): Promise<void> {
-    console.log('[Auth] Refreshing authorization context');
+    // console.log('[Auth] Refreshing authorization context');
 
     const response = await firstValueFrom(this.authorizationService.getLoginContext());
 
@@ -254,22 +246,23 @@ export class AuthService implements OnDestroy {
    * Loads authorization context from the backend and initializes AuthStateService.
    * First attempts to restore from sessionStorage; if not found, calls the API.
    */
-  async loadAuthorization(): Promise<void> {
-    console.log('[Auth] loadAuthorization() called');
+  async loadAuthorization(oid: string): Promise<void> {
+    this.authorizationInitializationError = null;
 
-    // Try to restore from sessionStorage first
-    this.authStateService.restore();
+    const restored = this.authStateService.restore(oid);
 
-    // If successfully restored, no need to call the API
-    if (this.authStateService.user() !== null) {
-      console.log('[Auth] Authorization restored from sessionStorage - skipping API call');
+    if (restored) {
       return;
     }
 
-    console.log('[Auth] No cached authorization - calling Authorization API');
+    try {
+      await this.refreshAuthorization();
 
-    // No stored context - fetch from backend
-    await this.refreshAuthorization();
+      this.authorizationInitializationError = null;
+    } catch (error) {
+      this.authorizationInitializationError = error;
+      throw error;
+    }
   }
 
   // -------------------------------------------------------------------------
@@ -284,26 +277,16 @@ export class AuthService implements OnDestroy {
     const account = this.msal.getActiveAccount() ?? this.msal.getAllAccounts()[0] ?? null;
 
     if (account) {
-      const claims = account.idTokenClaims as Record<string, unknown> | undefined;
-
-      console.group('[Auth] Azure AD user identity');
-      console.log(
-        'AzureAdObjectId :',
-        (claims?.['oid'] as string | undefined) ?? account.homeAccountId,
-      );
-      console.log('Email           :', account.username);
-      console.log('DisplayName     :', account.name ?? '—');
-      console.log('FirstName       :', (claims?.['given_name'] as string | undefined) ?? '—');
-      console.log('LastName        :', (claims?.['family_name'] as string | undefined) ?? '—');
-      console.log('Phone           :', (claims?.['phone_number'] as string | undefined) ?? '—');
-      console.log('JobTitle        :', (claims?.['jobTitle'] as string | undefined) ?? '—');
-      console.groupEnd();
-
       setAuthUser(mapAccountToAuthUser(account));
       // Load backend authorization context (first tries sessionStorage, then API).
-      await this.loadAuthorization().catch((err) =>
-        console.error('[Auth] Authorization load error during sync:', err),
-      );
+      const oid = account.idTokenClaims?.['oid'];
+
+      if (typeof oid !== 'string' || !oid) {
+        this.authStateService.clear();
+        throw new MissingAzureAdObjectIdError();
+      }
+
+      await this.loadAuthorization(oid);
     } else {
       setUnauthenticated();
       this.authStateService.clear();
@@ -313,30 +296,25 @@ export class AuthService implements OnDestroy {
   getProfilePhoto() {
     const account = this.msal.getActiveAccount();
     if (!account) {
-      console.warn('[Auth] getProfilePhoto: no active account.');
+      // console.warn('[Auth] getProfilePhoto: no active account.');
       return of(null);
-    } 
-    return from(this.acquireAccessToken(['User.Read']))
-    .pipe(
-      mergeMap(accessToken => {
+    }
+    return from(this.acquireAccessToken(['User.Read'])).pipe(
+      mergeMap((accessToken) => {
         if (!accessToken) {
-          console.warn('[Auth] getProfilePhoto: no access token available.');
+          // console.warn('[Auth] getProfilePhoto: no access token available.');
           return of(null);
         }
 
         const headers = new HttpHeaders({
-          Authorization: `Bearer ${accessToken}`
+          Authorization: `Bearer ${accessToken}`,
         });
 
-        return this.http.get(
-          'https://graph.microsoft.com/v1.0/me/photo/$value',
-          {
-            headers,
-            responseType: 'blob'
-          }
-        );
-
-      })
+        return this.http.get('https://graph.microsoft.com/v1.0/me/photo/$value', {
+          headers,
+          responseType: 'blob',
+        });
+      }),
     );
   }
 
@@ -344,19 +322,25 @@ export class AuthService implements OnDestroy {
     switch (event.eventType) {
       case EventType.LOGIN_SUCCESS:
       case EventType.SSO_SILENT_SUCCESS: {
-        console.log('[Auth] Login successful');
         const payload = event.payload as AuthenticationResult | null;
+
         if (payload?.account) {
           this.msal.setActiveAccount(payload.account);
           setAuthUser(mapAccountToAuthUser(payload.account));
-          console.log('[Auth] Calling Authorization API (fresh login - clearing cache)');
-          // Load backend authorization context after login.
-          // On login, always fetch fresh data from the API (don't restore from cache).
-          this.authStateService.clear(); // Clear any stale cached data
-          this.loadAuthorization().catch((err) =>
-            console.error('[Auth] Authorization load error after login event:', err),
-          );
+
+          const oid = payload.account.idTokenClaims?.['oid'];
+
+          if (typeof oid !== 'string' || !oid) {
+            this.authStateService.clear();
+            setAuthError('Authenticated account is missing Azure AD Object ID.');
+            return;
+          }
+
+          this.loadAuthorization(oid).catch((err) => {
+            console.error('[Auth] Authorization load failed:', err);
+          });
         }
+
         break;
       }
 
@@ -380,7 +364,7 @@ export class AuthService implements OnDestroy {
 
       case EventType.LOGIN_FAILURE: {
         const message = event.error?.message ?? 'Authentication failed.';
-        console.error('[Auth] Login failure:', message);
+        // console.error('[Auth] Login failure:', message);
         setAuthError(message);
         this.authStateService.clear();
         break;
@@ -390,5 +374,4 @@ export class AuthService implements OnDestroy {
         break;
     }
   }
- 
 }

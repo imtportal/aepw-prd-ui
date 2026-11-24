@@ -85,7 +85,7 @@ export class AuditService {
         this.loadingMore.set(false);
         const errorMsg = err?.error?.errors?.[0] || err?.error?.message || 'Failed to load audit timeline.';
         this.error.set(errorMsg);
-        console.error('[AuditService] Error loading timeline:', err);
+        // console.error('[AuditService] Error loading timeline:', err);
         return throwError(() => err);
       }),
     );

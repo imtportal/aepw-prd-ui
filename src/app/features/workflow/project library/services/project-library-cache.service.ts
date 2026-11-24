@@ -34,7 +34,7 @@ export class ProjectLibraryCacheService {
       const newState = { ...currentState, ...state };
       localStorage.setItem(this.CACHE_KEY, JSON.stringify(newState));
     } catch (error) {
-      console.error('Failed to save filter state to localStorage', error);
+      // console.error('Failed to save filter state to localStorage', error);
     }
   }
 
@@ -48,7 +48,7 @@ export class ProjectLibraryCacheService {
         return JSON.parse(cached) as ProjectLibraryFilterState;
       }
     } catch (error) {
-      console.error('Failed to retrieve filter state from localStorage', error);
+      // console.error('Failed to retrieve filter state from localStorage', error);
     }
 
     return this.getDefaultState();
@@ -61,7 +61,7 @@ export class ProjectLibraryCacheService {
     try {
       localStorage.removeItem(this.CACHE_KEY);
     } catch (error) {
-      console.error('Failed to clear filter state from localStorage', error);
+      // console.error('Failed to clear filter state from localStorage', error);
     }
   }
 

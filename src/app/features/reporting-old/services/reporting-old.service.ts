@@ -56,10 +56,10 @@ export class ReportingService {
           this._yoyData.set(res.data.yoyData);
           this._pieData.set(res.data.pieData);
         }
-        console.log('[ReportingService] Load Success:', res);
+        // console.log('[ReportingService] Load Success:', res);
       }),
       catchError(err => {
-        console.error('[ReportingService] Load Error:', err);
+        // console.error('[ReportingService] Load Error:', err);
         return throwError(() => err);
       }),
     );

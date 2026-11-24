@@ -74,10 +74,10 @@ export class ReviewService {
       .put<ApiResponse<boolean>>(`${this.apiUrl}/UpdateReviewApprovalAssignee`, request)
       .pipe(
         tap((res) => {
-          console.log('[ReviewService] Update Review Approval Assignee Success:', res);
+          // console.log('[ReviewService] Update Review Approval Assignee Success:', res);
         }),
         catchError((err) => {
-          console.error('[ReviewService] Update Review Approval Assignee Error:', err);
+          // console.error('[ReviewService] Update Review Approval Assignee Error:', err);
           return throwError(() => err);
         }),
       );
@@ -137,10 +137,10 @@ export class ReviewService {
     return this.http.get<PaginatedResponse<ReviewListDto>>(this.url, { params: p }).pipe(
       tap((res) => {
         this._reviews.set(res.data);
-        console.log('[ReviewService] Load Paged Reviews Success:', res);
+        // console.log('[ReviewService] Load Paged Reviews Success:', res);
       }),
       catchError((err) => {
-        console.error('[ReviewService] Load Paged Reviews Error:', err);
+        // console.error('[ReviewService] Load Paged Reviews Error:', err);
         return throwError(() => err);
       }),
     );
@@ -158,10 +158,10 @@ export class ReviewService {
       .pipe(
         tap((res) => {
           this._reviewerQueue.set(res.data);
-          console.log('[ReviewService] Load Paged Queue Success:', res);
+          // console.log('[ReviewService] Load Paged Queue Success:', res);
         }),
         catchError((err) => {
-          console.error('[ReviewService] Load Paged Queue Error:', err);
+          // console.error('[ReviewService] Load Paged Queue Error:', err);
           return throwError(() => err);
         }),
       );
@@ -226,10 +226,10 @@ export class ReviewService {
   getReviewDetail(projectId: number): Observable<ApiResponse<ReviewDto>> {
     return this.http.get<ApiResponse<ReviewDto>>(`${this.url}/${projectId}`).pipe(
       tap((res) => {
-        console.log('[ReviewService] Get Review Detail Success:', res);
+        // console.log('[ReviewService] Get Review Detail Success:', res);
       }),
       catchError((err) => {
-        console.error('[ReviewService] Get Review Detail Error:', err);
+        // console.error('[ReviewService] Get Review Detail Error:', err);
         return throwError(() => err);
       }),
     );
@@ -257,10 +257,10 @@ export class ReviewService {
       >(`${this.url}/${projectId}/metrics/${metricCode}/status`, { field, value })
       .pipe(
         tap((res) => {
-          console.log('[ReviewService] Update Metric Status Success:', res);
+          // console.log('[ReviewService] Update Metric Status Success:', res);
         }),
         catchError((err) => {
-          console.error('[ReviewService] Update Metric Status Error:', err);
+          // console.error('[ReviewService] Update Metric Status Error:', err);
           return throwError(() => err);
         }),
       );
@@ -275,10 +275,10 @@ export class ReviewService {
       .patch<ApiResponse<boolean>>(`${this.url}/${projectId}/approval`, { stepId, action })
       .pipe(
         tap((res) => {
-          console.log('[ReviewService] Update Approval Step Success:', res);
+          // console.log('[ReviewService] Update Approval Step Success:', res);
         }),
         catchError((err) => {
-          console.error('[ReviewService] Update Approval Step Error:', err);
+          // console.error('[ReviewService] Update Approval Step Error:', err);
           return throwError(() => err);
         }),
       );
@@ -297,11 +297,11 @@ export class ReviewService {
       >(`${this.apiUrl}/AddComment`, [{ ReviewId: reviewId, Body: body, UserId: userId, MentionedUsers: mentionedUsers, Stage: stage }])
       .pipe(
         catchError((err) => {
-          console.error('[ReviewService] Add Comment Error:', err);
+          // console.error('[ReviewService] Add Comment Error:', err);
           return of({ data: null, status: -1 } as ApiResponse<ReviewCommentDto | null>);
         }),
         tap((res) => {
-          console.log('[ReviewService] Add Comment Success:', res);
+          // console.log('[ReviewService] Add Comment Success:', res);
         }),
       );
   }
@@ -330,7 +330,7 @@ export class ReviewService {
                 : r,
             ),
           );
-          console.log('[ReviewService] Bulk Launch Success:', res);
+          // console.log('[ReviewService] Bulk Launch Success:', res);
         }),
         // catchError(err => {
         //   console.error('[ReviewService] Bulk Launch Error:', err);
@@ -350,11 +350,11 @@ export class ReviewService {
       >(`${this.url}/${projectId}/metrics/${metricCode}/value`, { value })
       .pipe(
         tap((res) => {
-          console.log('[ReviewService] Update Reported Value Success:', res);
+          // console.log('[ReviewService] Update Reported Value Success:', res);
         }),
         catchError((err) => {
           this.error.set('Failed to save reported value');
-          console.error('[ReviewService] Update Reported Value Error:', err);
+          // console.error('[ReviewService] Update Reported Value Error:', err);
           return throwError(() => err);
         }),
       );
@@ -368,7 +368,7 @@ export class ReviewService {
     return this.http.post<ApiResponse<number>>(this.apiUrl + '/SaveReview', payload).pipe(
       catchError((err) => {
         this._savingAsDraft.set(false);
-        console.error('[ReviewService] Create Review Error:', err);
+        // console.error('[ReviewService] Create Review Error:', err);
         return throwError(() => err);
       }),
       map((res) => {
@@ -376,7 +376,7 @@ export class ReviewService {
       }),
       tap((res) => {
         this._savingAsDraft.set(false);
-        console.log('[ReviewService] Create Review Success:', res);
+        // console.log('[ReviewService] Create Review Success:', res);
       }),
     );
   }
@@ -536,6 +536,18 @@ export class ReviewService {
 
     return this.http.delete<ApiResponse<number>[]>(
       this.apiUrl + '/DeleteReviewMetricEvidence/' + itemId,
+      { headers },
+    );
+  }
+
+  deleteMetricEvidences(itemIds: string, userId: number) {
+    const headers = new HttpHeaders()
+    .set('userId', String(userId))
+    .set('itemIds', String(itemIds))
+    ;
+
+    return this.http.delete<ApiResponse<number>[]>(
+      this.apiUrl + '/DeleteReviewMetricEvidences/',
       { headers },
     );
   }

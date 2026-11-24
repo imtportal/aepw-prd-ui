@@ -25,10 +25,10 @@ export class UserControlAccessService {
   getRolePageAccess(): Observable<ApiResponse<RolePageAccessModel[]>> {
     return this.http.get<ApiResponse<RolePageAccessModel[]>>(`${this.apiUrl}/pages`).pipe(
       tap((response) => {
-        console.log('[RoleAccessService] Get Role Page Access Success:', response);
+        // console.log('[RoleAccessService] Get Role Page Access Success:', response);
       }),
       catchError((error) => {
-        console.error('[RoleAccessService] Get Role Page Access Error:', error);
+        // console.error('[RoleAccessService] Get Role Page Access Error:', error);
         return throwError(() => error);
       }),
     );
@@ -45,10 +45,10 @@ export class UserControlAccessService {
       >(`${this.apiUrl}/pages/${pageStructureId}/actions`)
       .pipe(
         tap((response) => {
-          console.log('[RoleAccessService] Get Role Page Action Access Success:', response);
+          // console.log('[RoleAccessService] Get Role Page Action Access Success:', response);
         }),
         catchError((error) => {
-          console.error('[RoleAccessService] Get Role Page Action Access Error:', error);
+          // console.error('[RoleAccessService] Get Role Page Action Access Error:', error);
           return throwError(() => error);
         }),
       );
@@ -58,10 +58,10 @@ export class UserControlAccessService {
   saveRolePageAccess(request: SaveRolePageAccessRequest): Observable<ApiResponse<boolean>> {
     return this.http.post<ApiResponse<boolean>>(`${this.apiUrl}/pages`, request).pipe(
       tap((response) => {
-        console.log('[RoleAccessService] Save Role Page Access Success:', response);
+        // console.log('[RoleAccessService] Save Role Page Access Success:', response);
       }),
       catchError((error) => {
-        console.error('[RoleAccessService] Save Role Page Access Error:', error);
+        // console.error('[RoleAccessService] Save Role Page Access Error:', error);
         return throwError(() => error);
       }),
     );
@@ -74,10 +74,10 @@ export class UserControlAccessService {
   ): Observable<ApiResponse<boolean>> {
     return this.http.post<ApiResponse<boolean>>(`${this.apiUrl}/pages/actions`, request).pipe(
       tap((response) => {
-        console.log('[RoleAccessService] Save Role Page Action Access Success:', response);
+        // console.log('[RoleAccessService] Save Role Page Action Access Success:', response);
       }),
       catchError((error) => {
-        console.error('[RoleAccessService] Save Role Page Action Access Error:', error);
+        // console.error('[RoleAccessService] Save Role Page Action Access Error:', error);
         return throwError(() => error);
       }),
     );

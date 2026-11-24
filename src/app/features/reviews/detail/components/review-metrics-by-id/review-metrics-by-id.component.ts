@@ -37,6 +37,7 @@ import {
   ClockArrowUp,
   ListRestart,
   History,
+  Trash2,
 } from 'lucide-angular';
 
 import {
@@ -141,6 +142,7 @@ import { ActionAccess } from '../../../../../core/auth/models/authorization.mode
         ListRestart,
         History,
         X,
+        Trash2
       }),
     },
   ],
@@ -162,7 +164,7 @@ export class ReviewMetricsByIdComponent {
     const result = this.actionAccess().some(
       (action) => action.key === 'TASKREASSIGNMENT' && action.value,
     );
-    console.log('TASKREASSIGNMENT button access:', result);
+    // console.log('TASKREASSIGNMENT button access:', result);
     return result;
   });
 
@@ -383,7 +385,7 @@ export class ReviewMetricsByIdComponent {
           return this.lookupService.getUsers(searchTerm).pipe(
             map((response) => response.data ?? []),
             catchError((error) => {
-              console.error('[Stage Assignee User Typeahead]', error);
+              // console.error('[Stage Assignee User Typeahead]', error);
               return of<AppUserLookup[]>([]);
             }),
           );
@@ -572,7 +574,7 @@ export class ReviewMetricsByIdComponent {
     const userId = this.authStateService.getCurrentUserId();
 
     if (!userId) {
-      console.error('[Authorization] Current user ID not available.');
+      // console.error('[Authorization] Current user ID not available.');
       return;
     }
 
@@ -583,10 +585,10 @@ export class ReviewMetricsByIdComponent {
         next: (response) => {
           this.actionAccess.set(response.data ?? []);
 
-          console.log('[Authorization] User Management action access:', response.data);
+          // console.log('[Authorization] User Management action access:', response.data);
         },
         error: (error) => {
-          console.error('[Authorization] Failed to load User Management action access:', error);
+          // console.error('[Authorization] Failed to load User Management action access:', error);
 
           this.actionAccess.set([]);
         },
@@ -779,6 +781,9 @@ export class ReviewMetricsByIdComponent {
         }
 
         this.reviewData.set(review);
+
+        // Evidence section select all button reset
+        this.evidenceSelectedAll.set({});
 
         if (review && !this.activeCategoryCode()) {
           const firstCategory = review.categories[0]?.code ?? '';
@@ -974,7 +979,9 @@ export class ReviewMetricsByIdComponent {
             [evidenceId]: confidenceScore,
           }));
         },
-        error: (err) => console.error('Failed to load evidence confidence score:', err),
+        error: (err) => {
+          // console.error('Failed to load evidence confidence score:', err);
+        },
       });
   }
 
@@ -1507,7 +1514,7 @@ export class ReviewMetricsByIdComponent {
   protected updatingReportedLimitAcknowledgedBy = signal<boolean>(false);
   overrideReportedLimit() {
     const rawValueBeforeExceedingLimit = this.rawValueBeforeExceedingLimit();
-    console.log(815);
+    // console.log(815);
 
     // if (!Object.entries(rawValueBeforeExceedingLimit)?.length) {
     //   return;
@@ -1699,7 +1706,7 @@ export class ReviewMetricsByIdComponent {
   }
 
   filesSelected($event: any, metricId: number, metricCode: string): void {
-    console.log({ $event });
+    // console.log({ $event });
     const fileName =
       $event.files.length > 1
         ? '(' + $event.files.length + ') evidences being uploaded...'
@@ -1864,6 +1871,7 @@ export class ReviewMetricsByIdComponent {
 
   protected deleteEvidenceItemId = signal<string | null>(null);
   protected evidenceDeletionInProgress = signal<boolean>(false);
+  protected evidencesDeletionInProgress = signal<boolean>(false);
 
   promptDeleteEvidence(evidence: EvidenceDto): void {
     this.deleteEvidenceItemId.set(evidence?.itemId);
@@ -1901,6 +1909,56 @@ export class ReviewMetricsByIdComponent {
         },
         () => {
           this.evidenceDeletionInProgress.set(false);
+        },
+      );
+  }
+
+  confirmDeleteEvidences(): void {
+    const userId = this.getUserId();
+
+    this.evidencesDeletionInProgress.set(true);
+
+    const bulkDeleteEvidenceSubmetricCode = this.bulkDeleteEvidenceSubmetricCode();
+
+    const evidenceItemIds = <string[]>[];
+
+    
+    const reviewData = this.reviewData();
+    const topMetrics = reviewData?.topMetrics || [];
+
+    for (const topMetric of topMetrics) {
+      if (topMetric.l1Metrics) {
+        for (const subMetric of topMetric.l1Metrics) {
+          if ((subMetric.metricCode === bulkDeleteEvidenceSubmetricCode) && subMetric.evidences) {
+            for (const evidence of subMetric.evidences) {
+              if (evidence.selected) {
+                evidenceItemIds.push(evidence.itemId);
+              }
+            }
+          }
+        }
+      }
+    }
+    
+    this.reviewSvc
+      .deleteMetricEvidences(evidenceItemIds.join(","), userId || 0)
+      .pipe(take(1))
+      .subscribe(
+        (res) => {
+          this.evidencesDeletionInProgress.set(false);
+
+          this.bulkDeleteEvidenceSubmetricCode.set(null);
+          
+          this.refreshReviewData();
+
+          if (res[0]?.success) {
+            this.toastService.success('Evidences deleted successfully.');
+          } else {
+            this.toastService.error('Failed to delete evidences.');
+          }
+        },
+        () => {
+          this.evidencesDeletionInProgress.set(false);
         },
       );
   }
@@ -2379,5 +2437,59 @@ export class ReviewMetricsByIdComponent {
     }
 
     this.totalVisibleMetricsForCategory.set(totalVisibleMetricsForCategory);
+  }
+
+  protected evidenceSelectedAll = signal<{ [metricCode: string]: boolean }>({});
+  protected evidencesSelectForSubmetric = signal<{ [metricCode: string]: number }>({});
+  updateEvidenceSelectAll(subMetric:  ReviewMetricDto) {
+    let allSelected = subMetric?.evidences?.length ? true : false;
+    
+    let atleastOneSelected = 0;
+
+    for (const evidence of subMetric.evidences || []) {
+      if (!evidence.selected) {
+        allSelected = false;
+      } else {
+        atleastOneSelected++;
+      }
+    }
+
+    const atleastOneSelectedForSubMetric = this.evidencesSelectForSubmetric();
+
+    atleastOneSelectedForSubMetric[subMetric.metricCode] = atleastOneSelected ?? 0;
+
+    this.evidencesSelectForSubmetric.set(atleastOneSelectedForSubMetric);
+
+    const evidenceSelectedAll = this.evidenceSelectedAll();
+
+    evidenceSelectedAll[subMetric.metricCode] = allSelected ?? false;
+
+    this.evidenceSelectedAll.set(evidenceSelectedAll);
+  }
+
+  selectUnselectAllEvidences(metricCode: string, $event: any) {
+    const reviewData = this.reviewData();
+    const topMetrics = reviewData?.topMetrics || [];
+
+    for (const topMetric of topMetrics) {
+      for (const l1Metric of topMetric?.l1Metrics || []) {
+        if (l1Metric.metricCode != metricCode) {
+          continue;
+        }
+
+        for (const evidence of l1Metric.evidences || []) {
+          evidence.selected = $event.target.checked;
+        }
+        
+        this.updateEvidenceSelectAll(l1Metric);
+        break;
+      }
+    }
+
+  }
+
+  protected bulkDeleteEvidenceSubmetricCode = signal<string | null>(null);
+  cancelEvidenceBulkDeletion() {
+    this.bulkDeleteEvidenceSubmetricCode.set(null);
   }
 }

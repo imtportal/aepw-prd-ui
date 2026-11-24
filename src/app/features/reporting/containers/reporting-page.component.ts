@@ -231,7 +231,7 @@ export class ReportingPageComponent {
     const userId = this.authStateService.getCurrentUserId();
 
     if (!userId) {
-      console.error('[Authorization] Current user ID not available.');
+      // console.error('[Authorization] Current user ID not available.');
       this.actionAccess.set([]);
       this.actionAccessLoaded.set(true);
       return;
@@ -264,7 +264,7 @@ export class ReportingPageComponent {
           this.actionAccessLoaded.set(true);
         },
         error: error => {
-          console.error('[Authorization] Failed to load Reporting action access:', error);
+          // console.error('[Authorization] Failed to load Reporting action access:', error);
           this.actionAccess.set([]);
           this.actionAccessLoaded.set(true);
         }
@@ -437,10 +437,10 @@ onQuarterAdd(item: { code: string }): void {
         },
         error: (error) => {
 
-          console.error(
-            'Error loading metric filters:',
-            error
-          );
+          // console.error(
+            // 'Error loading metric filters:',
+            // error
+          // );
 
         }
       });
@@ -459,7 +459,7 @@ onQuarterAdd(item: { code: string }): void {
 
       },
       error: (error) => {
-        console.error('Error loading metric filters', error);
+        // console.error('Error loading metric filters', error);
       }
 
 
@@ -571,7 +571,7 @@ onQuarterAdd(item: { code: string }): void {
           ?.projectCategoryOptions ?? [];
 
       default:
-        console.warn('No filter options mapping for:', filterKey);
+        // console.warn('No filter options mapping for:', filterKey);
         return [];
     }
   }
@@ -649,7 +649,7 @@ onQuarterAdd(item: { code: string }): void {
           this.metricFilterOptions.set(response);
         },
         error: error => {
-          console.error('Metric cascading failed:', error);
+          // console.error('Metric cascading failed:', error);
         }
       });
 
@@ -664,7 +664,7 @@ onQuarterAdd(item: { code: string }): void {
 
         },
         error: error => {
-          console.error('Project cascading failed:', error);
+          // console.error('Project cascading failed:', error);
         }
       });
 
@@ -676,7 +676,7 @@ onQuarterAdd(item: { code: string }): void {
 
         },
         error: error => {
-          console.error('Independent filters failed:', error);
+          // console.error('Independent filters failed:', error);
         }
       });
   }
@@ -884,7 +884,7 @@ onQuarterAdd(item: { code: string }): void {
         },
 
         error: (error) => {
-          console.error('Report generation failed:', error);
+          // console.error('Report generation failed:', error);
           this.toastService.error(`Unexpected Error occurs ${error}`)
           this.showLoading.set(false)
         }

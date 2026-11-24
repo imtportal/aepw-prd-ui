@@ -1,0 +1,236 @@
+<div class="flex flex-col gap-6">
+  <div class="flex flex-wrap gap-4">
+  
+    <ui-button variant="outline" (clicked)="backToReviewTasks()">
+      Back to Review Tasks
+    </ui-button>
+  </div>
+
+  @if (loadingLookups()) {
+    <div
+      class="flex items-center justify-center gap-3 rounded-lg border bg-[hsl(var(--aepw-blue)/0.08)] p-4 text-sm text-[hsl(var(--aepw-blue))]"
+      role="status"
+      aria-live="polite"
+    >
+      <span class="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" aria-hidden="true"></span>
+      Loading... please wait
+    </div>
+  } @else {
+  @if (errorMessage()) {
+    <p class="rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive" role="alert">
+      {{ errorMessage() }}
+    </p>
+  }
+
+  @if (lookupError()) {
+    <p class="rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive" role="alert">
+      {{ lookupError() }}
+    </p>
+  }
+
+  <div class="flex flex-wrap items-center gap-3">
+    <div class="w-[25rem] max-w-full">
+      <input
+        id="review-stage-search"
+        type="text"
+        class="h-9 w-full rounded-md border border-input bg-card px-3 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+        placeholder="Search by IM ID, PIN or Project Title"
+        aria-label="Search review stage tasks"
+        [ngModel]="searchText()"
+        (ngModelChange)="onSearchChange($event)"
+      />
+    </div>
+
+    <div class="w-44">
+      <select
+        id="review-stage-filter"
+        class="h-9 w-full rounded-md border border-input bg-card px-3 text-sm text-foreground disabled:opacity-50"
+        aria-label="Review Stage"
+        [disabled]="loadingLookups()"
+        [ngModel]="selectedReviewStageId() ?? ''"
+        (ngModelChange)="onReviewStageChange($event)"
+      >
+        <option value="">All Review Stages</option>
+        @for (stage of reviewStages(); track stage.reviewStageId) {
+          <option [value]="stage.reviewStageId">{{ stage.name }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="w-44">
+      <select
+        id="review-stage-period"
+        class="h-9 w-full rounded-md border border-input bg-card px-3 text-sm text-foreground disabled:opacity-50"
+        aria-label="Period"
+        [disabled]="loadingLookups()"
+        [ngModel]="selectedPeriod() ?? ''"
+        (ngModelChange)="onPeriodChange($event)"
+      >
+        <option value="">All Periods</option>
+        @for (period of periods(); track period.label) {
+          <option [value]="period.label">{{ period.label }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="w-44">
+      <select
+        id="review-stage-tlm"
+        class="h-9 w-full rounded-md border border-input bg-card px-3 text-sm text-foreground disabled:opacity-50"
+        aria-label="TLM"
+        [disabled]="loadingLookups()"
+        [ngModel]="selectedTlmId() ?? ''"
+        (ngModelChange)="onTlmChange($event)"
+      >
+        <option value="">All TLMs</option>
+        @for (tlm of tlms(); track tlm.metricId) {
+          <option [value]="tlm.metricId">{{ tlm.name }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="w-44">
+      <select
+        id="review-stage-program"
+        class="h-9 w-full rounded-md border border-input bg-card px-3 text-sm text-foreground disabled:opacity-50"
+        aria-label="Program"
+        [disabled]="loadingLookups()"
+        [ngModel]="selectedProgramId() ?? ''"
+        (ngModelChange)="onProgramChange($event)"
+      >
+        <option value="">All Programs</option>
+        @for (program of programs(); track program.programId) {
+          <option [value]="program.programId">{{ program.name }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="w-44">
+      <select
+        id="review-stage-assigned-user"
+        class="h-9 w-full rounded-md border border-input bg-card px-3 text-sm text-foreground disabled:opacity-50"
+        aria-label="Assigned User"
+        [disabled]="loadingLookups()"
+        [ngModel]="selectedAssignedUserId() ?? ''"
+        (ngModelChange)="onAssignedUserChange($event)"
+      >
+        <option value="">All Assigned Users</option>
+        @for (user of assignedUsers(); track user.userId) {
+          <option [value]="user.userId">{{ user.displayName }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="w-44">
+      <select
+        id="review-stage-record-type"
+        class="h-9 w-full rounded-md border border-input bg-card px-3 text-sm text-foreground disabled:opacity-50"
+        aria-label="Type"
+        [disabled]="loadingLookups()"
+        [ngModel]="selectedRecordTypeId() ?? ''"
+        (ngModelChange)="onRecordTypeChange($event)"
+      >
+        <option value="">All Source Type</option>
+        @for (recordType of recordTypes(); track recordType.recordTypeId) {
+          <option [value]="recordType.recordTypeId">{{ recordType.name }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="w-44">
+      <select
+        id="review-stage-scope"
+        class="h-9 w-full rounded-md border border-input bg-card px-3 text-sm text-foreground"
+        aria-label="Review Scope"
+        [ngModel]="reviewScope()"
+        (ngModelChange)="onReviewScopeChange($event)"
+      >
+        <option value="current">Pending Stage</option>
+        <option value="all">All Stages</option>
+      </select>
+    </div>
+
+    <div class="flex h-9 items-center">
+      <label class="flex items-center gap-2 px-1 text-sm text-foreground">
+        <input
+          type="checkbox"
+          class="h-4 w-4 rounded border-input"
+          [checked]="myProjectsOnly()"
+          (change)="onMyProjectsChange($event)"
+        />
+        My Projects
+      </label>
+    </div>
+
+    <div class="ml-auto">
+      <button
+        type="button"
+        class="h-9 rounded-md border px-3 text-sm text-foreground hover:bg-muted"
+        (click)="clearFilters()"
+      >
+        Clear Filters
+      </button>
+    </div>
+  </div>
+
+  <ui-card>
+    <ui-card-content styleClass="p-0">
+      <ui-data-table
+        [columns]="columns"
+        [data]="rows()"
+        [total]="totalRecords()"
+        [loading]="loading()"
+        [rowTemplate]="reviewStageRow"
+        [noRecordsFoundText]="'No review-stage tasks found.'"
+        (pageChange)="onPageChange($event)"
+         [maxBodyHeight]="'calc(100vh - 220px)'"
+      />
+    </ui-card-content>
+  </ui-card>
+
+  <ng-template #reviewStageRow let-task>
+    <tr class="border-b last:border-0">
+      <td class="px-4 py-3 text-[hsl(var(--aepw-blue))]">
+        {{ task.impactMasterId == null ? '-' : 'IM-' + task.impactMasterId }}
+      </td>
+      <td class="px-4 py-3 text-[hsl(var(--aepw-blue))] overflow-hidden "  [title]="task.pin || '-'">
+        {{ task.pin || '-' }}
+      </td>
+      <td class="px-4 py-3">
+        @if (task.projectType) {
+          <span
+            [class]="
+              'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ' +
+              (projectTypeColors[task.projectType] ?? 'bg-[hsl(var(--aepw-dark-grey)/0.12)] text-[hsl(var(--aepw-dark-grey))]')
+            "
+          >
+            {{ task.projectType }}
+          </span>
+        } @else {
+          -
+        }
+      </td>
+      <td class="px-4 py-3 overflow-hidden "  [title]="task.projectTitle || '-'">
+        {{ task.projectTitle || '-' }}
+      </td>
+      <td class="px-4 py-3">{{ task.reportingPeriod || '-' }}</td>
+      <td class="px-4 py-3">{{ task.topLevelMetric || '-' }}</td>
+      <td class="px-4 py-3 text-center">
+        @if (task.reviewStage) {
+          <span
+            class="inline-flex items-center  text-center rounded-full bg-[hsl(var(--aepw-blue)/0.12)] px-2 py-0.5 text-xs font-medium text-[hsl(var(--aepw-blue))]"
+          >
+            {{ task.reviewStage }}
+          </span>
+        } @else {
+          -
+        }
+      </td>
+      <td class="px-4 py-3">{{ task.program || '-' }}</td>
+      <td class="px-4 py-3">{{ task.assignedUserName || '-' }}</td>
+      <td class="px-4 py-3">{{ task.approverName || '-' }}</td>
+      <td class="px-4 py-3">{{ task.updatedOn | date: 'dd MMM yyyy' }}</td>
+    </tr>
+  </ng-template>
+  }
+</div>

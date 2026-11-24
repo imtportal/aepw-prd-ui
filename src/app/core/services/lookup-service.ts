@@ -41,10 +41,10 @@ export class LookupService {
       .get<ApiResponse<MetricCategoryLookup[]>>(`${this.apiUrl}/metric-categories`)
       .pipe(
         tap((response) => {
-          console.log('[LookupService] Metric Categories:', response);
+          // console.log('[LookupService] Metric Categories:', response);
         }),
         catchError((error) => {
-          console.error('Error fetching metric categories', error);
+          // console.error('Error fetching metric categories', error);
           return throwError(() => error);
         }),
       );
@@ -53,10 +53,10 @@ export class LookupService {
   getMetricUnits(): Observable<ApiResponse<MetricUnitLookup[]>> {
     return this.http.get<ApiResponse<MetricUnitLookup[]>>(`${this.apiUrl}/metric-units`).pipe(
       tap((response) => {
-        console.log('[LookupService] Metric Units:', response);
+        // console.log('[LookupService] Metric Units:', response);
       }),
       catchError((error) => {
-        console.error('Error fetching metric units', error);
+        // console.error('Error fetching metric units', error);
         return throwError(() => error);
       }),
     );
@@ -70,10 +70,10 @@ export class LookupService {
 
     return this.http.get<ApiResponse<ProgramLookup[]>>(`${this.apiUrl}/programs`, { params }).pipe(
       tap((response) => {
-        console.log('[LookupService] Programs:', response);
+        // console.log('[LookupService] Programs:', response);
       }),
       catchError((error) => {
-        console.error('Error fetching programs', error);
+        // console.error('Error fetching programs', error);
         return throwError(() => error);
       }),
     );
@@ -81,10 +81,10 @@ export class LookupService {
   getMetricSources(): Observable<ApiResponse<MetricSourceLookup[]>> {
     return this.http.get<ApiResponse<MetricSourceLookup[]>>(`${this.apiUrl}/metric-sources`).pipe(
       tap((response) => {
-        console.log('[LookupService] Metric Sources:', response);
+        // console.log('[LookupService] Metric Sources:', response);
       }),
       catchError((error) => {
-        console.error('Error fetching metric sources', error);
+        // console.error('Error fetching metric sources', error);
         return throwError(() => error);
       }),
     );
@@ -99,10 +99,10 @@ export class LookupService {
       })
       .pipe(
         tap((response) => {
-          console.log('[LookupService] Users:', response);
+          // console.log('[LookupService] Users:', response);
         }),
         catchError((error) => {
-          console.error('Error fetching users', error);
+          // console.error('Error fetching users', error);
           return throwError(() => error);
         }),
       );
@@ -123,7 +123,7 @@ export class LookupService {
       .get<ApiResponse<BusinessRoleUserLookup[]>>(`${this.apiUrl}/business-role-users`, { params })
       .pipe(
         catchError((error) => {
-          console.error('Error fetching business role users', error);
+          // console.error('Error fetching business role users', error);
           return throwError(() => error);
         }),
       );
@@ -143,10 +143,10 @@ export class LookupService {
   getSystemRoles(): Observable<ApiResponse<SystemRoleLookup[]>> {
     return this.http.get<ApiResponse<SystemRoleLookup[]>>(`${this.apiUrl}/system-roles`).pipe(
       tap((response) => {
-        console.log('[LookupService] System roles', response);
+        // console.log('[LookupService] System roles', response);
       }),
       catchError((error) => {
-        console.error('Error fetching system roles', error);
+        // console.error('Error fetching system roles', error);
         return throwError(() => error);
       }),
     );
@@ -154,10 +154,22 @@ export class LookupService {
   getParentMetrics(): Observable<ApiResponse<ParentMetricLookup[]>> {
     return this.http.get<ApiResponse<ParentMetricLookup[]>>(`${this.apiUrl}/parent-metrics`).pipe(
       tap((response) => {
-        console.log('[LookupService] Parent Metrics:', response);
+        // console.log('[LookupService] Parent Metrics:', response);
       }),
       catchError((error) => {
-        console.error('Error fetching parent metrics', error);
+        // console.error('Error fetching parent metrics', error);
+        return throwError(() => error);
+      }),
+    );
+  }
+
+    getTopLevelMetrics(): Observable<ApiResponse<ParentMetricLookup[]>> {
+    return this.http.get<ApiResponse<ParentMetricLookup[]>>(`${this.apiUrl}/toplevel-metrics`).pipe(
+      tap((response) => {
+        console.log('[LookupService] Top Level Metrics:', response);
+      }),
+      catchError((error) => {
+        console.error('Error fetching top level metrics', error);
         return throwError(() => error);
       }),
     );
@@ -165,10 +177,10 @@ export class LookupService {
   getCities(): Observable<ApiResponse<CountryLookup[]>> {
     return this.http.get<ApiResponse<CountryLookup[]>>(`${this.apiUrl}/cities`).pipe(
       tap((response) => {
-        console.log('[LookupService] Cities:', response);
+        // console.log('[LookupService] Cities:', response);
       }),
       catchError((error) => {
-        console.error('Error fetching cities', error);
+        // console.error('Error fetching cities', error);
         return throwError(() => error);
       }),
     );
@@ -176,10 +188,10 @@ export class LookupService {
   getRecordTypes(): Observable<ApiResponse<RecordTypeLookup[]>> {
     return this.http.get<ApiResponse<RecordTypeLookup[]>>(`${this.apiUrl}/record-types`).pipe(
       tap((response) => {
-        console.log('[LookupService] Record Types:', response);
+        // console.log('[LookupService] Record Types:', response);
       }),
       catchError((error) => {
-        console.error('Error fetching record types', error);
+        // console.error('Error fetching record types', error);
         return throwError(() => error);
       }),
     );
@@ -191,10 +203,10 @@ export class LookupService {
       })
       .pipe(
         tap((response) => {
-          console.log('[LookupService] Time Zones:', response);
+          // console.log('[LookupService] Time Zones:', response);
         }),
         catchError((error) => {
-          console.error('Error fetching time zones', error);
+          // console.error('Error fetching time zones', error);
           return throwError(() => error);
         }),
       );
@@ -204,10 +216,10 @@ export class LookupService {
       .get<ApiResponse<FundingRecipientLookup[]>>(`${this.apiUrl}/funding-recipients`)
       .pipe(
         tap((response) => {
-          console.log('[LookupService] Funding Recipients:', response);
+          // console.log('[LookupService] Funding Recipients:', response);
         }),
         catchError((error) => {
-          console.error('Error fetching funding recipients', error);
+          // console.error('Error fetching funding recipients', error);
           return throwError(() => error);
         }),
       );
@@ -215,10 +227,10 @@ export class LookupService {
   getBusinessRoles(): Observable<ApiResponse<BusinessRoleLookup[]>> {
     return this.http.get<ApiResponse<BusinessRoleLookup[]>>(`${this.apiUrl}/business-roles`).pipe(
       tap((response) => {
-        console.log('[LookupService] Business Roles:', response);
+        // console.log('[LookupService] Business Roles:', response);
       }),
       catchError((error) => {
-        console.error('Error fetching business roles', error);
+        // console.error('Error fetching business roles', error);
         return throwError(() => error);
       }),
     );
@@ -315,7 +327,7 @@ export class LookupService {
 
     if (impactMasterId) {
       params = params.set('impactMasterId', impactMasterId);
-      console.log('imapct master id in llokup serive.....' + impactMasterId);
+      // console.log('imapct master id in llokup serive.....' + impactMasterId);
     }
     return this.http
       .get<
@@ -323,10 +335,10 @@ export class LookupService {
       >(`${this.apiUrl}/statuses/${encodeURIComponent(module)}`, { headers, params })
       .pipe(
         tap((response) => {
-          console.log(`[LookupService] Statuses for module: ${module}`, response);
+          // console.log(`[LookupService] Statuses for module: ${module}`, response);
         }),
         catchError((error) => {
-          console.error(`Error fetching statuses for module: ${module}`, error);
+          // console.error(`Error fetching statuses for module: ${module}`, error);
           return throwError(() => error);
         }),
       );
@@ -347,10 +359,10 @@ export class LookupService {
   getPhases(): Observable<ApiResponse<PhaseLookup[]>> {
     return this.http.get<ApiResponse<PhaseLookup[]>>(`${this.apiUrl}/phases`).pipe(
       tap((response) => {
-        console.log('[LookupService] Phases:', response);
+        // console.log('[LookupService] Phases:', response);
       }),
       catchError((error) => {
-        console.error('Error fetching Phases', error);
+        // console.error('Error fetching Phases', error);
         return throwError(() => error);
       }),
     );
@@ -359,10 +371,10 @@ export class LookupService {
   getProjectCategories(): Observable<ApiResponse<CategoryLookup[]>> {
     return this.http.get<ApiResponse<CategoryLookup[]>>(`${this.apiUrl}/impact-categories`).pipe(
       tap((response) => {
-        console.log('[LookupService] Categories:', response);
+        // console.log('[LookupService] Categories:', response);
       }),
       catchError((error) => {
-        console.error('Error fetching Categories', error);
+        // console.error('Error fetching Categories', error);
         return throwError(() => error);
       }),
     );

@@ -60,7 +60,7 @@ export class ProgramFormPage implements OnInit, HasUnsavedChanges {
   protected readonly canAddProgram = computed(() => {
     const result = this.actionAccess().some((action) => action.key === 'ADD' && action.value);
 
-    console.log('ADD button access:', result);
+    // console.log('ADD button access:', result);
 
     return result;
   });
@@ -68,7 +68,7 @@ export class ProgramFormPage implements OnInit, HasUnsavedChanges {
   protected readonly canEditProgram = computed(() => {
     const result = this.actionAccess().some((action) => action.key === 'EDIT' && action.value);
 
-    console.log('EDIT button access:', result);
+    // console.log('EDIT button access:', result);
 
     return result;
   });
@@ -78,7 +78,7 @@ export class ProgramFormPage implements OnInit, HasUnsavedChanges {
   protected readonly canDeleteProgram = computed(() => {
     const result = this.actionAccess().some((action) => action.key === 'DELETE' && action.value);
 
-    console.log('DELETE button access:', result);
+    // console.log('DELETE button access:', result);
 
     return result;
   });
@@ -118,9 +118,9 @@ export class ProgramFormPage implements OnInit, HasUnsavedChanges {
   ngOnInit(): void {
     this.loadActionAccess();
     const programId = this.route.snapshot.paramMap.get('programId');
-    console.log(programId);
+    // console.log(programId);
     if (programId) {
-      console.log('inside program id true');
+      // console.log('inside program id true');
       this.loadProgram(programId);
     }
   }
@@ -128,7 +128,7 @@ export class ProgramFormPage implements OnInit, HasUnsavedChanges {
     const userId = this.authStateService.getCurrentUserId();
 
     if (!userId) {
-      console.error('[Authorization] Current user ID not available.');
+      // console.error('[Authorization] Current user ID not available.');
       return;
     }
 
@@ -139,10 +139,10 @@ export class ProgramFormPage implements OnInit, HasUnsavedChanges {
         next: (response) => {
           this.actionAccess.set(response.data ?? []);
 
-          console.log('[Authorization] User Management action access:', response.data);
+          // console.log('[Authorization] User Management action access:', response.data);
         },
         error: (error) => {
-          console.error('[Authorization] Failed to load User Management action access:', error);
+          // console.error('[Authorization] Failed to load User Management action access:', error);
 
           this.actionAccess.set([]);
         },
@@ -173,7 +173,7 @@ export class ProgramFormPage implements OnInit, HasUnsavedChanges {
           this.router.navigate(['/admin/programs']);
         },
         error: (error) => {
-          console.error(error);
+          // console.error(error);
 
           this.toast.error(error?.error?.message ?? 'Failed to create Funding Recipient.');
         },
@@ -205,7 +205,9 @@ export class ProgramFormPage implements OnInit, HasUnsavedChanges {
           this.toast.success('Program updated successfully');
           this.router.navigate(['/admin/programs']);
         },
-        error: console.error,
+        error: (err) => {
+          // console.error(err);
+        },
       });
   }
   private loadProgram(programId: string): void {

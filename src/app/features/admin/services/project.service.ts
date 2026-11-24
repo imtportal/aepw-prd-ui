@@ -72,10 +72,10 @@ export class ProjectService {
       })
       .pipe(
         tap((response) => {
-          console.log('[ProjectService] Get All Projects Success:', response);
+          // console.log('[ProjectService] Get All Projects Success:', response);
         }),
         catchError((error) => {
-          console.error('[ProjectService] Get All Projects Error:', error);
+          // console.error('[ProjectService] Get All Projects Error:', error);
           return throwError(() => error);
         }),
       );
@@ -86,10 +86,10 @@ export class ProjectService {
   getProjectById(projectId: number): Observable<ApiResponse<ProjectDetailModel>> {
     return this.http.get<ApiResponse<ProjectDetailModel>>(`${this.apiUrl}/${projectId}`).pipe(
       tap((response) => {
-        console.log('[ProjectService] Get Project By Id Success:', response);
+        // console.log('[ProjectService] Get Project By Id Success:', response);
       }),
       catchError((error) => {
-        console.error('[ProjectService] Get Project By Id Error:', error);
+        // console.error('[ProjectService] Get Project By Id Error:', error);
         return throwError(() => error);
       }),
     );
@@ -98,10 +98,10 @@ export class ProjectService {
   saveProject(request: CreateProjectRequest): Observable<ApiResponse<CreateProjectResponse>> {
     return this.http.post<ApiResponse<CreateProjectResponse>>(this.url, request).pipe(
       tap((response) => {
-        console.log('[ProjectService] Save Project Success:', response);
+        // console.log('[ProjectService] Save Project Success:', response);
       }),
       catchError((error) => {
-        console.error('[ProjectService] Save Project Error:', error);
+        // console.error('[ProjectService] Save Project Error:', error);
         return throwError(() => error);
       }),
     );
@@ -110,10 +110,10 @@ export class ProjectService {
   getMetricsForProject(projectId: string): Observable<ApiResponse<MetricCategoryDto[]>> {
     return this.http.get<ApiResponse<MetricCategoryDto[]>>(`${this.url}/${projectId}/metrics`).pipe(
       tap((response) => {
-        console.log('[ProjectService] Get Metrics For Project Success:', response);
+        // console.log('[ProjectService] Get Metrics For Project Success:', response);
       }),
       catchError((error) => {
-        console.error('[ProjectService] Get Metrics For Project Error:', error);
+        // console.error('[ProjectService] Get Metrics For Project Error:', error);
         return throwError(() => error);
       }),
     );
@@ -127,10 +127,10 @@ export class ProjectService {
   ): Observable<ApiResponse<boolean>> {
     return this.http.put<ApiResponse<boolean>>(`${this.apiUrl}/${projectId}`, request).pipe(
       tap((response) => {
-        console.log('[ProjectService] Update Project Success:', response);
+        // console.log('[ProjectService] Update Project Success:', response);
       }),
       catchError((error) => {
-        console.error('[ProjectService] Update Project Error:', error);
+        // console.error('[ProjectService] Update Project Error:', error);
         return throwError(() => error);
       }),
     );
@@ -147,10 +147,10 @@ export class ProjectService {
       >(`${this.url}/${projectId}/metrics`, { ...request, projectId }, { params: { updatedBy } })
       .pipe(
         tap((response) => {
-          console.log('[ProjectService] Save Project Metrics Success:', response);
+          // console.log('[ProjectService] Save Project Metrics Success:', response);
         }),
         catchError((error) => {
-          console.error('[ProjectService] Save Project Metrics Error:', error);
+          // console.error('[ProjectService] Save Project Metrics Error:', error);
           return throwError(() => error);
         }),
       );
@@ -207,10 +207,10 @@ export class ProjectService {
 
           this.impactDetailsMap.set(impactDetailsMap);
         };
-        console.log('[ProjectService] Load Bulk Projects Success:', res);
+        // console.log('[ProjectService] Load Bulk Projects Success:', res);
       }),
       catchError((err) => {
-        console.error('[ProjectService] Load Bulk Projects Error:', err);
+        // console.error('[ProjectService] Load Bulk Projects Error:', err);
         return throwError(() => err);
       }),
     );

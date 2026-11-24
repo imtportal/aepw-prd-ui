@@ -309,7 +309,7 @@ export class EvidenceReviewComponent implements OnInit, HasUnsavedChanges {
     const userId = this.authStateService.getCurrentUserId();
 
     if (!userId) {
-      console.error('[Authorization] Current user ID not available.');
+      // console.error('[Authorization] Current user ID not available.');
       return;
     }
 
@@ -320,10 +320,10 @@ export class EvidenceReviewComponent implements OnInit, HasUnsavedChanges {
         next: (response) => {
           this.actionAccess.set(response.data ?? []);
 
-          console.log('[Authorization] User Management action access:', response.data);
+          // console.log('[Authorization] User Management action access:', response.data);
         },
         error: (error) => {
-          console.error('[Authorization] Failed to load User Management action access:', error);
+          // console.error('[Authorization] Failed to load User Management action access:', error);
 
           this.actionAccess.set([]);
         },
@@ -335,7 +335,7 @@ export class EvidenceReviewComponent implements OnInit, HasUnsavedChanges {
     for (const page of pages) {
       // A missing page number is invalid response data.
       if (!Number.isInteger(page.pageNumber) || page.pageNumber < 1) {
-        console.warn('Skipping evidence fields with an invalid page number.', page);
+        // console.warn('Skipping evidence fields with an invalid page number.', page);
         continue;
       }
 
@@ -385,7 +385,7 @@ export class EvidenceReviewComponent implements OnInit, HasUnsavedChanges {
 
     for (const item of response.lineItems?.items ?? []) {
       if (!Number.isInteger(item.evidenceDetailId) || item.evidenceDetailId <= 0) {
-        console.warn('Skipping line item without a valid EvidenceDetailId.', item);
+        // console.warn('Skipping line item without a valid EvidenceDetailId.', item);
         continue;
       }
 
@@ -576,7 +576,7 @@ export class EvidenceReviewComponent implements OnInit, HasUnsavedChanges {
           this.toastService.success('Evidence review saved successfully.');
         },
         error: (error: unknown) => {
-          console.error('[EvidenceReview] Failed to save evidence review.', error);
+          // console.error('[EvidenceReview] Failed to save evidence review.', error);
           this.toastService.error('Unable to save evidence review. Please try again.');
         },
       });

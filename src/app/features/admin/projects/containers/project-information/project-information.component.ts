@@ -285,16 +285,16 @@ export class ProjectInformationComponent implements OnInit, HasUnsavedChanges {
     }
   }
   saveAsDraft(): void {
-    console.log('FORM STATUS:', this.impactForm.status);
+    // console.log('FORM STATUS:', this.impactForm.status);
 
     Object.entries(this.impactForm.controls).forEach(([name, control]) => {
-      console.log(name, {
-        value: control.value,
-        valid: control.valid,
-        touched: control.touched,
-        dirty: control.dirty,
-        errors: control.errors,
-      });
+      // console.log(name, {
+        // value: control.value,
+        // valid: control.valid,
+        // touched: control.touched,
+        // dirty: control.dirty,
+        // errors: control.errors,
+      // });
     });
     const draftStatusId = this.draftStatusId();
 
@@ -583,7 +583,7 @@ export class ProjectInformationComponent implements OnInit, HasUnsavedChanges {
     this.loadActionAccess();
     this.getProjectLibraryPermissions();
     const recordTypeId = Number(this.route.snapshot.queryParamMap.get('recordTypeId'));
-    console.log('record type id is:' + recordTypeId);
+    // console.log('record type id is:' + recordTypeId);
     if (!Number.isNaN(recordTypeId)) {
       this.selectedRecordTypeId.set(recordTypeId);
       this.impactForm.patchValue({
@@ -596,10 +596,10 @@ export class ProjectInformationComponent implements OnInit, HasUnsavedChanges {
     const impactMasterId = this.route.snapshot.paramMap.get('impactMasterId');
     ///////////////////////////////////////////////////////////////////
 
-    console.log('imapct master id in form' + impactMasterId);
+    // console.log('imapct master id in form' + impactMasterId);
     if (impactMasterId) {
       this.isEditMode.set(true);
-      console.log(impactMasterId);
+      // console.log(impactMasterId);
       this.impactMasterId.set(impactMasterId);
       // this.loadReviewIds(impactMasterId); // commnet out cause we are loading review ids in loadInitialData() function
       this.loadLookups(impactMasterId);
@@ -728,7 +728,7 @@ export class ProjectInformationComponent implements OnInit, HasUnsavedChanges {
           this.reviewIdsLoading.set(false);
         },
         error: (error) => {
-          console.error('[ProjectInformationComponent] Get Review IDs Error:', error);
+          // console.error('[ProjectInformationComponent] Get Review IDs Error:', error);
           this.reviewIdsLoading.set(false);
           this.reviewIdsLoadError.set(true);
         },
@@ -739,7 +739,7 @@ export class ProjectInformationComponent implements OnInit, HasUnsavedChanges {
     const userId = this.authStateService.getCurrentUserId();
 
     if (!userId) {
-      console.error('[Authorization] Current user ID not available.');
+      // console.error('[Authorization] Current user ID not available.');
       return;
     }
 
@@ -750,12 +750,12 @@ export class ProjectInformationComponent implements OnInit, HasUnsavedChanges {
         next: (response) => {
           this.actionAccess.set(response.data ?? []);
 
-          console.log('[Authorization] User Management action access:', response.data);
+          // console.log('[Authorization] User Management action access:', response.data);
 
           this.applyApproverActionPermissions();
         },
         error: (error) => {
-          console.error('[Authorization] Failed to load User Management action access:', error);
+          // console.error('[Authorization] Failed to load User Management action access:', error);
 
           this.actionAccess.set([]);
 
@@ -770,7 +770,7 @@ export class ProjectInformationComponent implements OnInit, HasUnsavedChanges {
     const l2Control = this.impactForm.controls.l2ApproverUserId;
     const l3Control = this.impactForm.controls.l3ApproverUserId;
     const corporateApproverControl = this.impactForm.controls.corporateApproverUserId;
-    console.log('can assign project approver', this.canAssignProjectApprover());
+    // console.log('can assign project approver', this.canAssignProjectApprover());
     if (this.isCorporate()) {
       if (this.canAssignCorporateApprover()) {
         l2Control.enable({ emitEvent: false });
@@ -794,7 +794,7 @@ export class ProjectInformationComponent implements OnInit, HasUnsavedChanges {
   }
   // Load Lookups
   private loadLookups(impactMasterId: string | null): void {
-    console.log('impact master id in loadlookup...........' + impactMasterId);
+    // console.log('impact master id in loadlookup...........' + impactMasterId);
     forkJoin({
       programs: this.lookupService.getPrograms(),
       cities: this.lookupService.getCities(),
@@ -829,13 +829,15 @@ export class ProjectInformationComponent implements OnInit, HasUnsavedChanges {
         this.projectCategories.set(result.projectCategories.data ?? []);
         this.metricCategories.set(result.metricCategories.data ?? []);
       },
-      error: (err) => console.error(err),
+      error: (err) => {
+          // console.error(err);
+        },
     });
   }
   // LOAD PROJECT ON EDIT
   private loadProject(impactMasterId: string): void {
     this.isEditMode.set(true);
-    console.log(this.isEditMode());
+    // console.log(this.isEditMode());
     this.impactMasterId.set(impactMasterId);
     forkJoin({
       detail: this.impactMasterService.getImpactMasterById(impactMasterId),
@@ -860,11 +862,11 @@ export class ProjectInformationComponent implements OnInit, HasUnsavedChanges {
             detail.data.l3ApproverUserId,
             detail.data.l3ApproverUserName,
           );
-          console.log(detail.data.l3ApproverUserId);
-          console.log(detail.data.l3ApproverUserName);
+          // console.log(detail.data.l3ApproverUserId);
+          // console.log(detail.data.l3ApproverUserName);
 
-          console.log(detail.data.corporateApproverUserId);
-          console.log(detail.data.corporateApproverUserName);
+          // console.log(detail.data.corporateApproverUserId);
+          // console.log(detail.data.corporateApproverUserName);
           // Set approval checkboxes based on existing data
           if (detail.data.l2ApproverUserId) {
             this.requireL2Approver.set(true);
@@ -916,13 +918,13 @@ export class ProjectInformationComponent implements OnInit, HasUnsavedChanges {
     }
     this.impactMasterService.getMetrics(recordTypeId.toString()).subscribe({
       next: (response) => {
-        console.log('Metrics API Response:', response);
-        console.log('Categories:', response.data);
+        // console.log('Metrics API Response:', response);
+        // console.log('Categories:', response.data);
         this.editableMetrics.set(response.data ?? []);
         this.initializeParentRiskPct();
         this.initializeExpandedMetrics();
         this.initializeExpandedCategories();
-        console.log('Signal value:', this.editableMetrics());
+        // console.log('Signal value:', this.editableMetrics());
 
         // Clear any existing validation errors
         this.metricFieldErrors.set(new Map());
@@ -969,7 +971,7 @@ export class ProjectInformationComponent implements OnInit, HasUnsavedChanges {
       cityIds: form.cityIds ?? [],
     };
 
-    console.log('[Create Impact Master Request]', request);
+    // console.log('[Create Impact Master Request]', request);
 
     this.saving.set(true);
 
@@ -981,20 +983,20 @@ export class ProjectInformationComponent implements OnInit, HasUnsavedChanges {
       )
       .subscribe({
         next: (response) => {
-          console.log('[Create Project Response]', response);
+          // console.log('[Create Project Response]', response);
 
           const impactMasterId = response.data.impactMasterId;
 
           const metricRequest = this.buildMetricRequest(impactMasterId);
 
-          console.log('[Save Metrics Request]', JSON.stringify(metricRequest, null, 2));
+          // console.log('[Save Metrics Request]', JSON.stringify(metricRequest, null, 2));
 
           this.impactMasterService
             .saveImpactMasterMetrics(impactMasterId, metricRequest)
             .pipe(takeUntilDestroyed(this.destroyRef))
             .subscribe({
               next: (metricResponse) => {
-                console.log('[Save Metrics Response]', metricResponse);
+                // console.log('[Save Metrics Response]', metricResponse);
                 this.impactForm.markAsPristine();
                 this.metricsDirty.set(false);
                 // redirect to listing page with list refreshed
@@ -1008,16 +1010,16 @@ export class ProjectInformationComponent implements OnInit, HasUnsavedChanges {
                 //
               },
               error: (error) => {
-                console.log('Metrics Error', error);
-                console.log('Metrics Error Payload', error.error);
-                console.log('Metrics Error Status', error.status);
+                // console.log('Metrics Error', error);
+                // console.log('Metrics Error Payload', error.error);
+                // console.log('Metrics Error Status', error.status);
                 this.toast.error(error.error?.message ?? 'Metrics failed to save');
               },
             });
         },
         error: (err) => {
           this.toast.error(err.error?.message ?? 'Project failed to create');
-          console.error('[Create Project Error]', err);
+          // console.error('[Create Project Error]', err);
         },
       });
   }
@@ -1080,9 +1082,9 @@ export class ProjectInformationComponent implements OnInit, HasUnsavedChanges {
   updateProject(): void {
     const impactMasterId = this.impactMasterId();
 
-    console.log(impactMasterId);
+    // console.log(impactMasterId);
     if (!impactMasterId) {
-      console.error('[ProjectDetailSheet] Project Id not found');
+      // console.error('[ProjectDetailSheet] Project Id not found');
       return;
     }
     const updatedBy = this.authStateService.getCurrentUserId()!;
@@ -1116,7 +1118,7 @@ export class ProjectInformationComponent implements OnInit, HasUnsavedChanges {
       )
       .subscribe({
         next: () => {
-          console.log('[ProjectDetailSheet] Project and metrics updated successfully');
+          // console.log('[ProjectDetailSheet] Project and metrics updated successfully');
           this.impactForm.markAsPristine();
           this.metricsDirty.set(false);
           if (this.isCorporate()) {
@@ -1130,7 +1132,7 @@ export class ProjectInformationComponent implements OnInit, HasUnsavedChanges {
           this.router.navigate(['/admin/projects']);
         },
         error: (err) => {
-          console.error('[ProjectDetailSheet] Project update failed', err);
+          // console.error('[ProjectDetailSheet] Project update failed', err);
 
           this.toast.error(err.error?.message ?? 'Failed to update record');
         },
@@ -1184,7 +1186,7 @@ export class ProjectInformationComponent implements OnInit, HasUnsavedChanges {
     this.metricValidationError.set('');
 
     if (this.isEditMode()) {
-      console.log('in edit');
+      // console.log('in edit');
       this.updateProject();
     } else {
       this.createProject();
@@ -1278,7 +1280,7 @@ export class ProjectInformationComponent implements OnInit, HasUnsavedChanges {
       this.collectSelected(cat.metrics, metrics);
     }
 
-    console.log('[Flattened Metrics]', metrics);
+    // console.log('[Flattened Metrics]', metrics);
     return {
       impactMasterId: String(impactMasterId),
       metrics,
@@ -1853,7 +1855,7 @@ export class ProjectInformationComponent implements OnInit, HasUnsavedChanges {
       .pipe(
         map((response) => response.data ?? []),
         catchError((error) => {
-          console.error(`[Business Role Users] Failed to load ${roleCode}`, error);
+          // console.error(`[Business Role Users] Failed to load ${roleCode}`, error);
 
           return of<BusinessRoleUserLookup[]>([]);
         }),

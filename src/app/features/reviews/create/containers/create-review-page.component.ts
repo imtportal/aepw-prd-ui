@@ -369,7 +369,7 @@ export class CreateReviewPageComponent implements HasUnsavedChanges {
   ngOnInit() {
     this.getTranslations();
     this.getReviewPeriodOptions();
-    console.log("Create review page Init...")
+    // console.log("Create review page Init...")
     if (+(this.pendingIdParam() || 0) > 0) {
       this.currentStep.set(-1);
     }
@@ -490,7 +490,7 @@ export class CreateReviewPageComponent implements HasUnsavedChanges {
     if (pendingReview) {
       const reviewMetrics = pendingReview.reviewMetrics;
 
-      console.log({ reviewMetrics, riskOverrides: this.riskOverrides() });
+      // console.log({ reviewMetrics, riskOverrides: this.riskOverrides() });
     }
   }
 
@@ -525,7 +525,7 @@ export class CreateReviewPageComponent implements HasUnsavedChanges {
     const reviewMetrics = this.getReviewMetrics();
     payLoad.ReviewMetrics = reviewMetrics; 
 
-    console.log("payLoad for launch", payLoad);
+    // console.log("payLoad for launch", payLoad);
 
     this.launchInProgress.set(true);
     this.reviewSvc.createReview(payLoad)
@@ -710,7 +710,7 @@ export class CreateReviewPageComponent implements HasUnsavedChanges {
       // }
 
 
-      console.log("payLoad for draft", payLoad);
+      // console.log("payLoad for draft", payLoad);
 
       this.reviewSvc.createReview(payLoad)
       .pipe(take(1))
@@ -820,7 +820,7 @@ export class CreateReviewPageComponent implements HasUnsavedChanges {
   }
 
   getReviewPeriodOptions(projectId?: string) {
-    console.log("projectUpdated, ProjectId: ", projectId);
+    // console.log("projectUpdated, ProjectId: ", projectId);
 
     if (projectId) {
       this.periodSvc.getReviewPeriods(+projectId, 1).pipe(take(1)).subscribe();

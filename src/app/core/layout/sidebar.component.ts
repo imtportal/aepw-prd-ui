@@ -252,7 +252,7 @@ export class SidebarComponent {
     from(this.auth.getProfilePhoto())
       .pipe(take(1))
       .subscribe((blob) => {
-        console.log('[AppComponent] Profile photo response:', blob);
+        // console.log('[AppComponent] Profile photo response:', blob);
 
         if (blob) {
           this.profilePictureBlob.update(() => blob);
