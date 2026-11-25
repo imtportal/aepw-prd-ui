@@ -31,6 +31,7 @@ import { uiStore } from '../store/ui/ui.store';
 import { PageLoadingService } from '../services/page-loading.service';
 import { AuthStateService } from '../auth';
 import { from, take } from 'rxjs';
+import { ProjectLibraryCacheService } from '../../features/workflow/project library/services/project-library-cache.service';
 
 interface NavItem {
   title: string;
@@ -197,12 +198,16 @@ export class SidebarComponent {
   readonly isOpen = input<boolean>(false);
   protected readonly isCollapsed = signal(false);
   private readonly pageLoadingService = inject(PageLoadingService);
+  private readonly projectLibraryCache = inject(ProjectLibraryCacheService);
   protected readonly closeSidebar = () => uiStore.sidebarOpen.set(false);
   protected readonly toggleSidebar = (): void => {
     this.isCollapsed.update((collapsed) => !collapsed);
   };
 
   protected readonly onMenuItemClick = (href: string): void => {
+    if (href === '/workflow/projectLibrary') {
+      this.projectLibraryCache.resetPreferences();
+    }
     this.closeSidebar();
     if (!this.isActive(href)) {
       this.pageLoadingService.start();

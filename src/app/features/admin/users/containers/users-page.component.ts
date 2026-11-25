@@ -55,6 +55,8 @@ import { AuthorizationService, AuthStateService } from '../../../../core/auth';
 import { ToastService } from '../../../../shared/ui/toast/toast.service';
 import { TranslocoService, TranslocoPipe } from '@jsverse/transloco';
 import { ActionAccess } from '../../../../core/auth/models/authorization.model';
+import { PaginationPreferenceService } from '../../../../core/services/pagination-preference.service';
+import { PAGINATION_KEYS } from '../../../../shared/constants/pagination.constant';
 
 const ALL_ROLES: UserRole[] = [
   'Admin',
@@ -123,8 +125,12 @@ export class UsersPageComponent {
 
   // pagination
   readonly totalUsers = signal(0);
-  readonly currentPage = signal(1);
-  readonly currentPageSize = signal(10);
+  protected readonly paginationKey = PAGINATION_KEYS.USER_MANAGEMENT;
+  private readonly pagination = inject(PaginationPreferenceService);
+  // Persisted page index is 0-based (as emitted by the table); the users API expects 1-based.
+  private readonly pageIndex = this.pagination.page(this.paginationKey);
+  readonly currentPage = computed(() => this.pageIndex() + 1);
+  readonly currentPageSize = this.pagination.pageSize(this.paginationKey);
   readonly loading = signal(false);
 
   protected readonly allRoles = ALL_ROLES;
@@ -664,7 +670,7 @@ export class UsersPageComponent {
   // SEARCH
   onSearch(): void {
     this.searchQuery.set(this.selectedSearchUser()?.displayName ?? '');
-    this.currentPage.set(1);
+    this.pageIndex.set(0);
     this.loadUsers();
   }
   onSearchUserClear(): void {
@@ -679,14 +685,14 @@ export class UsersPageComponent {
     this.selectedFilterRoleId.set(roleId);
 
     // If the role filter changes, reset pagination and reload immediately.
-    this.currentPage.set(1);
+    this.pageIndex.set(0);
     this.loadUsers();
   }
 
   onStatusFilterChange(status: boolean | null): void {
     this.selectedStatus.set(status);
 
-    this.currentPage.set(1);
+    this.pageIndex.set(0);
     this.loadUsers();
   }
 
@@ -696,11 +702,11 @@ export class UsersPageComponent {
     // Keep searchQuery in sync with the selected user.
     this.searchQuery.set(user?.displayName ?? '');
 
-    this.currentPage.set(1);
+    this.pageIndex.set(0);
     this.loadUsers();
   }
   private reloadFromFilters(): void {
-    this.currentPage.set(1);
+    this.pageIndex.set(0);
     this.loadUsers();
   }
   onClearFilters(): void {
@@ -713,12 +719,12 @@ export class UsersPageComponent {
 
     this.userSearchTypeahead.next('');
 
-    this.currentPage.set(1);
+    this.pageIndex.set(0);
 
     this.loadUsers();
   }
   onPageChange(request: PagedRequest): void {
-    this.currentPage.set(request.page + 1); // convert 0-based -> 1-based
+    this.pageIndex.set(request.page);
     this.currentPageSize.set(request.pageSize);
 
     this.loadUsers();

@@ -4,11 +4,17 @@ import {
   output,
   computed,
   signal,
+  linkedSignal,
+  effect,
+  inject,
+  untracked,
   TemplateRef,
   ChangeDetectionStrategy,
 } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 import { PagedRequest } from '../../../core/models/api-response.model';
+import { PaginationPreferenceService } from '../../../core/services/pagination-preference.service';
+import { DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS } from '../../constants/pagination.constant';
 import { FormsModule } from '@angular/forms';
 
 export interface DataColumn {
@@ -24,8 +30,6 @@ export interface DataColumn {
   minWidth?: string;
 }
 
-const PAGE_SIZE_OPTIONS = [10, 20, 50] as const;
-
 @Component({
   selector: 'ui-data-table',
   standalone: true,
@@ -39,6 +43,12 @@ export class DataTableComponent<T = unknown> {
   readonly total = input<number>(0);
   readonly loading = input<boolean>(false);
   readonly initialPageSize = input<number>(10);
+  /**
+   * Optional unique page identifier. When set, the current page and rows per page are restored
+   * from and persisted to PaginationPreferenceService; the parent is then responsible for the
+   * initial data load, using the same preference signals. When omitted, behaviour is unchanged.
+   */
+  readonly paginationKey = input<string | null>(null);
 
   readonly noRecordsFoundText = input<string>('No records found.');
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -54,8 +64,21 @@ export class DataTableComponent<T = unknown> {
 
   protected readonly pageSizeOptions = PAGE_SIZE_OPTIONS;
 
-  readonly currentPage = signal(0);
-  protected readonly currentPageSize = signal(10);
+  private readonly pagination = inject(PaginationPreferenceService);
+  private readonly persistedPage = computed(() => {
+    const key = this.paginationKey();
+    return key ? this.pagination.page(key) : null;
+  });
+  private readonly persistedPageSize = computed(() => {
+    const key = this.paginationKey();
+    return key ? this.pagination.pageSize(key) : null;
+  });
+
+  // With a paginationKey these follow the persisted preference; otherwise they are plain local state.
+  readonly currentPage = linkedSignal(() => this.persistedPage()?.() ?? 0);
+  protected readonly currentPageSize = linkedSignal(
+    () => this.persistedPageSize()?.() ?? DEFAULT_PAGE_SIZE,
+  );
   // sorting
   readonly sortKey = signal<string | undefined>(undefined);
   readonly sortDir = signal<'asc' | 'desc' | undefined>(undefined);
@@ -73,6 +96,30 @@ export class DataTableComponent<T = unknown> {
   );
 
   protected readonly skeletonRows = computed(() => Array(this.currentPageSize()).fill(null));
+
+  private sawLoading = false;
+
+  constructor() {
+    // A restored page can be past the last page (e.g. records were deleted); once data has
+    // loaded, fall back to the last valid page.
+    effect(() => {
+      if (!this.paginationKey()) return;
+
+      if (this.loading()) {
+        this.sawLoading = true;
+        return;
+      }
+      if (!this.sawLoading) return;
+
+      const lastPage = Math.max(0, Math.ceil(this.total() / this.currentPageSize()) - 1);
+      if (this.currentPage() > lastPage) {
+        untracked(() => {
+          this.applyPagination(lastPage, this.currentPageSize());
+          this.emit();
+        });
+      }
+    });
+  }
 
   protected thClass(col: DataColumn): string {
     const align =
@@ -144,15 +191,25 @@ export class DataTableComponent<T = unknown> {
 
   //////////////////////////////////////////////////////////////////////////
   protected goTo(page: number): void {
-    this.currentPage.set(page);
+    this.applyPagination(page, this.currentPageSize());
     this.emit();
   }
 
   protected onPageSizeChange(event: Event): void {
     const size = +(event.target as HTMLSelectElement).value;
-    this.currentPageSize.set(size);
-    this.currentPage.set(0);
+    this.applyPagination(0, size);
     this.emit();
+  }
+
+  private applyPagination(page: number, pageSize: number): void {
+    this.currentPageSize.set(pageSize);
+    this.currentPage.set(page);
+
+    const key = this.paginationKey();
+    if (key) {
+      this.pagination.pageSize(key).set(pageSize);
+      this.pagination.page(key).set(page);
+    }
   }
 
   private emit(): void {
@@ -166,8 +223,10 @@ export class DataTableComponent<T = unknown> {
 
   /** Call this from parent ngOnInit to trigger the initial load with default page size. */
   ngOnInit(): void {
-    const initial = this.initialPageSize(); 
-    this.currentPageSize.set(initial);
+    // Keyed tables already hold the restored state and the parent performs the initial load.
+    if (this.paginationKey()) return;
+
+    this.currentPageSize.set(this.initialPageSize());
     this.emit();
   }
 }

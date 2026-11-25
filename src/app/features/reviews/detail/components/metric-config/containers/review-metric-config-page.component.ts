@@ -288,7 +288,7 @@ export class ReviewMetricConfigPageComponent {
       }
     }
 
-    this.reviewMetricConfigPageSvc.saveMetricsConfig(+this.id(), metricIds, 1)
+    this.reviewMetricConfigPageSvc.saveMetricsConfig(+this.id(), metricIds, this.authStateService.getCurrentUserId() || 0)
     .pipe
     (
       take(1)

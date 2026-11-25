@@ -48,6 +48,8 @@ import { TranslocoService, TranslocoPipe } from '@jsverse/transloco';
 import { PagedRequest } from '../../../../../core/models/api-response.model';
 import { ToastService } from '../../../../../shared/ui/toast/toast.service';
 import { AuthStateService } from '../../../../../core/auth';
+import { PaginationPreferenceService } from '../../../../../core/services/pagination-preference.service';
+import { PAGINATION_KEYS } from '../../../../../shared/constants/pagination.constant';
 
 @Component({
   selector: 'business-role-component',
@@ -97,9 +99,12 @@ export class BusinessRoleComponent {
   readonly allData = signal<BusinessRoleMappingModel[]>([]);
   readonly pageData = signal<BusinessRoleMappingModel[]>([]);
   readonly pageTotal = signal(0);
+  protected readonly paginationKey = PAGINATION_KEYS.BUSINESS_ROLE_MANAGEMENT;
+  private readonly pagination = inject(PaginationPreferenceService);
+  private readonly pageIndex = this.pagination.page(this.paginationKey);
   readonly tableState = signal<PagedRequest>({
-    page: 0,
-    pageSize: 10,
+    page: this.pageIndex(),
+    pageSize: this.pagination.pageSize(this.paginationKey)(),
   });
   // --------------------- FILTER ------------------------------------
   readonly selectedBusinessRoleId = signal('');
@@ -532,6 +537,7 @@ export class BusinessRoleComponent {
     this.applyTableOperations();
   }
   private resetToFirstPage(): void {
+    this.pageIndex.set(0);
     this.tableState.update((state) => ({
       ...state,
       page: 0,

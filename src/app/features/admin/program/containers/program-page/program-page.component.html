@@ -72,6 +72,7 @@
           [data]="pageData()"
           [total]="pageTotal()"
           [loading]="loading()"
+          [paginationKey]="paginationKey"
           [rowTemplate]="programRow"
           [maxBodyHeight]="'calc(100vh - 140px)'"
           (pageChange)="onPageChange($event)"

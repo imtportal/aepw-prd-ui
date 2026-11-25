@@ -801,6 +801,9 @@ export class ReviewMetricsByIdComponent {
         if (navigateBackIfApplicable) {
           this.navigateBackIfApplicable();
         }
+
+        // since reloading automatically brings data without selected flag, meaning it will reset any previously selected evidences
+        this.evidencesSelectForSubmetric.set({})
       });
   }
 

@@ -33,6 +33,8 @@ import {
 import { Router } from '@angular/router';
 import { AuthorizationService, AuthStateService } from '../../../../../core/auth';
 import { ActionAccess } from '../../../../../core/auth/models/authorization.model';
+import { PaginationPreferenceService } from '../../../../../core/services/pagination-preference.service';
+import { PAGINATION_KEYS } from '../../../../../shared/constants/pagination.constant';
 @Component({
   selector: '',
   standalone: true,
@@ -89,9 +91,11 @@ export class FundingRecipientPageComponent implements OnInit {
   readonly totalPages = signal(0);
   private readonly _allFundingRecipients = signal<FundingRecipient[]>([]);
 
-  private readonly _currentPage = signal(0);
+  protected readonly paginationKey = PAGINATION_KEYS.FUNDING_RECIPIENT;
+  private readonly pagination = inject(PaginationPreferenceService);
+  private readonly _currentPage = this.pagination.page(this.paginationKey);
 
-  private readonly _pageSize = signal(10);
+  private readonly _pageSize = this.pagination.pageSize(this.paginationKey);
   readonly pageData = computed(() => this._allFundingRecipients());
 
   readonly pageTotal = computed(() => this.totalRecords());

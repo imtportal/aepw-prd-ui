@@ -121,6 +121,7 @@
           [data]="appUsers()"
           [total]="totalUsers()"
           [loading]="loading()"
+          [paginationKey]="paginationKey"
           [rowTemplate]="userRow"
           [maxBodyHeight]="'calc(100vh - 200px)'"
           (pageChange)="onPageChange($event)"

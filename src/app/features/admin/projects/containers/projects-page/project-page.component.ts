@@ -82,6 +82,8 @@ import { AuthorizationService, AuthStateService } from '../../../../../core/auth
 import { ToastService } from '../../../../../shared/ui/toast/toast.service';
 import { DialogComponent } from '../../../../../shared/ui/dialog/dialog.component';
 import { ActionAccess } from '../../../../../core/auth/models/authorization.model';
+import { PaginationPreferenceService } from '../../../../../core/services/pagination-preference.service';
+import { PAGINATION_KEYS } from '../../../../../shared/constants/pagination.constant';
 
 @Component({
   selector: 'app-projects-page',
@@ -174,8 +176,10 @@ export class ProjectsPageComponent implements OnInit {
   readonly loading = signal(false);
   readonly searchQuery = signal('');
   private readonly _allImpactMasters = signal<ImpactMasterListModel[]>([]);
-  private readonly _currentPage = signal(0);
-  private readonly _pageSize = signal(10);
+  protected readonly paginationKey = PAGINATION_KEYS.PROJECT_MANAGEMENT;
+  private readonly pagination = inject(PaginationPreferenceService);
+  private readonly _currentPage = this.pagination.page(this.paginationKey);
+  private readonly _pageSize = this.pagination.pageSize(this.paginationKey);
   //-------------------------------- Pagination variables ------------------------------------------
   readonly totalRecords = signal(0);
   readonly totalPages = signal(0);

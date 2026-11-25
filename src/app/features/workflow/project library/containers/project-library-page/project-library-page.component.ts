@@ -55,7 +55,6 @@ import {
   catchError,
   debounceTime,
   distinctUntilChanged,
-  filter,
   finalize,
   forkJoin,
   map,
@@ -77,7 +76,8 @@ import {
 } from '../../../../../core/models/lookup-model';
 import { LookupService } from '../../../../../core/services/lookup-service';
 import { PageLoadingService } from '../../../../../core/services/page-loading.service';
-import { Router, NavigationStart } from '@angular/router';
+import { PaginationPreferenceService } from '../../../../../core/services/pagination-preference.service';
+import { Router } from '@angular/router';
 import { ButtonComponent } from '../../../../../shared/ui/button/button.component';
 import { ImpactMasterService } from '../../services/project-library-new.service';
 import { ProjectLibraryCacheService } from '../../services/project-library-cache.service';
@@ -129,6 +129,7 @@ export class ProjectLibraryPageComponent implements OnInit {
   private readonly pageLoadingService = inject(PageLoadingService);
   private readonly authStateService = inject(AuthStateService);
   private readonly authorizationService = inject(AuthorizationService);
+  private readonly paginationSvc = inject(PaginationPreferenceService);
   readonly actionAccess = signal<ActionAccess[]>([]);
   private readonly pageKey = 'PROJECTMASTER';
   // Action Signals
@@ -179,8 +180,9 @@ export class ProjectLibraryPageComponent implements OnInit {
   readonly loading = signal(false);
   readonly searchQuery = signal('');
   private readonly _allImpactMasters = signal<ImpactMasterListModel[]>([]);
-  private readonly _currentPage = signal(0);
-  private readonly _pageSize = signal(10);
+  // Pagination is now managed by PaginationPreferenceService via paginationKey in template
+  protected readonly _currentPage = computed(() => this.paginationSvc.page('PROJECT_LIBRARY')());
+  protected readonly _pageSize = computed(() => this.paginationSvc.pageSize('PROJECT_LIBRARY')());
   //-------------------------------- Pagination variables ------------------------------------------
   readonly totalRecords = signal(0);
   readonly totalPages = signal(0);
@@ -341,57 +343,10 @@ export class ProjectLibraryPageComponent implements OnInit {
     this.loadActionAccess();
     this.loading.set(true);
     this.loadLookups();
-    
-    // Listen to router navigation events to clear cache only when navigating away from project context
-    this.router.events
-      .pipe(
-        filter((event) => event instanceof NavigationStart),
-        takeUntilDestroyed(this.destroyRef)
-      )
-      .subscribe((event: any) => {
-        // Check if navigating to a route outside the project context
-        const targetUrl = event.url;
-        const isProjectRoute = 
-          targetUrl.includes('/admin/projects') || 
-          targetUrl.includes('/workflow/project-library');
-        
-        // Only clear cache if navigating away from project context
-        if (!isProjectRoute) {
-          this.cacheService.clearFilterState();
-        }
-      });
-    
-    // Restore filter state from cache
-    const cachedState = this.cacheService.getFilterState();
-    if (cachedState) {
-      this.searchQuery.set(cachedState.searchQuery || '');
-      this.selectedProgramId.set(cachedState.selectedProgramId || null);
-      this.selectedRecordTypeId.set(cachedState.selectedRecordTypeId || null);
-      this.selectedStatusId.set(cachedState.selectedStatusId || null);
-      this.selectedL1UserId.set(cachedState.selectedL1UserId || null);
-      this.selectedImpactMasterId.set(cachedState.selectedImpactMasterId || null);
-      this.selectedImpactMasterTitle.set(cachedState.selectedImpactMasterTitle || null);
-      this.selectedImpactMasterPin.set(cachedState.selectedImpactMasterPin || null);
-      this.selectedFundingRecipientId.set(cachedState.selectedFundingRecipientId || null);
-      this.selectedFundingRecipientName.set(cachedState.selectedFundingRecipientName || null);
-      this.selectedMetricCategories.set(cachedState.selectedMetricCategories || []);
-      this.isMyProjects.set(cachedState.isMyProjects || false);
-      this._currentPage.set(cachedState.currentPage || 0);
-      this._pageSize.set(cachedState.pageSize || 10);
-      
-      // If there's a cached impact master, trigger search to load its data
-      // Use PIN or ID as search term to find the exact match
-      if (cachedState.selectedImpactMasterId) {
-        const searchTerm = cachedState.selectedImpactMasterPin || cachedState.selectedImpactMasterTitle;
-        if (searchTerm) {
-          this.impactMasterSearchTerm.set(searchTerm);
-          // Trigger search with a slight delay to ensure observables are ready
-          setTimeout(() => {
-            this.impactMasterSearch$.next(searchTerm);
-          }, 100);
-        }
-      }
-    }
+
+    this.cacheService.preferencesReset$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.clearFilters());
     
     this.refreshImpactMasters();
     this.loadImpactMasterFilterOptions();
@@ -549,7 +504,7 @@ export class ProjectLibraryPageComponent implements OnInit {
 
     // Apply global search
     this.searchQuery.set(searchText);
-    this._currentPage.set(0);
+    this.paginationSvc.page('PROJECT_LIBRARY').set(0);
 
     // Close dropdown without selecting an option
     this.impactMasterSelect.close();
@@ -566,7 +521,7 @@ export class ProjectLibraryPageComponent implements OnInit {
 
     this.selectedImpactMasterId.set(null);
     this.searchQuery.set(searchText);
-    this._currentPage.set(0);
+    this.paginationSvc.page('PROJECT_LIBRARY').set(0);
 
     this.impactMasterSelect.close();
 
@@ -584,21 +539,18 @@ export class ProjectLibraryPageComponent implements OnInit {
     this.selectedImpactMasterId.set(null);
 
     this.searchQuery.set(searchText);
-    this._currentPage.set(0);
+    this.paginationSvc.page('PROJECT_LIBRARY').set(0);
 
     this.refreshImpactMasters();
   }
   onSearchChange(q: string): void {
     this.searchQuery.set(q);
-    this._currentPage.set(0);
-    this.saveFilterStateToCache();
+    this.paginationSvc.page('PROJECT_LIBRARY').set(0);
     this.refreshImpactMasters();
   }
 
   onPageChange(params: PagedRequest): void {
-    this._currentPage.set(params.page);
-    this._pageSize.set(params.pageSize);
-    this.saveFilterStateToCache();
+    // Page and pageSize are automatically persisted by PaginationPreferenceService via paginationKey
     this.refreshImpactMasters();
   }
   // No longer needed - using Observable directly with async pipe
@@ -610,8 +562,7 @@ export class ProjectLibraryPageComponent implements OnInit {
       this.impactMasterSearchTerm.set('');
     }
 
-    this._currentPage.set(0);
-    this.saveFilterStateToCache();
+    this.paginationSvc.page('PROJECT_LIBRARY').set(0);
     this.refreshImpactMasters();
   }
 
@@ -619,7 +570,6 @@ export class ProjectLibraryPageComponent implements OnInit {
     if (item) {
       this.selectedImpactMasterTitle.set(item.title || null);
       this.selectedImpactMasterPin.set(item.pin || null);
-      this.saveFilterStateToCache();
     } else {
       this.selectedImpactMasterTitle.set(null);
       this.selectedImpactMasterPin.set(null);
@@ -628,33 +578,29 @@ export class ProjectLibraryPageComponent implements OnInit {
 
   onProgramFilterChange(value: string | null): void {
     this.selectedProgramId.set(value);
-    this._currentPage.set(0);
-    this.saveFilterStateToCache();
+    this.paginationSvc.page('PROJECT_LIBRARY').set(0);
     this.refreshImpactMasters();
     this.loadImpactMasterFilterOptions();
   }
 
   onRecordTypeFilterChange(value: string | null): void {
     this.selectedRecordTypeId.set(value);
-    this._currentPage.set(0);
-    this.saveFilterStateToCache();
+    this.paginationSvc.page('PROJECT_LIBRARY').set(0);
     this.refreshImpactMasters();
     this.loadImpactMasterFilterOptions();
   }
 
   onStatusFilterChange(value: string | null): void {
     this.selectedStatusId.set(value);
-    this._currentPage.set(0);
-    this.saveFilterStateToCache();
+    this.paginationSvc.page('PROJECT_LIBRARY').set(0);
     this.refreshImpactMasters();
     this.loadImpactMasterFilterOptions();
   }
   onFundingRecipientFilterChange(value: string | null): void {
     this.selectedFundingRecipientId.set(value);
-    this.saveFilterStateToCache();
 
     if (!value) {
-      this._currentPage.set(0);
+      this.paginationSvc.page('PROJECT_LIBRARY').set(0);
       this.refreshImpactMasters();
     }
   }
@@ -668,35 +614,15 @@ export class ProjectLibraryPageComponent implements OnInit {
 
     this.selectedL1UserId.set(checked ? String(this.currentLoggedInUserId) : null);
 
-    this._currentPage.set(0);
-    this.saveFilterStateToCache();
+    this.paginationSvc.page('PROJECT_LIBRARY').set(0);
     this.refreshImpactMasters();
   }
   applyFilters(): void {
-    this._currentPage.set(0);
+    this.paginationSvc.page('PROJECT_LIBRARY').set(0);
     this.refreshImpactMasters();
   }
 
-  private saveFilterStateToCache(): void {
-    this.cacheService.saveFilterState({
-      searchQuery: this.searchQuery(),
-      selectedProgramId: this.selectedProgramId(),
-      selectedRecordTypeId: this.selectedRecordTypeId(),
-      selectedStatusId: this.selectedStatusId(),
-      selectedL1UserId: this.selectedL1UserId(),
-      selectedImpactMasterId: this.selectedImpactMasterId(),
-      selectedImpactMasterPin: this.selectedImpactMasterPin(),
-      selectedImpactMasterTitle: this.selectedImpactMasterTitle(),
-      selectedFundingRecipientId: this.selectedFundingRecipientId(),
-      selectedFundingRecipientName: this.selectedFundingRecipientName(),
-      selectedMetricCategories: this.selectedMetricCategories(),
-      isMyProjects: this.isMyProjects(),
-      currentPage: this._currentPage(),
-      pageSize: this._pageSize(),
-    });
-  }
-
-    clearFilters(): void {
+  clearFilters(): void {
     this.searchQuery.set('');
     this.impactMasterSearchTerm.set('');
 
@@ -714,20 +640,16 @@ export class ProjectLibraryPageComponent implements OnInit {
 
     this.projectManagers.set([]);
 
-    this._currentPage.set(0);
+    this.paginationSvc.page('PROJECT_LIBRARY').set(0);
 
-    // Clear cache when filters are cleared
-    this.cacheService.clearFilterState();
-    
     this.refreshImpactMasters();
     this.loadImpactMasterFilterOptions();
   }
   onPmFilterChange(value: string | null): void {
     this.selectedL1UserId.set(value);
-    this.saveFilterStateToCache();
 
     if (!value) {
-      this._currentPage.set(0);
+      this.paginationSvc.page('PROJECT_LIBRARY').set(0);
       this.refreshImpactMasters();
     }
   }

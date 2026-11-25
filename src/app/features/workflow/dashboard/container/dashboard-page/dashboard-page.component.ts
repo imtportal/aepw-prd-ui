@@ -259,7 +259,7 @@ export class DashboardPageComponent {
     // );
     //   console.log('Request for Dashboard Portfolio Adjustment By Categories:', selectedPeriodCodes);
     // return
-    debugger;
+  
     this.dashboardService
       .getDashboardPortfolioAdjustmentByCategories(request)
       .pipe(finalize(() => {

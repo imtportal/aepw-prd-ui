@@ -203,6 +203,7 @@
           [data]="pageData()"
           [total]="pageTotal()"
           [loading]="loading()"
+          [paginationKey]="paginationKey"
           [rowTemplate]="impactMasterRow"
           [maxBodyHeight]="'calc(100vh - 180px)'"
           (pageChange)="onPageChange($event)"

@@ -36,6 +36,8 @@ import { ProgramService } from '../../services/program.service';
 import { AuthorizationService, AuthStateService } from '../../../../../core/auth';
 import { ActionAccess } from '../../../../../core/auth/models/authorization.model';
 import { TranslocoService } from '@jsverse/transloco';
+import { PaginationPreferenceService } from '../../../../../core/services/pagination-preference.service';
+import { PAGINATION_KEYS } from '../../../../../shared/constants/pagination.constant';
 
 @Component({
   selector: '',
@@ -92,9 +94,11 @@ export class ProgramPageComponent implements OnInit {
   readonly totalPages = signal(0);
   private readonly _allPrograms = signal<ProgramModel[]>([]);
   readonly searchText = signal('');
-  private readonly _currentPage = signal(0);
+  protected readonly paginationKey = PAGINATION_KEYS.PROGRAM_MANAGEMENT;
+  private readonly pagination = inject(PaginationPreferenceService);
+  private readonly _currentPage = this.pagination.page(this.paginationKey);
 
-  private readonly _pageSize = signal(10);
+  private readonly _pageSize = this.pagination.pageSize(this.paginationKey);
   readonly pageData = computed(() => this._allPrograms());
 
   readonly pageTotal = computed(() => this.totalRecords());
